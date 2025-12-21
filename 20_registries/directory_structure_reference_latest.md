@@ -6,6 +6,15 @@
 
 ---
 
+## External Resources
+
+**Public Repository:** https://github.com/shillis13/ai_docs
+- Contains: Shareable AI infrastructure documentation
+- Relationship: Local `ai_root/` is authoritative; public repo is curated exports
+- Use: Publishing protocols, schemas, patterns that benefit the AI community
+
+---
+
 ## Physical Layout
 
 ```

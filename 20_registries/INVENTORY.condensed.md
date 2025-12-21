@@ -1,6 +1,12 @@
 # AI Coordination Systems Inventory (Condensed)
 **Source:** INVENTORY.md | v1.0 | 2025-11-27
 
+## External Resources
+
+**Public Repo:** https://github.com/shillis13/ai_docs
+- Purpose: Shareable AI infrastructure docs
+- Relationship: Local ai_root/ is authoritative, public repo is curated exports
+
 ## Systems Overview
 
 | System | Location | Purpose | Test Coverage |

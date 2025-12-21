@@ -7,6 +7,23 @@
 
 ---
 
+## 0. Public Repository
+
+**URL:** https://github.com/shillis13/ai_docs  
+**Purpose:** Public document repository for AI infrastructure documentation.
+
+**Relationship to Local:**
+- Local `ai_root/` is authoritative source
+- Public repo contains selected exports for sharing
+- Not a sync target - manual curation of what goes public
+
+**Content Types:**
+- Shareable protocols and schemas
+- Documentation that may benefit the AI community
+- Non-sensitive architectural patterns
+
+---
+
 ## 1. CLI Task Coordination Protocol
 
 **Version:** v5.0 (protocol_taskCoordination_v5.0.yml)  
