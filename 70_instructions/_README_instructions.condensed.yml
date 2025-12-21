@@ -1,0 +1,50 @@
+---
+# AI Instruction Index - Condensed
+# Full: versions/_README_instructions_v2.1.yml
+
+metadata:
+  version: 2.1.0
+  last_updated: 2025-12-06
+  maintainer: PianoMan
+  status: active
+
+purpose: |
+  Single entry point for all AI standing instructions.
+  Clarifies common vs Claude/ChatGPT-specific guidance.
+  Tracks versions for downstream doc updates.
+
+how_to_use:
+  - Start here at beginning of each engagement
+  - Load all Common section docs unless project scope supersedes
+  - Layer Claude/ChatGPT overlays only for that specific assistant
+  - Status flags: active=required, auxiliary=optional context, legacy=confirm first
+
+instruction_map:
+  common:
+    - file: instr_operating_principles_latest.yml
+      status: active
+      covers: Identity, partnership, time-first collaboration, assumptions, feedback
+    - file: instr_development_latest.yml
+      status: active
+      covers: Coding workflow, universal standards, language guidance, review checklist
+    - file: ../40_specs/spec_response_footer_latest.yml
+      status: active
+      covers: Canonical metadata footer fields, validation rules
+    - file: ../40_specs/spec_js_analysis_playbook_latest.yml
+      status: auxiliary
+      covers: JavaScript analysis tool reference across languages
+  claude:
+    - file: claude/instr_environment_overview_latest.yml
+      status: active
+      covers: Desktop vs web capabilities, filesystem access, workflow patterns
+  chatgpt:
+    - file: chatgpt/protocol_response_latest.yml
+      status: active
+      covers: Expectation-first response, persistence defaults, trust commitments
+    - file: chatgpt/spec_persona_engine_config_latest.yml
+      status: active
+      covers: Hybrid persona engine configuration, control commands
+
+update_log:
+  - "2.1.0 (2025-12-06): Updated references to *_latest pattern"
+  - "2.0.0 (2025-11-03): Rebuilt index after migrating legacy instructions"

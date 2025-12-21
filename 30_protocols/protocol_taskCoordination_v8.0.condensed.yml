@@ -1,0 +1,49 @@
+# Task Coordination Protocol (Condensed)
+# v8.1 | 2025-12-19 | Supersedes: v8.0
+# Full: protocol_taskCoordination_v8.1.yml
+
+changes_v8.1: "target_worker now embedded in filename: req_XXXX_{target}_{slug}.md"
+
+naming:
+  pattern: "req_{NNNN}_{target}_{slug}.md"
+  target_values: [librarian, dev-lead, custodian, ops, any, cli]
+  examples:
+    - req_0042_librarian_process_exports.yml
+    - req_0043_custodian_fix_symlinks.yml
+    - req_0044_dev-lead_review_backlog.yml
+    - req_0045_ops_verify_daemon.yml
+    - req_0046_any_update_readme.yml
+    - req_0047_cli_adhoc_task.yml
+  agent_filter: "ls *_{target}_*.yml"
+
+dirs:
+  staged: "pre-pipeline; task/bundle dirs"
+  to_execute: "claimable; task/bundle dirs with claimable phases"
+  in_progress: "active; claimed as {taskId}.{slug}.{pid}.md"
+  completed: "finished"
+  error: "failed with error reports"
+
+lifecycle:
+  flow: "staged → to_execute → in_progress → completed|error"
+  claim: "mv ${TASK}.md ${TASK}.$$.md; mkdir claimed_${TS}_${PID}_${TASK}; mv task_dir ../in_progress/"
+  complete: "echo 'completed:' > ${TASK}.$$.completion.md; mv claimed_...${TASK} ../completed/${TASK}"
+  milestone: "echo 'milestone:X\nstatus:awaiting_input' > ${TASK}.$$.response.md; notify parent(watch/daemon/prompt)"
+
+claim_example: "in_progress/claimed_20251219_143022_12345_req_0042_librarian_process_exports/"
+
+orchestration:
+  hierarchy: "Desktop→Task→SubTask→... (any depth; worker targets: claude_cli agents)"
+  orch: [decompose, queue_to_execute, monitor(.response/.completion), coordinate_deps, symlink_results, close_on_children]
+  worker: [claim, execute_or_delegate, milestone, complete_move, notify_parent]
+  flow: "orch→to_execute; worker claims→in_progress/{task}.$$.md; sends .response/.completion; orch symlinks child@→completed/child"
+
+file_formats:
+  task: {required: "title,type,priority,posted,description,expected_response", optional: "session,entry_criteria,exit_criteria,subtasks"}
+  response: {milestone: str, status: "awaiting_input|blocked|continuing", summary: str, needs: str, timestamp: iso}
+  completion: {completed: iso, status: "success|partial|failed", summary: str, artifacts: "[{path,description}]"}
+
+versions:
+  - {v: 8.1, d: 2025-12-19, c: "target_worker in filename pattern"}
+  - {v: 8.0, d: 2025-12-14, c: "response/completion, subtask nesting, symlinks, claim format"}
+  - {v: 7.0, d: 2025-12-13, c: "response/completion, subtask nesting, symlinks"}
+  - {v: 6.0, d: 2025-12-11, c: "directory-always, bundle support"}

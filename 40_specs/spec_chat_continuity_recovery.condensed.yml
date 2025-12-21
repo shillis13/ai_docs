@@ -1,0 +1,35 @@
+# Chat Continuity Recovery (Condensed)
+# Source: spec_chat_continuity_recovery_v1.0.yml
+version: 1.0.0
+status: design
+
+purpose: Automated recovery from broken chats (context exhaustion)
+
+trigger:
+  detection: "prompt is too long" in claude.ai-web.log
+  notification: Interactive dialog with countdown, pause/cancel/continue buttons
+
+recovery_sequence:
+  1. export: Chat via ClaudeExporter or Puppeteer → JSON/MD
+  2. condense: Upload to AI → condensed_chat_{id}.md
+  3. context_digest: Generate faux digest from Claude's thinking → faux_context_digest_{id}.md
+  4. download: Files to ~/Documents/AI/ai_root/ai_memories/40_digests/chat_mems/
+  5. new_chat: Create in same project
+  6. attach: Both condensed + digest files
+  7. prompt: "Continuation of '{title}' at {url}. Review files, continue where left off."
+  8. submit
+
+technical_options:
+  notification_ui: AppleScript dialog (MVP) → web UI (v2)
+  export: ClaudeExporter extension, Puppeteer, API
+  ai_processing: ChatGPT API, Claude API, web automation, claude CLI
+
+dependencies:
+  existing: [chatUrl.py, detectBrokenChat.sh, brokenChatDaemon.sh, chat_orchestrator]
+  needed: [interactive_notification, export_trigger, ai_processor, continuation_injector]
+
+open_questions:
+  - Trigger ClaudeExporter programmatically?
+  - Which AI for processing? (cost vs reliability)
+  - Interactive macOS notification approach?
+  - Desktop app vs web for new chat?

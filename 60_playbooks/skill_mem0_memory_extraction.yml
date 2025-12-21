@@ -1,0 +1,770 @@
+metadata:
+  title: Mem0/OpenMemory Extraction Skill
+  version: 1.1.0
+  created: 2025-12-13
+  updated: 2025-12-13
+  author: Desktop Claude
+  purpose: Teach CLI agents (especially Librarian) how to extract mem0-compatible memories from chat transcripts
+  target_audience: [librarian, any CLI agent doing chat mining]
+  memory_model: mem0  # This skill uses mem0/OpenMemory's memory model
+  ingestion_target: OpenMemory MCP (local) or Mem0 API (hosted)
+  note: |
+    This skill is specific to the mem0 memory model which extracts atomic facts
+    for vector+graph storage. Other memory models (e.g., summary-based, 
+    topic-clustered) would need different extraction approaches.
+
+overview: |
+  This skill teaches how to identify and extract "memories" from conversation transcripts.
+  A memory is a discrete, reusable fact that provides value across future conversations.
+  
+  The goal is NOT to summarize conversations, but to extract atomic facts that:
+  - Stand alone without context
+  - Remain true over time (or are explicitly time-bounded)
+  - Would help an AI personalize or contextualize future interactions
+
+what_is_a_memory:
+  definition: |
+    A memory is a single, atomic piece of information about:
+    - The user (preferences, background, projects, skills)
+    - Decisions made (architectural choices, naming conventions, rejected approaches)
+    - Entities in the user's world (tools, people, systems, locations)
+    - Relationships between entities
+    
+  not_a_memory:
+    - Conversation summaries ("We discussed X, Y, and Z")
+    - Procedural logs ("User asked about X, I responded with Y")
+    - Temporary state ("User is currently debugging a function")
+    - Obvious facts ("User can read English")
+    - Redundant variations of same fact
+
+  good_memory_test: |
+    Ask: "Would this help me (or another AI) in a DIFFERENT conversation?"
+    If yes → likely a good memory
+    If no → probably conversation-specific noise
+
+memory_categories:
+  user_model:
+    description: Facts about the user themselves
+    examples:
+      - "User is a software developer with 25 years of experience"
+      - "User's name is PianoMan (handle/alias)"
+      - "User prefers direct communication without excessive caveats"
+      - "User works primarily on macOS"
+      - "User's workspace root is ~/Documents/AI/ai_root/"
+      - "User dislikes when Claude asks permission before taking obvious actions"
+    extraction_signals:
+      - Explicit self-descriptions ("I'm a...", "I prefer...", "I've been...")
+      - Revealed preferences through feedback ("Don't do X", "I like when you...")
+      - Background revealed in context ("In my 25 years...")
+      - Corrections ("Actually, I meant...", "No, I want...")
+
+  decisions:
+    description: Choices made that should persist
+    examples:
+      - "Memory slots use generic filenames (03.yml) with meanings in manifest"
+      - "Web/iOS use slots 28-30 as inbox for Desktop to migrate"
+      - "Project uses YAML over JSON for human-readability"
+      - "CLI agents write observations immediately, not batched"
+      - "Rejected approach: descriptive slot filenames (too rigid)"
+    extraction_signals:
+      - Explicit decisions ("Let's go with X", "We decided...")
+      - Rejections with rationale ("X won't work because...")
+      - Architecture choices ("The system will use...")
+      - Naming conventions established
+
+  entities:
+    description: Things in the user's world worth tracking
+    examples:
+      - "Librarian is a CLI agent responsible for memory curation"
+      - "Desktop Commander is an MCP for filesystem operations"
+      - "Codex MCP provides synchronous task execution"
+      - "mem_slots/ is the canonical memory directory"
+      - "exports/all_slots_concat.md is regenerated for Web/iOS access"
+    extraction_signals:
+      - Named tools, systems, or components
+      - File paths that are referenced repeatedly
+      - People or roles mentioned
+      - Projects or codebases
+
+  relationships:
+    description: How entities connect to each other
+    examples:
+      - "Desktop Claude has filesystem access; Web/iOS Claude does not"
+      - "Manifest defines what each slot number means"
+      - "Librarian reads from and writes to ai_claude/memories/cli/librarian/"
+      - "Condensed files are derived from latest files via summarization"
+    extraction_signals:
+      - Ownership/responsibility ("X is responsible for Y")
+      - Data flow ("X reads from Y", "A produces B")
+      - Dependencies ("X requires Y to function")
+      - Hierarchy ("X contains Y", "X is part of Y")
+
+  tool_knowledge:
+    description: How to use specific tools effectively
+    examples:
+      - "Desktop Commander: use 'cd dir && mv a b c dest/' for multi-file moves"
+      - "Codex MCP: first choice for synchronous execution with immediate results"
+      - "bash_tool: NEVER use - operates in sandbox with no filesystem access"
+      - "memory_user_edits: Web/iOS write to slots 28-30 as inbox"
+    extraction_signals:
+      - Discovered patterns ("I found that X works well for Y")
+      - Workarounds ("To avoid X, do Y instead")
+      - Anti-patterns ("Don't use X for Y because...")
+      - Efficiency tips ("Faster to X than Y")
+
+  temporal_facts:
+    description: Time-bounded information (mark with dates)
+    examples:
+      - "[2025-12] Currently evaluating Mem0 for memory infrastructure"
+      - "[2025-12] Chat pipeline in 30_processed stage, not yet condensed"
+      - "[2025-12] ~1,300 chat files in archive"
+    extraction_signals:
+      - Current state that will change ("Currently working on...")
+      - Counts or metrics ("We have X files")
+      - In-progress work ("Building...", "Implementing...")
+    note: Always timestamp these - they expire or need updates
+
+extraction_process:
+  step_1_scan:
+    action: Read through conversation looking for extraction signals
+    focus_areas:
+      - User corrections or feedback (high signal)
+      - Explicit decisions or choices
+      - New entities introduced
+      - Revealed preferences or background
+      - Technical discoveries or patterns
+    skip:
+      - Pleasantries and greetings
+      - Repetitive debugging cycles (unless resolution is novel)
+      - Content already extracted in previous chats
+
+  step_2_extract:
+    action: Pull out candidate memories as atomic statements
+    format: Single sentence, present tense, third person
+    guidelines:
+      - One fact per memory (split compound statements)
+      - Remove conversation-specific context
+      - Make it standalone (reader shouldn't need the chat)
+      - Use specific names over pronouns
+
+  step_3_categorize:
+    action: Assign each memory to a category
+    categories: [user_model, decisions, entities, relationships, tool_knowledge, temporal_facts]
+    note: Some memories span categories - pick primary, note secondary
+
+  step_4_deduplicate:
+    action: Check against existing memories
+    strategies:
+      - Exact match → skip
+      - Semantic duplicate → skip (same meaning, different words)
+      - Update/refinement → replace old with new
+      - Contradiction → flag for review, keep newer unless clearly wrong
+    
+  step_5_format:
+    action: Output in target format
+    formats:
+      mem0_api: See mem0_format section below
+      yaml_slot: See yaml_format section below
+
+mem0_format:
+  description: Format for Mem0/OpenMemory ingestion
+  api_example: |
+    from mem0 import Memory
+    m = Memory()
+    
+    # Add memory with metadata
+    m.add(
+      "User prefers direct communication without excessive caveats",
+      user_id="pianoman",
+      metadata={
+        "category": "user_model",
+        "source": "chat_20251213_memory_architecture",
+        "confidence": "high"
+      }
+    )
+  
+  batch_ingestion: |
+    memories = [
+      {"text": "Memory slots use generic filenames with meanings in manifest", 
+       "metadata": {"category": "decisions", "source": "..."}},
+      {"text": "Desktop Commander MCP for filesystem operations",
+       "metadata": {"category": "entities", "source": "..."}},
+    ]
+    for mem in memories:
+      m.add(mem["text"], user_id="pianoman", metadata=mem["metadata"])
+
+  key_fields:
+    text: The memory content (required)
+    user_id: Consistent identifier for the user (required)
+    metadata:
+      category: From memory_categories above
+      source: Chat filename or identifier
+      confidence: high/medium/low
+      timestamp: When extracted (auto if not provided)
+      expires: For temporal_facts that will become stale
+
+yaml_format:
+  description: Format for current file-based memory slots
+  structure: |
+    # In appropriate slot file (e.g., 03.yml for user_model)
+    - ts: 2025-12-13T14:30:00Z
+      content: "User prefers direct communication without excessive caveats"
+      source: chat_20251213_memory_architecture
+      confidence: high
+    
+    - ts: 2025-12-13T14:31:00Z
+      content: "Memory slots use generic filenames (03.yml) with meanings in manifest"
+      source: chat_20251213_memory_architecture
+      confidence: high
+  
+  slot_routing:
+    user_model: slot 03
+    communication_patterns: slot 04
+    tools_patterns: slot 05
+    current_context: slot 06
+    temporal_facts: slot 06 (with expiry)
+    decisions: slot 08 (learnings)
+    entities: varies by type
+    relationships: varies by type
+
+practical_examples:
+  example_chat_excerpt: |
+    User: "I've been a software developer for 25 years. I hate when you add 
+    unnecessary caveats. Just give me the answer."
+    
+    Claude: "Got it. Desktop Commander uses 'cd dir && mv a b c dest/' for 
+    moving multiple files efficiently."
+    
+    User: "Perfect. Let's use YAML for this config - more readable than JSON.
+    And let's call the directory mem_slots/ not slots/"
+    
+  extracted_memories:
+    - text: "User is a software developer with 25 years of experience"
+      category: user_model
+      confidence: high
+      
+    - text: "User dislikes unnecessary caveats in responses"
+      category: user_model  
+      confidence: high
+      
+    - text: "Desktop Commander: use 'cd dir && mv a b c dest/' for multi-file moves"
+      category: tool_knowledge
+      confidence: high
+      
+    - text: "Project uses YAML over JSON for human-readability"
+      category: decisions
+      confidence: high
+      
+    - text: "Memory directory is named mem_slots/ (not slots/)"
+      category: decisions
+      confidence: high
+
+  not_extracted:
+    - "User asked about memory architecture" # procedural, not reusable
+    - "Claude explained Desktop Commander" # conversation event
+    - "They discussed file naming" # summary, not atomic fact
+
+quality_guidelines:
+  high_value_memories:
+    - Explicit user preferences with clear reasoning
+    - Architectural decisions with rationale
+    - Discovered patterns or workarounds
+    - Corrections (user telling you what's wrong)
+    - Cross-cutting concerns (affects multiple areas)
+    
+  low_value_avoid:
+    - Obvious inferences ("User knows Python" from context)
+    - Temporary state ("Currently debugging X")
+    - One-time information ("Meeting scheduled for Tuesday")
+    - Vague preferences ("User likes clean code")
+    
+  confidence_levels:
+    high: Explicitly stated, directly quoted, confirmed
+    medium: Strongly implied, consistent with other facts
+    low: Inferred, single mention, might be context-specific
+    
+  deduplication_rules:
+    - Identical text → skip
+    - Same meaning, different words → skip (keep existing)
+    - Refinement/update → replace old with new, note in changelog
+    - Contradiction → flag for human review
+    - More specific than existing → add as separate (e.g., "uses Python" + "prefers Python 3.11+")
+
+batch_processing:
+  description: Guidelines for mining large chat archives
+  
+  recommended_approach:
+    phase_1_sample:
+      - Process 10-20 representative chats manually
+      - Calibrate extraction sensitivity
+      - Build category intuition
+      - Estimate memory density (memories per chat)
+      
+    phase_2_systematic:
+      - Process chronologically (oldest first)
+      - Earlier chats establish baseline facts
+      - Later chats may update/refine
+      - Track which chats have been processed
+      
+    phase_3_incremental:
+      - New chats processed as they occur
+      - Dedup against existing memory store
+      - Flag contradictions for review
+
+  per_chat_workflow:
+    1: Open chat file
+    2: Scan for extraction signals (see extraction_process.step_1_scan)
+    3: Extract candidate memories
+    4: Check existing store for duplicates
+    5: Format and output new memories
+    6: Mark chat as processed
+    
+  output_options:
+    direct_to_mem0: |
+      # If OpenMemory is running locally
+      for memory in extracted:
+        m.add(memory.text, user_id="pianoman", metadata=memory.metadata)
+        
+    to_staging_file: |
+      # If batching for later ingestion
+      # Write to: ai_general/data/memory_staging/batch_YYYYMMDD.yml
+      - text: "..."
+        category: "..."
+        source: "..."
+        confidence: "..."
+        
+    to_yaml_slots: |
+      # If using current file-based system
+      # Append to appropriate slot based on category
+
+  tracking:
+    processed_chats_log: ai_general/data/chat_archive/processed_manifest.yml
+    format: |
+      - file: chat_20251201_topic.md
+        processed: 2025-12-13T14:00:00Z
+        memories_extracted: 12
+        
+      - file: chat_20251202_topic.md
+        processed: 2025-12-13T14:05:00Z
+        memories_extracted: 8
+
+  estimation:
+    typical_density:
+      casual_chat: 0-2 memories
+      medium_technical: 5-15 memories
+      deep_project_work: 20-50+ memories
+    note: |
+      PianoMan's chats skew technical. Estimate 15-25 average.
+      1,300 chats × 20 = ~26,000 memories (fits Mem0 Starter tier)
+
+references:
+  mem0_docs: "https://docs.mem0.ai"
+  openmemory_github: "https://github.com/mem0ai/mem0"
+  local_manifest: "ai_claude/memories/mem_slots/manifest.yml"
+  librarian_slots: "ai_claude/memories/cli/librarian/"
+
+# =============================================================================
+# DISTRIBUTED EXTRACTION PROTOCOL
+# =============================================================================
+# For parallel processing of large chat archives across multiple Librarian instances
+
+distributed_extraction:
+  overview: |
+    Multiple CLI agents (Librarians) can work in parallel to extract memories
+    from a large chat archive. Each agent claims a leaf directory, processes
+    all files within it, and marks completion. Parent directories are marked
+    complete when all children are done. Final step aggregates all memories
+    for OpenMemory ingestion.
+
+  directory_structure:
+    source_location: ai_general/data/chat_archive/  # Where chats live
+    output_location: ai_general/data/mem0_extraction/  # Parallel structure for outputs
+    
+    example: |
+      # Source (read-only during extraction)
+      ai_general/data/chat_archive/
+      ├── 10_raw/
+      │   ├── 2024/
+      │   │   ├── 01/
+      │   │   │   ├── chat_20240101_topic1.md
+      │   │   │   └── chat_20240115_topic2.md
+      │   │   └── 02/
+      │   │       └── chat_20240203_topic3.md
+      
+      # Output (created during extraction)
+      ai_general/data/mem0_extraction/
+      ├── chat_archive/
+      │   ├── 10_raw/
+      │   │   ├── 2024/
+      │   │   │   ├── 01/
+      │   │   │   │   ├── memories.jsonl           # Extracted memories
+      │   │   │   │   └── processed.txt.completed  # List of processed files
+      │   │   │   ├── 02/
+      │   │   │   │   ├── memories.jsonl
+      │   │   │   │   └── processed.txt.completed
+      │   │   │   └── _dir.completed               # All subdirs done
+      │   │   └── _dir.completed
+      │   └── _dir.completed
+      └── _extraction.completed                    # Entire archive done
+
+  file_formats:
+    memories_jsonl:
+      description: One memory per line, JSON format, appendable
+      location: "{output_dir}/memories.jsonl"
+      format: |
+        {"text": "User is a software developer with 25 years experience", "category": "user_model", "source": "chat_20240101_topic1.md", "confidence": "high", "ts": "2025-12-13T22:45:00Z"}
+        {"text": "Project uses YAML over JSON for readability", "category": "decisions", "source": "chat_20240101_topic1.md", "confidence": "high", "ts": "2025-12-13T22:45:01Z"}
+        {"text": "Desktop Commander MCP for filesystem operations", "category": "entities", "source": "chat_20240115_topic2.md", "confidence": "high", "ts": "2025-12-13T22:46:00Z"}
+      
+      fields:
+        text: The memory content (required)
+        category: user_model|decisions|entities|relationships|tool_knowledge|temporal_facts
+        source: Original filename (for traceability)
+        confidence: high|medium|low
+        ts: Extraction timestamp (ISO 8601)
+        expires: Optional, for temporal_facts that will go stale
+      
+      why_jsonl: |
+        - Append-only: Multiple writes without read-modify-write
+        - Streamable: Process line by line without loading entire file
+        - Concatenatable: cat */memories.jsonl > all_memories.jsonl
+        - Standard: Direct compatibility with mem0 batch ingestion
+
+    processed_txt:
+      description: List of source files that have been processed
+      location: "{output_dir}/processed.txt" (becomes processed.txt.completed when done)
+      format: |
+        # One filename per line (relative to source directory)
+        chat_20240101_topic1.md
+        chat_20240115_topic2.md
+      
+      completion: |
+        When all files in directory are processed:
+        mv processed.txt processed.txt.completed
+
+    dir_completed:
+      description: Marker file indicating all subdirs in a directory are complete
+      location: "{output_dir}/_dir.completed"
+      content: |
+        # Auto-generated when all child directories have completion markers
+        completed: 2025-12-13T23:00:00Z
+        subdirs_completed:
+          - 01
+          - 02
+        total_memories: 847
+        total_files: 42
+
+  agent_workflow:
+    step_1_claim_directory:
+      action: Find an unclaimed leaf directory to process
+      leaf_definition: A directory containing source files but no subdirectories
+      claim_check: |
+        # Directory is available if:
+        # 1. It's a leaf (has files, no subdirs)
+        # 2. No processed.txt or processed.txt.completed exists in output location
+        # 3. No other agent has a processed.txt in progress (partial file)
+      
+      claiming: |
+        # Create output directory structure
+        mkdir -p ai_general/data/mem0_extraction/chat_archive/10_raw/2024/01/
+        
+        # Create empty processed.txt to claim the directory
+        touch ai_general/data/mem0_extraction/chat_archive/10_raw/2024/01/processed.txt
+        
+        # This prevents other agents from claiming same directory
+
+    step_2_process_files:
+      action: Extract memories from each file in the source directory
+      workflow: |
+        for each file in source_directory:
+          1. Read source file
+          2. Extract memories using extraction_process (see above)
+          3. Append each memory as JSON line to memories.jsonl
+          4. Append filename to processed.txt
+          5. (Optional) Log progress
+      
+      code_pattern: |
+        import json
+        from pathlib import Path
+        
+        source_dir = Path("ai_general/data/chat_archive/10_raw/2024/01/")
+        output_dir = Path("ai_general/data/mem0_extraction/chat_archive/10_raw/2024/01/")
+        
+        memories_file = output_dir / "memories.jsonl"
+        processed_file = output_dir / "processed.txt"
+        
+        for chat_file in source_dir.glob("*.md"):
+            # Extract memories (implement extraction logic)
+            memories = extract_memories(chat_file.read_text())
+            
+            # Append memories to JSONL
+            with open(memories_file, "a") as f:
+                for mem in memories:
+                    f.write(json.dumps(mem) + "\n")
+            
+            # Mark file as processed
+            with open(processed_file, "a") as f:
+                f.write(chat_file.name + "\n")
+
+    step_3_mark_complete:
+      action: Rename processed.txt to indicate completion
+      command: |
+        mv processed.txt processed.txt.completed
+      
+      verification: |
+        # Verify all source files are in processed list
+        source_count=$(ls -1 source_dir/*.md | wc -l)
+        processed_count=$(wc -l < processed.txt)
+        if [ "$source_count" -eq "$processed_count" ]; then
+          mv processed.txt processed.txt.completed
+        else
+          echo "ERROR: Mismatch - $source_count source files, $processed_count processed"
+        fi
+
+    step_4_check_parent_completion:
+      action: If all sibling directories complete, mark parent
+      logic: |
+        # Check if all subdirs of parent have .completed markers
+        parent_output = output_dir.parent
+        subdirs = [d for d in parent_source.iterdir() if d.is_dir()]
+        
+        all_complete = all(
+          (parent_output / d.name / "processed.txt.completed").exists()
+          for d in subdirs
+        )
+        
+        if all_complete:
+          # Create _dir.completed marker
+          # Aggregate stats from children
+          create_dir_completed_marker(parent_output)
+
+  coordination_rules:
+    claiming:
+      - Only claim leaf directories (no subdirs)
+      - Check for existing processed.txt before claiming
+      - Create processed.txt immediately upon claiming (atomic claim)
+      - If processed.txt exists but is stale (>1 hour, no updates), may reclaim
+      
+    collision_avoidance:
+      - Never process a directory with existing processed.txt
+      - Never process a directory with processed.txt.completed
+      - Check timestamp on processed.txt - if actively being written, skip
+      
+    failure_handling:
+      - If agent crashes, processed.txt remains (incomplete)
+      - Recovery agent can check: files in processed.txt vs files in memories.jsonl
+      - Resume from last successfully processed file
+      - Or: delete both files and restart directory
+      
+    parallelism:
+      - Each leaf directory is independent unit of work
+      - Agents can safely run in parallel on different directories
+      - No locking needed beyond processed.txt file existence
+      - Recommended: 3-5 parallel agents to avoid filesystem thrashing
+
+  aggregation_and_ingestion:
+    when_to_run: After _extraction.completed marker exists at root
+    
+    step_1_aggregate:
+      description: Combine all memories.jsonl files into single file
+      command: |
+        cd ai_general/data/mem0_extraction/
+        find . -name "memories.jsonl" -exec cat {} \; > all_memories.jsonl
+        
+        # Count total
+        wc -l all_memories.jsonl
+        # Expected: ~26,000 lines for 1,300 chats
+      
+      deduplication: |
+        # Optional: Remove exact duplicates before ingestion
+        sort -u all_memories.jsonl > all_memories_deduped.jsonl
+
+    step_2_validate:
+      description: Quick sanity checks before ingestion
+      checks:
+        - Each line is valid JSON
+        - Required fields present (text, category, source)
+        - No empty text fields
+        - Category values are valid
+      
+      script: |
+        import json
+        errors = []
+        valid_categories = {"user_model", "decisions", "entities", 
+                          "relationships", "tool_knowledge", "temporal_facts"}
+        
+        with open("all_memories.jsonl") as f:
+          for i, line in enumerate(f, 1):
+            try:
+              mem = json.loads(line)
+              if not mem.get("text"):
+                errors.append(f"Line {i}: empty text")
+              if mem.get("category") not in valid_categories:
+                errors.append(f"Line {i}: invalid category '{mem.get('category')}'")
+            except json.JSONDecodeError:
+              errors.append(f"Line {i}: invalid JSON")
+        
+        print(f"Validated. {len(errors)} errors found.")
+
+    step_3_ingest_to_openmemory:
+      description: Load memories into OpenMemory/Mem0
+      
+      batch_ingestion: |
+        from mem0 import Memory
+        import json
+        
+        m = Memory()  # Uses local OpenMemory config
+        
+        with open("all_memories.jsonl") as f:
+          for line in f:
+            mem = json.loads(line)
+            m.add(
+              mem["text"],
+              user_id="pianoman",
+              metadata={
+                "category": mem["category"],
+                "source": mem["source"],
+                "confidence": mem.get("confidence", "medium"),
+                "extracted_ts": mem.get("ts")
+              }
+            )
+        
+        print(f"Ingestion complete.")
+      
+      rate_limiting: |
+        # If using hosted Mem0 API, add delays to avoid rate limits
+        import time
+        for mem in memories:
+          m.add(...)
+          time.sleep(0.1)  # 10 memories/second max
+      
+      resumable: |
+        # Track ingestion progress for resume capability
+        ingested_sources = set()
+        
+        # Load previously ingested
+        if Path("ingested_sources.txt").exists():
+          ingested_sources = set(Path("ingested_sources.txt").read_text().splitlines())
+        
+        with open("all_memories.jsonl") as f:
+          for line in f:
+            mem = json.loads(line)
+            if mem["source"] in ingested_sources:
+              continue  # Skip already ingested
+            
+            m.add(mem["text"], ...)
+            
+            # Track progress
+            with open("ingested_sources.txt", "a") as log:
+              log.write(mem["source"] + "\n")
+
+  monitoring:
+    progress_check: |
+      # How many directories completed?
+      find ai_general/data/mem0_extraction -name "processed.txt.completed" | wc -l
+      
+      # How many still in progress?
+      find ai_general/data/mem0_extraction -name "processed.txt" ! -name "*.completed" | wc -l
+      
+      # Total memories extracted so far?
+      find ai_general/data/mem0_extraction -name "memories.jsonl" -exec wc -l {} \; | awk '{sum+=$1} END {print sum}'
+
+    dashboard_query: |
+      # Quick status summary
+      echo "=== Extraction Status ==="
+      echo "Completed dirs: $(find . -name 'processed.txt.completed' | wc -l)"
+      echo "In progress: $(find . -name 'processed.txt' ! -name '*.completed' | wc -l)"
+      echo "Memories extracted: $(find . -name 'memories.jsonl' -exec cat {} \; | wc -l)"
+      echo "Files processed: $(find . -name 'processed.txt*' -exec cat {} \; | wc -l)"
+
+# =============================================================================
+# ACTUAL DIRECTORY STRUCTURE (CORRECTED)
+# =============================================================================
+# This section reflects the real PianoMan corpus layout
+
+actual_structure:
+  source_root: ai_memories/40_histories/
+  
+  hierarchy: |
+    ai_memories/40_histories/
+    ├── chatgpt/
+    │   ├── 2022/
+    │   │   └── 12/
+    │   │       └── {YYYY-MM-DD}_{uuid}_{slug}/    ← CHAT DIR (leaf)
+    │   │           ├── conversation.yml           ← Main file
+    │   │           ├── conversation.chunk_001.yml ← Optional chunks
+    │   │           ├── conversation.chunk_002.yml
+    │   │           ├── _backup/                   ← Ignore
+    │   │           └── _extracted/                ← Ignore
+    │   ├── 2023/
+    │   │   ├── 01/
+    │   │   ├── 02/
+    │   │   └── ...
+    │   ├── 2024/
+    │   └── 2025/
+    └── claude/
+        └── 2025/
+            ├── 06/
+            ├── 07/
+            └── ...
+  
+  output_root: ai_memories/mem0_extraction/
+  
+  output_hierarchy: |
+    ai_memories/mem0_extraction/
+    ├── chatgpt/
+    │   ├── 2024/
+    │   │   ├── 01/
+    │   │   │   ├── memories.jsonl            # All memories from Jan 2024
+    │   │   │   ├── processed.txt             # Chat dirs processed (in progress)
+    │   │   │   └── processed.txt.completed   # Renamed when done
+    │   │   ├── 02/
+    │   │   └── _dir.completed                # Year 2024 done
+    │   └── _dir.completed                    # chatgpt done
+    └── claude/
+        └── ...
+
+  work_units:
+    definition: One MONTH directory = one work unit
+    rationale: |
+      - Too granular: 5,300 chat dirs would create 5,300 tracking files
+      - Just right: ~50 month directories, each with 10-200 chats
+      - Agent claims month, processes all chat dirs within it
+    
+    claiming: |
+      # Agent claims chatgpt/2024/01 by creating:
+      ai_memories/mem0_extraction/chatgpt/2024/01/processed.txt
+      
+      # Writes memories from all chat dirs to:
+      ai_memories/mem0_extraction/chatgpt/2024/01/memories.jsonl
+      
+      # Tracks which chat dirs are done in processed.txt:
+      2024-01-01_71f20090_enable_psreadline_for_powershell
+      2024-01-02_0abe2dca_new_chat
+      ...
+      
+      # When all chat dirs processed:
+      mv processed.txt processed.txt.completed
+
+  files_to_process:
+    primary: conversation.yml
+    chunks: conversation.chunk_NNN.yml (if exist, process in order)
+    ignore: 
+      - _backup/
+      - _extracted/
+      - Any non-yml files
+    
+    chunk_handling: |
+      # For large chats with chunks, process in sequence:
+      1. Read conversation.yml (contains metadata + first messages)
+      2. Read conversation.chunk_001.yml through chunk_NNN.yml
+      3. Extract memories from combined content
+      4. Dedupe within single chat before writing
+
+  statistics:
+    platforms: [chatgpt, claude]
+    chatgpt_months: ~40 (Dec 2022 - Oct 2025)
+    claude_months: ~7 (Jun 2025 - Dec 2025)
+    total_work_units: ~47 months
+    total_chats: ~5,300
+    recommended_agents: 3-5 parallel Librarians

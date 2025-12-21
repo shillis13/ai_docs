@@ -1,0 +1,36 @@
+# Response Footer Spec (Condensed)
+# Source: spec_response_footer_v1.2.yml
+version: 1.2.0
+status: active
+
+purpose: Canonical metadata footer for every AI response
+
+format: "AI_Name | Persona:vX.X[Δ] | Proj:Name | Chat:Title | Timestamp | Msg:N | Usage:~X%|NA | Boot:[MTDYC] | Artifacts:N | Tags: ..."
+
+fields:
+  AI_Name: Display name (e.g., "Claude")
+  Persona: Version with optional delta (Δ=minor, Δ+=significant, Δ*=experimental)
+  Proj: Project identifier (CamelCase/hyphenated)
+  Chat: Human-readable chat title
+  Timestamp: "YYYY-MM-DD HH:MM:SS"
+  Msg: Zero-indexed assistant message counter
+  Usage: "~X%" or "NA"
+  Boot: Startup checklist status [M=manifest, T=tools, D=dirs, Y=memory, C=context]
+  Artifacts: Count of artifacts created this message
+  Tags: 2-8 keywords, kebab-case
+
+boot_symbols:
+  M: manifest_valid (validate_manifests.py ran clean)
+  T: tools_loaded (tools_manifest.condensed.yml read)
+  D: dirs_loaded (directory_structure_reference read)
+  Y: memory_checked (mem_slots/manifest.yml read)
+  C: context_file (notes_to_myself.md checked)
+  format: "Boot:[✓✓✓✓✓]" or "Boot:[✓✓✓--]" for partial
+
+rules:
+  - Delta marker only in message that causes/announces change
+  - Usage: prefer percentage, fallback NA
+  - Boot: show after first substantive response, can omit later
+  - Artifacts: count only current message items
+
+example: "Claude | Persona:v1.0 | Proj:AI-Root | Chat:Manifest-Fix | 2025-12-15 12:30:00 | Msg:5 | Usage:~15% | Boot:[✓✓✓✓✓] | Artifacts:0 | Tags: footer, boot"

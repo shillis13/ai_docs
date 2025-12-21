@@ -1,0 +1,498 @@
+metadata:
+  title: Memory Store Architecture Vision
+  status: draft
+  created: 2025-12-13
+  author: Desktop Claude + PianoMan
+  purpose: Capture architectural ideas for multi-track, multi-resolution memory system
+  next_steps:
+    - Finalize mem0 integration approach
+    - Prototype L1 condensation
+    - Define extraction schemas
+
+overview: |
+  The Memory Store is designed to preserve chat history at multiple resolutions,
+  supporting diverse query types from fact retrieval to relationship analysis.
+  
+  Key principles:
+  1. L0 (raw) is canonical truth - always accessible, never discarded
+  2. Extraction and compression are SEPARATE concerns
+  3. Multiple extraction tracks capture different value dimensions
+  4. Compression is lossy by design - choose what to preserve
+  5. Age-based tiering reduces storage/token load while preserving access
+
+corpus_statistics:
+  as_of: 2025-12-13
+  total_files: 5,377
+  total_lines: 2,265,559
+  total_size_mb: 170
+  estimated_tokens: 35-45M
+  platforms: [chatgpt, claude]
+  date_range: "2022-12 to 2025-12"
+
+# =============================================================================
+# COMPRESSION LEVELS
+# =============================================================================
+compression_levels:
+  L0_raw:
+    description: Original chunked chat histories
+    reduction: 0%
+    data_loss: None (lossless)
+    location: "{chat_dir}/conversation.yml + conversation.chunk_NNN.yml"
+    retention: Forever (canonical truth)
+    
+  L1_condensed:
+    description: Condensed with minimal data loss
+    reduction: ~50%
+    status: NEEDS_DEFINITION
+    location: "{chat_dir}/conversation.L1.yml"
+    open_questions:
+      - What constitutes "minimal loss" varies by track
+      - May need L1-facts vs L1-texture variants
+      - See multi_track_extraction for discussion
+      
+  L2_summarized:
+    description: Meaningful summarization begins
+    reduction: ~75%
+    location: "{chat_dir}/conversation.L2.yml"
+    preserves: Key decisions, outcomes, significant exchanges
+    loses: Most back-and-forth, debugging journeys, nuance
+    
+  L3_digest:
+    description: Aggressive summarization
+    reduction: ~90%
+    location: "{chat_dir}/conversation.L3.yml"
+    preserves: What happened, what was decided
+    loses: How it happened, emotional texture
+    
+  L4_extracted_only:
+    description: Only extracted memories remain
+    reduction: ~95-97%
+    location: "No narrative file - only memories.jsonl"
+    note: May never need explicit L4 files if extractions are sufficient
+
+# =============================================================================
+# MULTI-TRACK EXTRACTION (DEFERRED)
+# =============================================================================
+multi_track_extraction:
+  status: deferred
+  priority: high
+  rationale: |
+    Condensation embeds assumptions about what matters. Different use cases
+    value different aspects of conversations. A single extraction track
+    loses information that other tracks would preserve.
+    
+  identified_tracks:
+    facts:
+      description: Decisions, solutions, preferences, technical knowledge
+      value_location: The answer, the outcome
+      examples:
+        - "Path escaping was the root cause"
+        - "User prefers YAML over JSON for readability"
+        - "Project uses mem_slots/ directory structure"
+      target_store: mem0/OpenMemory (vector + graph)
+      
+    texture:
+      description: Emotional dynamics, frustration, rapport, tone shifts
+      value_location: The struggle, the process
+      examples:
+        - "User showed patience through 3 failed attempts"
+        - "Breakthrough moment after extended debugging"
+        - "User prefers to discover solutions themselves"
+      target_store: TBD - may need different schema than facts
+      signals_to_capture:
+        - Repeated attempts (persistence indicators)
+        - Tone shifts (frustration → relief)
+        - Corrections and pushback
+        - Explicit emotional language
+        - Session length and engagement patterns
+        
+    third_track_tbd:
+      description: Possibly relationship/entity focused?
+      candidates:
+        - People and roles mentioned
+        - Organizational context
+        - Project evolution over time
+        - Tool/technology preferences and changes
+      status: needs_exploration
+      
+  implementation_options:
+    option_a_dual_l1:
+      description: Two L1 variants per chat
+      files:
+        - conversation.L1-facts.yml
+        - conversation.L1-texture.yml
+      pros: Clear separation, query-appropriate retrieval
+      cons: Storage overhead, processing overhead
+      
+    option_b_richer_l1:
+      description: Single L1 that preserves both dimensions
+      pros: Simpler structure
+      cons: Larger files, harder to query by dimension
+      
+    option_c_separate_extractions:
+      description: Multiple .jsonl extraction files
+      files:
+        - memories.jsonl (facts)
+        - signals.jsonl (texture)
+        - entities.jsonl (relationships)
+      pros: Clean separation, independent processing
+      cons: Multiple extraction passes needed
+      
+  recommendation: |
+    Option A + C combined:
+    - Separate extraction files for different value types
+    - L1+ compression can be single track (narrative preservation)
+    - L0 always available for deep-dive queries
+    - Index L0 for texture signals so you know WHICH chats to examine
+
+# =============================================================================
+# DIRECTORY HIERARCHY (DEFERRED)
+# =============================================================================
+directory_hierarchy:
+  status: deferred
+  principle: |
+    Everything lives with chat histories until a summary spans all children,
+    at which point summary goes in parent dir as a "stop here unless need detail" signal.
+    
+  example_structure: |
+    ai_memories/40_histories/chatgpt/2024/
+    ├── _summary.L2.yml          ← "2024 summary" - searcher may stop here
+    ├── _summary.L3.yml          ← More compressed 2024 summary
+    │
+    ├── 01/
+    │   ├── _summary.L2.yml      ← "January 2024 summary"
+    │   ├── _summary.L3.yml
+    │   │
+    │   ├── 2024-01-05_terminal_issue/
+    │   │   ├── conversation.yml           ← L0 (raw, lossless)
+    │   │   ├── conversation.L1.yml        ← L1 (condensed)
+    │   │   ├── conversation.L2.yml        ← L2 (summarized)
+    │   │   ├── memories.jsonl             ← Extracted facts
+    │   │   └── signals.jsonl              ← Extracted texture (future)
+    │   │
+    │   └── 2024-01-08_ballistics/
+    │       └── ...
+    │
+    └── 02/
+        └── ...
+        
+  search_pattern: |
+    Query arrives
+        │
+        ▼
+    Start at year level: _summary.L3.yml
+        │
+        ├─ "Nothing relevant here" → skip entire year
+        │
+        └─ "Has relevant content" → descend to month
+                │
+                ▼
+            Month level: _summary.L2.yml
+                │
+                └─ "Relevant discussion found" → descend to chat
+                        │
+                        ▼
+                    Chat level: L1 or L0 as needed
+
+# =============================================================================
+# AGE-BASED COMPRESSION (DEFERRED)
+# =============================================================================
+age_based_compression:
+  status: deferred
+  principle: |
+    Older memories can be more aggressively compressed because:
+    1. Recent context is more likely to be relevant
+    2. Older decisions/facts have been extracted to evergreen store
+    3. Token budget should favor recent material
+    
+  tiering_model:
+    recent_1_month:
+      level: L0 (raw)
+      rationale: Full context available, actively relevant
+      
+    months_2_to_3:
+      level: L1 (condensed)
+      rationale: Still recent, minimal loss acceptable
+      
+    months_4_to_6:
+      level: L2 (summarized)
+      rationale: Key points sufficient for most queries
+      
+    months_7_to_12:
+      level: L3 (digest)
+      rationale: Decisions/facts extracted, narrative compressed
+      
+    over_1_year:
+      level: L3 or extracted-only
+      rationale: Evergreen extractions carry forward, narrative rarely needed
+      note: L0 always retained for deep-dive access
+      
+  pre_generation: |
+    Multiple compression levels can be pre-generated:
+    - Run compression pipeline on schedule (weekly? monthly?)
+    - Generate L1, L2, L3 variants for aging content
+    - Allows instant access to any resolution without on-demand processing
+    
+  token_impact_estimate:
+    raw_corpus: 40M tokens
+    with_tiering:
+      recent_1mo_L0: 3M (7.5% of corpus at full size)
+      months_2_3_L1: 2.5M (5M × 50%)
+      months_4_6_L2: 2.5M (10M × 25%)
+      months_7_12_L3: 2M (20M × 10%)
+      over_1yr_L3: 0.5M (5M × 10%)
+      total: ~10.5M (75% reduction from always-L0)
+
+# =============================================================================
+# MULTI-AGENT MEMORY STORES (DEFERRED)
+# =============================================================================
+multi_agent_memory:
+  status: deferred
+  concept: |
+    Use multiple agents, each holding a portion of memory, to create
+    effectively larger "in-memory" context than any single agent can hold.
+    Queries federate across agents, coordinator aggregates responses.
+    
+  architecture: |
+    Query: "What approach for file naming?"
+               │
+               ▼
+        ┌─────────────────┐
+        │  Coordinator    │  routes query, aggregates responses
+        └────────┬────────┘
+                 │ broadcast or smart-route
+        ┌────────┼────────┬────────┬────────┐
+        ▼        ▼        ▼        ▼        ▼
+    ┌───────┐┌───────┐┌───────┐┌───────┐┌───────┐
+    │Agent 1││Agent 2││Agent 3││Agent 4││Agent N│
+    │ Code  ││ Rels  ││ Comms ││2024-H2││ ...   │
+    └───────┘└───────┘└───────┘└───────┘└───────┘
+    
+  sharding_strategies:
+    by_time:
+      description: Each agent holds a time period
+      pros: Simple, predictable
+      cons: Topics span time periods
+      
+    by_domain:
+      description: Specialist agents per domain
+      domains:
+        - Code/Repository (architecture, patterns, conventions)
+        - Relationships (people, orgs, interactions)
+        - Communication (style, preferences, patterns)
+        - Projects (histories, decisions, outcomes)
+        - Meta/Self (AI system design, memory architecture)
+      pros: Queries hit fewer agents, deeper expertise
+      cons: Classification needed upfront
+      
+    hybrid:
+      description: Domain specialists + time-sharded general
+      pros: Best of both
+      cons: More complex routing
+      
+  scaling_math:
+    at_100k_per_agent:
+      L0_raw: 40M / 100K = 400 agents (not feasible)
+      L3_compressed: 4M / 100K = 40 agents (marginal)
+      L4_extracted: 1M / 100K = 10 agents (feasible)
+      
+    feasibility_threshold: ~10-20 agents for practical coordination
+    
+  routing_strategies:
+    broadcast_all: Every query hits every agent (complete but expensive)
+    keyword_routing: Agents register topics, router matches
+    embedding_similarity: Query vector compared to agent summaries
+    hierarchical: Domain → time → specific
+
+# =============================================================================
+# MULTI-DURATION SUMMARIES (DEFERRED)
+# =============================================================================
+multi_duration_summaries:
+  status: deferred
+  concept: |
+    Pre-generate summaries at multiple time granularities:
+    - Daily digests
+    - Weekly summaries
+    - Monthly overviews
+    - Quarterly reviews
+    - Yearly retrospectives
+    
+  use_cases:
+    daily: "What did we work on yesterday?"
+    weekly: "Summarize last week's progress"
+    monthly: "What were the key decisions this month?"
+    quarterly: "Q3 retrospective"
+    yearly: "2024 year in review"
+    
+  generation_schedule:
+    daily: Generate nightly
+    weekly: Generate Sunday night
+    monthly: Generate 1st of month
+    quarterly: Generate after quarter end
+    yearly: Generate January 1st
+    
+  storage_location: |
+    ai_memories/40_histories/
+    ├── _daily/
+    │   ├── 2024-01-05.yml
+    │   └── 2024-01-06.yml
+    ├── _weekly/
+    │   ├── 2024-W01.yml
+    │   └── 2024-W02.yml
+    ├── _monthly/
+    │   ├── 2024-01.yml
+    │   └── 2024-02.yml
+    └── _quarterly/
+        └── 2024-Q1.yml
+
+# =============================================================================
+# OPEN QUESTIONS
+# =============================================================================
+open_questions:
+  extraction:
+    - Can mem0 capture texture and relationship dynamics, or only facts?
+    - What schema for signals.jsonl (texture extraction)?
+    - How to identify the "third track" if it exists?
+    
+  compression:
+    - What specifically gets removed at L1? (varies by track)
+    - Should L1 have variants (L1-facts, L1-texture)?
+    - When to generate compressed versions? On-demand vs pre-generated?
+    
+  storage:
+    - In-place (with chat dirs) vs parallel structure (mem0_extraction/)?
+    - Decided: In-place for compression, TBD for extractions
+    
+  retrieval:
+    - How does coordinator know which agent to query?
+    - When to stop at summary vs descend to detail?
+    - How to index L0 for texture signals without reading it all?
+    
+  implementation_sequence:
+    - mem0 integration first? Or L1 condensation first?
+    - Extract facts track before texture track?
+    - Single-agent extraction then scale to multi-agent?
+
+# =============================================================================
+# NEXT STEPS
+# =============================================================================
+next_steps:
+  immediate:
+    - Finalize mem0/OpenMemory integration decision
+    - Determine if mem0 can capture texture or facts-only
+    - Create extraction pipeline for facts track
+    
+  near_term:
+    - Define L1 condensation rules
+    - Build age-based compression scheduler
+    - Prototype directory hierarchy with summaries
+    
+  future:
+    - Texture extraction track
+    - Multi-agent memory coordination
+    - Multi-duration summary generation
+
+
+# =============================================================================
+# MEM0 INTEGRATION (EVALUATION IN PROGRESS)
+# =============================================================================
+mem0_integration:
+  status: spike_in_progress
+  location: ai_general/projects/mem0/
+  gitignore: "Ignore all contents - infrastructure/experimentation"
+  
+  what_mem0_provides:
+    vector_store:
+      - Semantic similarity search
+      - Atomic fact storage as text embeddings
+      - Deduplication and conflict resolution
+      - Multiple backend options (Qdrant, FAISS, Chroma)
+      
+    graph_store:
+      - Entity extraction (people, places, concepts)
+      - Relationship triplets: (entity) --[relation]--> (entity)
+      - Multi-hop traversal queries
+      - Multiple backends (Neo4j, Memgraph, Neptune, Kuzu)
+      
+    extraction_pipeline:
+      - LLM-powered fact extraction
+      - Configurable via custom_fact_extraction_prompt
+      - ADD/UPDATE/DELETE/NOOP memory lifecycle
+      - Temporal awareness (created_at, updated_at)
+      
+  identified_limitations:
+    no_texture_extraction:
+      description: |
+        Default extraction is fact-focused. The FACT_RETRIEVAL_PROMPT explicitly
+        targets "facts, user memories, and preferences" - not emotional dynamics,
+        frustration patterns, rapport signals, or process texture.
+      example: |
+        Input: "That still doesn't work." "Tried again." "YES! Finally got it."
+        Default output: ["Solution was found"]
+        Missing: ["User showed persistence", "Breakthrough moment occurred"]
+      workaround: |
+        Custom extraction prompt can capture texture, but:
+        - Still uses {"facts": [...]} schema
+        - No metadata to distinguish fact vs texture
+        - Would need separate extraction pass or metadata tagging
+      effort: Medium - custom prompt + metadata discipline
+      
+    no_relationship_strength:
+      description: |
+        Graph relationships are qualitative, not quantitative. Neo4j natively
+        supports edge properties like {score: 5, strength: 0.8}, but mem0's
+        extraction layer only produces simple triplets without intensity.
+      example: |
+        What we want:
+          (Charlie) --[loves, strength=0.95]--> (apples)
+          (Charlie) --[tolerates, strength=0.3]--> (broccoli)
+        What mem0 produces:
+          (Charlie) --[likes]--> (apples)
+          (Charlie) --[likes]--> (broccoli)
+      workaround_options:
+        encode_in_label: |
+          Use distinct relationship types: loves, likes, tolerates, avoids, hates
+          Requires custom extraction prompt to distinguish intensity
+        fork_and_extend: |
+          Modify mem0 extraction to output {relation, strength}
+          Store strength as Neo4j edge property
+          More invasive but cleaner long-term
+        alternative_tool: |
+          MCP Neo4j memory server (different project) explicitly supports
+          strength (0.1-1.0) on relationships. Not mem0 but worth evaluating.
+      effort: High - requires code changes or workarounds
+      
+    single_extraction_track:
+      description: |
+        One extraction prompt produces one type of output. No native support
+        for multiple extraction tracks (facts vs texture vs relationships).
+      workaround: |
+        Run multiple extraction passes with different prompts, output to
+        separate files (memories_facts.jsonl, memories_texture.jsonl)
+      effort: Medium - orchestration overhead
+      
+  customization_points:
+    custom_fact_extraction_prompt: |
+      Fully replaceable prompt for fact extraction.
+      Can capture texture if prompted, but schema unchanged.
+    custom_update_memory_prompt: |
+      Controls ADD/UPDATE/DELETE decisions.
+      Can customize conflict resolution logic.
+    custom_prompt_for_graph: |
+      Controls entity/relationship extraction for graph store.
+      Can focus on specific entity types or relationship patterns.
+    llm_provider: |
+      Configurable LLM for extraction (OpenAI, Anthropic, etc.)
+      Can use different models for different operations.
+      
+  decisions_needed:
+    - Accept limitations and work around them?
+    - Fork mem0 to add strength/texture support?
+    - Use mem0 for facts, separate system for texture?
+    - Evaluate alternative (MCP Neo4j memory server)?
+    
+  next_steps:
+    - Complete spike: get basic mem0 running
+    - Test custom extraction prompt for texture
+    - Evaluate effort to add edge properties
+    - Decide: extend mem0 vs parallel texture system

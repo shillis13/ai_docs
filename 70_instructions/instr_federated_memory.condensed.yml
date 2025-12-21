@@ -1,0 +1,32 @@
+---
+# instr_federated_memory.condensed.yml (~300 tokens)
+# Full: ai_general/docs/70_instructions/instr_federated_memory.yml
+
+core: "Write observations immediately to your memory slots. Never checkpoint - log as insights occur."
+
+your_slots:
+  desktop: ai_claude/memories/mem_slots/03-30.yml
+  librarian: ai_claude/memories/cli/librarian/mem_slots/01-10.yml
+  dev-lead: ai_claude/memories/cli/dev-lead/mem_slots/01-10.yml
+  custodian: ai_claude/memories/cli/custodian/mem_slots/01-10.yml
+  ops: ai_claude/memories/cli/ops/mem_slots/01-10.yml
+  codex: ai_codex/memories/mem_slots/01-10.yml
+
+entry_format: |
+  - ts: 2025-12-11T07:15:23Z
+    type: learning|pattern|shortcut|issue
+    content: "Your insight"
+
+what_to_log:
+  - Patterns discovered
+  - Shortcuts learned
+  - Mistakes to avoid
+  - User preferences observed
+  - Cross-references found
+  - Process improvements
+
+manifest: "Update your manifest when assigning slot purposes"
+read_others: "Allowed. Check their manifest first. Never write to others' slots."
+tracking: "Optional 'reads' field - increment on access for curation signals"
+persistence: "CLI uses named sessions. Desktop writes to slots for cross-chat memory."
+mindset: "Get better at your job. Notice → write → future you benefits."

@@ -1,0 +1,76 @@
+# Condensed from: cli_session_persistence.md
+# Source: ai_general/docs/30_protocols/cli_session_persistence.md
+
+cli_session_persistence:
+  overview: |
+    Session content stored SERVER-SIDE (Anthropic), not local.
+    sessionId is key to retrieve via `claude -r <sessionId>`.
+    Sessions scoped by project directory.
+
+  local_storage:
+    history_jsonl: ~/.claude/history.jsonl  # Session index
+    session_env: ~/.claude/session-env/<uuid>/  # Placeholder for env vars
+    file_history: ~/.claude/file-history/<uuid>/  # File changes
+    debug: ~/.claude/debug/<uuid>.txt  # Debug logs
+    projects: ~/.claude/projects/  # Per-project settings
+
+  history_jsonl_format:
+    fields: [display, pastedContents, timestamp, project, sessionId]
+    note: Project path determines which sessions shown with -r
+
+  cli_commands:
+    continue_recent: claude -c "prompt"  # Continue most recent in current dir
+    resume_specific: claude -r <sessionId> "prompt"
+    interactive_picker: claude -r
+
+  session_wrapper:
+    location: ~/bin/ai/claude_cli_session.sh
+    query_commands:
+      list: ./claude_cli_session.sh list ~/path/to/project
+      latest: ./claude_cli_session.sh latest ~/path/to/project
+      info: ./claude_cli_session.sh info <session_id>
+    execution_commands:
+      new: ./claude_cli_session.sh new ~/project "prompt"
+      continue: ./claude_cli_session.sh continue ~/project "prompt"
+      resume: ./claude_cli_session.sh resume <session_id> "prompt"
+      auto: ./claude_cli_session.sh auto ~/project "prompt"  # continue if exists, else new
+      task: ./claude_cli_session.sh task /path/to/task.md
+
+  task_file_format:
+    frontmatter:
+      session_mode: [auto, new, continue, "resume:<ID>"]
+      project_dir: path
+      claude_args: optional
+    body: Prompt content
+    template: ~/.claude/coordination/docs/task_template_session_aware.md
+
+  coordination_patterns:
+    persistent_worker: |
+      session_mode: continue + project_dir enables context accumulation across tasks
+    fresh_session: |
+      session_mode: new for isolated disposable work
+    named_streams: |
+      Multiple logical streams per project via named session IDs
+
+  multi_ai_implications:
+    - CLI workers build expertise via session continuity
+    - No custom implementation needed - use native -c/-r
+    - Project-scoped isolation
+    - Server-side storage (no local cleanup)
+
+  open_questions:
+    - Session retention duration?
+    - Session size limits?
+    - Cross-device resume?
+
+  local_storage_notes:
+    projects: path-encoded directories under ~/.claude/projects/
+
+  created_files:
+    - ~/bin/ai/cli/claude_cli_session.sh
+    - ~/.claude/session_registry.yml
+    - ai_general/templates/cli_task_session_aware.md
+
+  symlinks_in_ai_comms_claude_cli:
+    session_persistence.md: "-> protocol doc"
+    task_template.md: "-> task template"

@@ -1,0 +1,3 @@
+# Source: instr_claude_specific_latest.yml (v2.0.0)
+# Status: Placeholder template - no operational content
+# Note: Claude-specific instructions go here; general instructions symlinked from ai_general/instructions/

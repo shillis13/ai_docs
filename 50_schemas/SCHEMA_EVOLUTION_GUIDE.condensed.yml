@@ -1,0 +1,72 @@
+---
+# CONDENSED: SCHEMA_EVOLUTION_GUIDE
+# Full version: 50_schemas/SCHEMA_EVOLUTION_GUIDE.md
+metadata:
+  title: Schema Evolution Guide (Condensed)
+  version: 1.0.0-condensed
+  source: SCHEMA_EVOLUTION_GUIDE.md
+
+purpose: Safely evolve JSON Schemas without breaking existing documents or tools.
+
+compatibility_types:
+  backward: Old documents validate under new schema (priority)
+  forward: New documents validate under older schema
+  breaking: Previously valid documents fail validation or tools can't interpret
+
+composition_patterns:
+  "$ref": "Reuse definitions (e.g., schema_base.json#/definitions/metadata)"
+  "$defs": "Local fragment library, reference via $ref"
+  allOf: "Inheritance/mixins - intersect multiple schemas"
+  oneOf: "Exactly one branch matches (polymorphic)"
+  anyOf: "At least one branch matches"
+
+backward_compatible_changes:
+  add_optional_field: Add to properties without adding to required
+  add_section_type: Extend oneOf/patternProperties branches
+  relax_constraint: Increase maxLength, widen enums, loosen regex
+
+breaking_changes:
+  add_required_field:
+    migrate: Stage as optional → populate → mark required
+  remove_field:
+    migrate: Deprecate → update producers → remove
+  change_type:
+    migrate: Introduce new property (foo_v2) or oneOf bridge
+  tighten_constraint:
+    migrate: Audit data → add linting → tighten
+
+additionalProperties:
+  true: Max extensibility, future-friendly
+  false: Strictest, deterministic renderers
+  per_object: Mix via patternProperties (e.g., "^ext_" allowed)
+
+versioning:
+  document_level: metadata.version (e.g., 1.1.0)
+  schema_level: schema_*_v1.json, schema_*_v2.json
+  git_tags: schema-v1.4.0 tags
+  hybrid: Both document versions + git tags (recommended)
+
+evolution_workflow:
+  add_optional:
+    - Update schema (add property)
+    - Add docs/examples
+    - Update producers
+    - Run validators
+    - Communicate in PR
+  breaking:
+    - Design + document rationale
+    - Feature branch
+    - Implement + transformation scripts
+    - Validate against historic docs
+    - Migrate stored documents
+    - Communicate timelines
+
+digest_schema_notes:
+  structure: "{metadata, table_of_contents, sections, footer}"
+  extensibility:
+    metadata: Supports optional context, maintainer, version, related_*
+    sections: patternProperties with heading+content, additionalProperties:false
+  common_extensions:
+    - Add metadata fields (source_repo, tags)
+    - Add section types via oneOf
+    - Expand footer analytics

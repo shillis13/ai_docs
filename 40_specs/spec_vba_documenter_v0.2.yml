@@ -1,0 +1,474 @@
+---
+# VBA Documenter Design Specification v0.2
+# Updated with refined requirements from PianoMan
+# Date: 2025-12-17
+# Status: DRAFT - Ready for Review
+
+metadata:
+  title: VBA Documenter Tool
+  version: 0.2.0
+  purpose: Extract VBA documentation, generate Confluence wiki markup with call graphs
+  target_location: ~/bin/python/src/ai_utils/vba_documenter/
+
+## Scale Assessment
+
+codebase_metrics:
+  files: 66
+  breakdown:
+    standard_modules: 47  # .bas
+    class_modules: 19     # .cls
+  lines_of_code: 48192
+  procedures: 951
+  estimated_tokens: "60-80K"
+
+existing_documentation:
+  style: Structured block comments with delimiters
+  delimiters: ["'===", "'***"]
+  fields_present:
+    - Function Name
+    - Description  
+    - Parameters
+    - Returns
+    - Example Usage
+  coverage: Partial (many procedures have descriptors)
+
+## Requirements (Refined)
+
+hard_requirements:
+  R1_ease_of_use: 
+    description: "Process to create/update Confluence pages must be as simple as possible"
+    implementation: "Single command generates ready-to-paste markup files"
+    
+  R2_no_confluence_api:
+    description: "Cannot leverage Confluence API"
+    implementation: "Generate wiki markup files; user copies to Confluence"
+    
+  R3_leverage_descriptors:
+    description: "Parse and use existing function descriptors"
+    implementation: "Regex parser extracts structured comment blocks"
+
+confluence_structure:
+  module_level:
+    heading: H3
+    container: Panel macro
+    sections:
+      - module_description: "Extract from module header or generate"
+      - dependencies_callout:
+          type: "Expand macro (collapsible)"
+          content: "Call-out graph: modules called FROM this module"
+      - dependents_callin:
+          type: "Expand macro (collapsible)"  
+          content: "Call-in graph: modules that call INTO this module"
+      - implementation:
+          type: "Expand macro (collapsible)"
+          content: "Full source code"
+      - testing:
+          type: "Expand macro (collapsible)"
+          content: "Test procedures if present"
+
+  method_level:
+    heading: H4
+    container: Panel macro
+    sections:
+      - method_descriptor: "Parsed from comment block"
+      - implementation:
+          type: "Expand macro (collapsible)"
+          content: "Method source code"
+
+## Confluence Wiki Markup Templates
+
+module_template: |
+  h3. {module_name}
+  {panel:title=Module Overview|borderStyle=solid|borderColor=#ccc|bgColor=#f5f5f5}
+  {section}
+  {column:width=100%}
+  
+  *Description:* {module_description}
+  
+  *Type:* {module_type}  |  *Procedures:* {procedure_count}  |  *Lines:* {line_count}
+  
+  {expand:title=Dependencies (calls out to)}
+  {noformat}
+  {dependency_list}
+  {noformat}
+  {expand}
+  
+  {expand:title=Dependents (called by)}
+  {noformat}
+  {dependent_list}
+  {noformat}
+  {expand}
+  
+  {expand:title=Implementation (Full Source)}
+  {code:language=vb|title={module_name}}
+  {full_source}
+  {code}
+  {expand}
+  
+  {expand:title=Testing}
+  {testing_content}
+  {expand}
+  
+  {column}
+  {section}
+  {panel}
+
+method_template: |
+  h4. {method_name}
+  {panel:borderStyle=dashed|borderColor=#999}
+  
+  *Signature:* {{{{monospace}}}}{method_signature}{{{{monospace}}}}
+  
+  *Description:* {method_description}
+  
+  {method_parameters}
+  
+  *Returns:* {return_type} - {return_description}
+  
+  {expand:title=Example Usage}
+  {code:language=vb}
+  {example_code}
+  {code}
+  {expand}
+  
+  {expand:title=Implementation}
+  {code:language=vb|linenumbers=true}
+  {method_source}
+  {code}
+  {expand}
+  
+  {panel}
+
+parameters_template: |
+  *Parameters:*
+  || Name || Type || Optional || Description ||
+  {parameter_rows}
+
+## Architecture
+
+components:
+  vba_parser:
+    purpose: Parse VBA source files
+    responsibilities:
+      - Extract module metadata (name, type, attributes)
+      - Parse procedure signatures (Sub, Function, Property)
+      - Extract descriptor comment blocks
+      - Identify procedure boundaries (start/end lines)
+    output: List[Module] with nested Procedure objects
+
+  call_graph_analyzer:
+    purpose: Build dependency graphs
+    responsibilities:
+      - Scan procedure bodies for calls to other procedures
+      - Match calls to defined procedures across modules
+      - Build both call-out (dependencies) and call-in (dependents) graphs
+    output: Dict[module_name -> {calls_out: Set, called_by: Set}]
+    
+  descriptor_parser:
+    purpose: Parse structured comment blocks
+    responsibilities:
+      - Detect descriptor delimiters ('===, '***)
+      - Extract fields (Function Name, Description, Parameters, Returns, Example)
+      - Handle multi-line values
+    output: MethodDescriptor dataclass
+
+  confluence_generator:
+    purpose: Generate Confluence wiki markup
+    responsibilities:
+      - Apply templates with parsed data
+      - Generate TOC
+      - Create module index
+      - Handle special characters/escaping
+    output: String (wiki markup)
+
+  description_generator:
+    purpose: Generate missing descriptions (optional AI-assisted)
+    responsibilities:
+      - Identify undocumented procedures
+      - Generate descriptions from code analysis
+      - Can delegate to AI (Gemini/Claude) for natural language
+    mode: Optional enhancement
+
+## Data Model
+
+Module:
+  fields:
+    - name: str
+    - module_type: enum[STANDARD, CLASS, USERFORM]
+    - source_file: Path
+    - source_lines: List[str]
+    - header_comment: Optional[str]
+    - declarations: List[Declaration]
+    - procedures: List[Procedure]
+    - dependencies: Set[str]  # module names this calls
+    - dependents: Set[str]    # module names that call this
+
+Procedure:
+  fields:
+    - name: str
+    - proc_type: enum[SUB, FUNCTION, PROPERTY_GET, PROPERTY_LET, PROPERTY_SET]
+    - visibility: enum[PUBLIC, PRIVATE]
+    - signature: str  # Full signature line
+    - parameters: List[Parameter]
+    - return_type: Optional[str]
+    - descriptor: Optional[MethodDescriptor]
+    - source_lines: Tuple[int, int]  # Start, end line numbers
+    - calls: Set[str]  # Procedures this calls
+
+MethodDescriptor:
+  fields:
+    - function_name: str
+    - description: str
+    - parameters: List[ParamDoc]
+    - returns: str
+    - example: Optional[str]
+    - raw_text: str  # Original comment block
+
+ParamDoc:
+  fields:
+    - name: str
+    - data_type: str
+    - description: str
+    - is_optional: bool
+    - default_value: Optional[str]
+
+## CLI Interface
+
+commands:
+  generate:
+    description: Generate Confluence documentation
+    usage: |
+      vba-doc generate <source_path> [options]
+      
+      source_path: Directory containing .bas/.cls files
+    options:
+      --output, -o: Output directory (default: ./confluence_docs/)
+      --format: Output format [confluence|markdown] (default: confluence)
+      --split: Split output [single|per-module] (default: single)
+      --include-private: Include private members (default: false)
+      --generate-missing: AI-generate missing descriptions (default: false)
+    examples:
+      - "vba-doc generate ./VbaFileMethods_v02/ -o ./docs/"
+      - "vba-doc generate ./VbaFileMethods_v02/ --split per-module"
+
+  analyze:
+    description: Analyze codebase without generating docs
+    usage: |
+      vba-doc analyze <source_path> [options]
+    options:
+      --report: Report type [summary|dependencies|undocumented]
+    outputs:
+      - summary: File/procedure counts, documentation coverage
+      - dependencies: Call graph in text or DOT format
+      - undocumented: List of procedures without descriptors
+
+  extract-calls:
+    description: Generate call graph visualization
+    usage: |
+      vba-doc extract-calls <source_path> --format [text|dot|mermaid]
+
+## Implementation Plan
+
+phase_1_parser:
+  name: "Core Parser & Data Model"
+  effort: "4-6 hours"
+  deliverables:
+    - models.py: Dataclasses for Module, Procedure, MethodDescriptor
+    - vba_parser.py: Parse .bas/.cls files into data model
+    - descriptor_parser.py: Extract structured comment blocks
+  tests:
+    - test_vba_parser.py: Unit tests for parsing constructs
+    - fixtures/: Sample .bas/.cls files with various patterns
+
+phase_2_call_graph:
+  name: "Call Graph Analysis"
+  effort: "2-3 hours"
+  deliverables:
+    - call_analyzer.py: Build dependency/dependent graphs
+  tests:
+    - test_call_analyzer.py: Verify call detection across modules
+  challenge: "VBA late-binding makes some calls hard to detect statically"
+
+phase_3_generator:
+  name: "Confluence Generator"
+  effort: "3-4 hours"
+  deliverables:
+    - confluence_generator.py: Wiki markup output
+    - templates/confluence_module.j2
+    - templates/confluence_method.j2
+  tests:
+    - test_confluence_generator.py: Validate markup structure
+
+phase_4_cli:
+  name: "CLI & Integration"
+  effort: "2-3 hours"
+  deliverables:
+    - cli.py: Click-based command interface
+    - __main__.py: Entry point
+  tests:
+    - test_cli.py: Argument parsing and end-to-end
+
+phase_5_polish:
+  name: "Documentation & Polish"
+  effort: "2 hours"
+  deliverables:
+    - README.md: Usage documentation
+    - Update tools_manifest
+    - Example output files
+
+total_estimated_effort: "13-18 hours"
+
+## Workflow: Creating Confluence Pages
+
+user_workflow:
+  description: "After tool is built, here's how you'll use it"
+  steps:
+    1_generate:
+      command: "vba-doc generate /path/to/VbaFileMethods_v02/ -o ./docs/"
+      result: "Creates confluence_docs/vba_framework.wiki (single file with all modules)"
+      
+    2_copy_to_confluence:
+      action: "Open Confluence, create new page, switch to wiki markup editor"
+      paste: "Copy contents of vba_framework.wiki"
+      
+    3_update_workflow:
+      action: "When code changes, re-run generate command"
+      result: "New markup file ready to replace page content"
+
+alternative_per_module:
+  description: "For large frameworks, split into separate pages"
+  command: "vba-doc generate ./VbaFileMethods_v02/ -o ./docs/ --split per-module"
+  result: |
+    Creates:
+    - docs/index.wiki (TOC with links)
+    - docs/Table.wiki
+    - docs/mod_ContainerUtils.wiki
+    - ... (one file per module)
+
+## Platform Recommendation
+
+analysis:
+  gemini_1m_context:
+    pros:
+      - Could process entire codebase in single prompt
+      - Good for generating missing descriptions
+    cons:
+      - Overkill for structured parsing
+      - Hard to iterate/debug
+      - Not repeatable without re-prompting
+      
+  python_tool:
+    pros:
+      - Deterministic, repeatable
+      - Easy to iterate and maintain
+      - Can be automated (cron, CI/CD)
+      - Handles call graph analysis well
+    cons:
+      - More upfront development time
+      - AI-generated descriptions require separate step
+
+  hybrid_approach:
+    recommended: true
+    description: |
+      1. Python tool handles: parsing, call graphs, structure extraction
+      2. Optional AI pass: Generate descriptions for undocumented procedures
+      3. Best of both worlds: Reliable structure + intelligent descriptions
+
+## Execution Workflow (Using AI Framework)
+
+step_1_design_review:
+  actor: Codex MCP
+  task: "Review spec for completeness and technical feasibility"
+  focus_areas:
+    - VBA parsing edge cases
+    - Call graph accuracy limitations
+    - Confluence markup compatibility
+    - Test coverage adequacy
+  deliverable: Review comments in spec file
+
+step_2_implementation:
+  actor: Claude CLI (Task Coordination v4.0)
+  pattern: "Iterative phases with Desktop Claude oversight"
+  tasks:
+    - phase_1: Implement parser and data model
+    - phase_2: Implement call graph analyzer
+    - phase_3: Implement Confluence generator
+    - phase_4: Implement CLI
+  approval_gates: After each phase
+
+step_3_testing:
+  actor: Claude CLI
+  tasks:
+    - Create test fixtures from actual VbaFileMethods code
+    - Unit tests for each component
+    - Integration test: full pipeline on real codebase
+  validation: Codex MCP reviews test coverage
+
+step_4_validation:
+  actor: Desktop Claude + User
+  tasks:
+    - Run tool against VbaFileMethods_v02
+    - Review generated Confluence markup
+    - Paste into test Confluence page
+    - Verify formatting renders correctly
+  iterate: Based on feedback
+
+## Dependencies
+
+required:
+  - click: CLI framework (already available)
+  - pyyaml: Config and data serialization
+  - jinja2: Template rendering
+
+no_external_deps_needed:
+  - VBA parsing: Pure regex/string parsing (oletools not needed for .bas/.cls)
+  - Call graph: Static analysis with regex
+
+## Directory Structure
+
+location: ~/bin/python/src/ai_utils/vba_documenter/
+structure: |
+  vba_documenter/
+  ├── __init__.py
+  ├── __main__.py           # Entry point
+  ├── cli.py                # Click CLI
+  ├── models.py             # Dataclasses
+  ├── parsers/
+  │   ├── __init__.py
+  │   ├── vba_parser.py     # Module/procedure parsing
+  │   └── descriptor_parser.py  # Comment block parsing
+  ├── analyzers/
+  │   ├── __init__.py
+  │   └── call_graph.py     # Dependency analysis
+  ├── generators/
+  │   ├── __init__.py
+  │   ├── base.py           # Abstract generator
+  │   └── confluence.py     # Wiki markup output
+  ├── templates/
+  │   ├── confluence_module.j2
+  │   ├── confluence_method.j2
+  │   └── confluence_index.j2
+  └── tests/
+      ├── __init__.py
+      ├── conftest.py
+      ├── test_vba_parser.py
+      ├── test_descriptor_parser.py
+      ├── test_call_graph.py
+      ├── test_confluence_generator.py
+      └── fixtures/
+          ├── sample_module.bas
+          ├── sample_class.cls
+          └── expected_output.wiki
+
+## Open Questions
+
+for_user:
+  Q1: "Should we detect and document VBA References (e.g., Scripting.Dictionary, ADODB)?"
+  Q2: "For testing section - are there naming conventions for test procedures (e.g., Test_*)?"
+  Q3: "Preference for call graph format: text list, Mermaid diagram, or both?"
+  Q4: "Any modules that should be excluded from documentation?"
+
+technical:
+  Q5: "Handle line continuations in signatures (underscore at end of line)?"
+  Q6: "Parse Attribute statements for additional metadata?"
+  Q7: "Support for #Const compiler directives and conditional compilation?"

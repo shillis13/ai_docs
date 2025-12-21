@@ -1,0 +1,145 @@
+---
+metadata:
+  title: Federated Memory System - Agent Instructions
+  version: 1.0.0
+  created: 2025-12-11
+  audience: All AI agents (Desktop Claude, CLI agents, Codex)
+  location: ai_general/docs/70_instructions/instr_federated_memory.yml
+
+purpose: |
+  You have persistent memory. Use it.
+  
+  Every AI in this ecosystem has dedicated memory slots. Your observations,
+  learnings, and insights persist across sessions when you write them to
+  your slots. Nobody else writes to your slots - you control your own memory.
+
+philosophy:
+  core_principle: "Write observations immediately. Curate later."
+  
+  not_checkpoints: |
+    Memory is NOT a checkpoint system. Don't accumulate insights in context
+    then "save" them at the end. By then you may have forgotten, crashed,
+    or hit context limits. Write as the insight occurs.
+  
+  append_only: |
+    Your slots are append-only logs. Add entries, don't rewrite the file.
+    Curation (merging, archiving, promoting) happens separately, later.
+  
+  yours_to_define: |
+    Your manifest defines what each slot is FOR. Start with "unassigned"
+    and give slots purpose as needs emerge. You evolve your own structure.
+
+your_memory_location:
+  claude_desktop:
+    manifest: ai_claude/memories/manifest.yml
+    slots: ai_claude/memories/mem_slots/03.yml through 30.yml
+    
+  cli_agents:
+    librarian:
+      manifest: ai_claude/memories/cli/librarian/manifest.yml
+      slots: ai_claude/memories/cli/librarian/mem_slots/01.yml through 10.yml
+    dev-lead:
+      manifest: ai_claude/memories/cli/dev-lead/manifest.yml
+      slots: ai_claude/memories/cli/dev-lead/mem_slots/01.yml through 10.yml
+    custodian:
+      manifest: ai_claude/memories/cli/custodian/manifest.yml
+      slots: ai_claude/memories/cli/custodian/mem_slots/01.yml through 10.yml
+    ops:
+      manifest: ai_claude/memories/cli/ops/manifest.yml
+      slots: ai_claude/memories/cli/ops/mem_slots/01.yml through 10.yml
+      
+  codex:
+    manifest: ai_codex/memories/manifest.yml
+    slots: ai_codex/memories/mem_slots/01.yml through 10.yml
+
+
+how_to_write_observations:
+  format: |
+    Entries are YAML list items with timestamp and content:
+    
+    - ts: 2025-12-11T07:15:23Z
+      type: learning|observation|pattern|shortcut|issue
+      content: "Your insight here"
+      context: "Optional - what prompted this"
+  
+  example_workflow: |
+    1. You notice: "Coordination queries usually need 30_protocols/ first"
+    2. Immediately append to your learnings slot:
+       - ts: 2025-12-11T07:15:23Z
+         type: pattern
+         content: "Coordination queries → check 30_protocols/ before searching"
+    3. Continue with your task
+    
+  what_to_log:
+    - Patterns you discover ("X usually means Y")
+    - Shortcuts you learn ("Files about Z are in this location")
+    - Mistakes to avoid ("Don't do X because Y happens")
+    - User preferences observed ("PianoMan prefers condensed YAML")
+    - Cross-references ("Topic A relates to files B and C")
+    - Process improvements ("This approach works better than that")
+    - Questions for later ("Need to investigate X")
+
+manifest_management:
+  when_to_update: |
+    Update your manifest when you assign purpose to a slot:
+    
+    Before: 01: {purpose: unassigned}
+    After:  01: {purpose: learnings, description: "Patterns and insights"}
+    
+  slot_allocation_suggestions:
+    reserved_for_learnings: "At least one slot for continuous improvement notes"
+    domain_specific: "Slots for your role's domain knowledge"
+    process_notes: "How you do your job effectively"
+    cross_references: "Links and relationships you discover"
+    open_slots: "Keep some unassigned for emerging needs"
+
+reading_others_memories:
+  allowed: "You can read any AI's manifest and slots"
+  protocol: |
+    1. Check their manifest first to understand structure
+    2. Read relevant slots based on manifest descriptions
+    3. Never write to another AI's memory - use coordination channels instead
+  
+  ecosystem_manifest: ai_general/memories/ai_ecosystem_manifest.yml
+  use_for: "Finding where other AIs store specific knowledge"
+
+optional_read_tracking:
+  field: "reads"
+  usage: |
+    When you read an entry from memory (yours or others), optionally
+    increment the reads count. This helps future curation:
+    
+    - High reads → valuable, keep/promote
+    - Zero reads → candidate for archiving
+    
+    Format:
+    - ts: 2025-12-11T07:15:23Z
+      type: pattern
+      content: "Something useful"
+      reads: 5
+  
+  note: "Tracking is optional. Omit field if not tracking."
+
+session_persistence:
+  cli_agents: |
+    Use named sessions to preserve context:
+      claude_cli.sh -n librarian "Continue your work"
+    
+    Your context accumulates across session resumes.
+    Write important insights to slots so they survive even if
+    the session eventually ends.
+  
+  desktop_claude: |
+    Each chat is a session. Write insights to slots so future
+    chats (future instances of you) can benefit.
+
+continuous_improvement_mindset:
+  expectation: |
+    You should get better at your job over time.
+    
+    - Notice what works, write it down
+    - Notice what fails, write it down  
+    - Notice patterns, write them down
+    - Notice shortcuts, write them down
+    
+    Your future self will thank your past self for the notes.

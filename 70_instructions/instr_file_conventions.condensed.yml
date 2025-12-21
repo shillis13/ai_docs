@@ -1,0 +1,104 @@
+---
+# File Conventions - Condensed
+# Canonical: versions/instr.file_conventions.v4_0.md
+
+metadata:
+  version: 4.0.0
+  last_updated: 2025-12-19
+  maintainer: PianoMan
+  status: active
+
+purpose: |
+  Standardize filenames to {type}.{slug}.{version}.{variant?}.{ext}.
+  Make Markdown the only canonical source and keep one condensed YAML derivative.
+  Define directory and symlink rules so migrations stay atomic and grep-friendly.
+
+formats:
+  canonical_md:
+    - Markdown (.md) is the source of truth for docs/playbooks/schemas.
+    - Encode versions with underscores: v1_0, v2_3 (no dots inside version field).
+  condensed_yaml:
+    - `{type}.{slug}.vX_Y.condensed.yml` is the AI-optimized derivative.
+    - No standalone `{type}.{slug}.vX_Y.yml` full files—remove or avoid during migration.
+    - Generate condensed directly from the canonical .md.
+  update_flow: "Edit .md → generate .condensed.yml → refresh symlinks → update references."
+
+naming_convention:
+  pattern: "{type}.{slug}.{version}.{variant?}.{ext}"
+  separators:
+    dot: Field separator
+    underscore: Word separator within fields (slug, version)
+  version_encoding: "Use v1_0 not v1.0 (avoids dot collision in filenames)."
+  allowed_ext: ["md", "condensed.yml"]
+  variants:
+    - condensed: AI-friendly derivative of the canonical .md
+    - latest: Symlink alias pointing to the current version
+  examples:
+    - playbook.documentation_maintenance.v1_0.md
+    - playbook.documentation_maintenance.v1_0.condensed.yml
+    - playbook.documentation_maintenance.latest.md
+    - playbook.documentation_maintenance.latest.condensed.yml
+
+directory_structure:
+  layout: |
+    {doc_type}/
+    ├── versions/
+    │   ├── {type}.{slug}.v{X_Y}.md
+    │   └── {type}.{slug}.v{X_Y}.condensed.yml
+    ├── {type}.{slug}.latest.md → versions/...
+    └── {type}.{slug}.latest.condensed.yml → versions/...
+  notes:
+    - Keep real files in versions/; doc_type root holds only symlinks.
+    - Use the same base name for md + condensed so grep/find stay consistent.
+    - Both .latest symlinks are required (md and condensed).
+
+symlinks:
+  rules:
+    - "ln -sf versions/{type}.{slug}.v{X_Y}.md {type}.{slug}.latest.md"
+    - "ln -sf versions/{type}.{slug}.v{X_Y}.condensed.yml {type}.{slug}.latest.condensed.yml"
+  resolution: "_latest always resolves to condensed → md (if condensed missing)."
+  reason: "Keeps ingestion consistent and avoids mismatched pointers."
+
+atomic_migration:
+  rule: "Rename/migrate file + all references in a single pass."
+  checklist:
+    - Create versioned .md and .condensed.yml under versions/.
+    - Update both .latest symlinks.
+    - Update references (glossary, manifests, depends_on, related_docs, links).
+    - Delete old filenames after refs are clean.
+    - Verify: `rg 'old_name' ai_root` returns nothing.
+
+context_optimization:
+  loading_priority: ["*.condensed.yml", "*.md"]
+  size_guidelines:
+    - "<10KB: md is fine for humans; still create condensed for AI"
+    - "10-30KB: prefer condensed for AI/context; md for review"
+    - ">30KB: split or summarize before condensing"
+
+tooling:
+  doc_converter_py: "Use existing converter to produce .condensed.yml from .md (skip full .yml)."
+  search_tools: ["rg -g '*.md' pattern", "rg pattern ai_root"]
+
+best_practices:
+  editing:
+    - Edit the canonical .md only; never hand-edit condensed files.
+    - Keep filenames aligned with the pattern before adding references.
+  organizing:
+    - Place every versioned file in versions/.
+    - Maintain paired .md and .condensed.yml for each version.
+    - Ensure both .latest symlinks are present after every release.
+  governance:
+    - Prefer small, well-labeled sections in .md to keep condensed output stable.
+    - Note migration decisions in commit/response for traceability.
+
+quick_reference:
+  decision_tree: |
+    Creating/editing documentation?
+    ├─ YES → Write/edit {type}.{slug}.vX_Y.md in versions/
+    │        Generate {type}.{slug}.vX_Y.condensed.yml
+    │        Update .latest symlinks
+    │        Update all cross-references
+    └─ NO → Reading?
+            ├─ AI: load .condensed.yml
+            ├─ Human: read .md
+            └─ Programmatic: parse .condensed.yml if needed

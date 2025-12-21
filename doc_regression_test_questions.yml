@@ -1,0 +1,86 @@
+metadata:
+  title: Documentation Regression Test - Questions
+  purpose: Verify new AI instances can discover and apply knowledge from docs
+  generated: "2025-12-08"
+  updated: "2025-12-11"
+  instructions: |
+    Present these questions to a fresh Claude instance with access to the ai_root
+    workspace via Desktop Commander. The AI should discover relevant documentation
+    using memory pointers, the knowledge manifest, and search capabilities.
+    
+    Do NOT provide source file hints. The test validates documentation discoverability.
+    
+    Grade responses using doc_regression_test_ANSWERS.yml (kept separate).
+
+test_categories:
+  - category: Orchestration Entry Points & Scheduling
+    questions:
+      - "How do you check if an AI is available and send prompts/notifications?"
+
+  - category: CLI Orchestration Patterns
+    questions:
+      - "How do you delegate a simple task from Desktop Claude to a CLI worker?"
+
+  - category: Task Coordination Protocol v5
+    questions:
+      - "How does a CLI claim a task and mark it complete?"
+
+  - category: CLI Session Persistence
+    questions:
+      - "How do you resume a previous Claude CLI session?"
+
+  - category: Reference Pointer Protocol & Loading
+    questions:
+      - "What are reference pointers and why use them instead of storing raw memory content?"
+
+  - category: AI Message Sender
+    questions:
+      - "How do you send a message to Claude or ChatGPT automatically?"
+
+  - category: Chat Continuity Recovery
+    questions:
+      - "What do you do when a Claude chat hits 'prompt is too long'?"
+
+  - category: JS Analysis Playbook
+    questions:
+      - "When should you use the JavaScript analysis playbook?"
+
+  - category: CLI MCP Configuration
+    questions:
+      - "How do you enable Desktop Commander and BrowserMCP for CLI instances?"
+
+  - category: Codex CLI Install & Coordination
+    questions:
+      - "How do you wire Codex CLI into the coordination system?"
+
+  - category: CLI Browser Automation Instructioning
+    questions:
+      - "How should you brief a CLI to perform a browser automation task?"
+
+  - category: Claude Delegation Guidelines
+    questions:
+      - "When should Desktop Claude delegate to CLI vs Codex?"
+
+  - category: Claude Context Preservation Rules
+    questions:
+      - "How do you keep Claude Desktop context intact and avoid banned tools?"
+
+  - category: Operating Principles v2.2
+    questions:
+      - "How do you apply the operating principles and time-first collaboration defaults?"
+
+  - category: Memory Pointer Protocol
+    questions:
+      - "How do you load and interpret memory slot pointers?"
+
+  - category: Codex MCP Configuration & Usage
+    questions:
+      - "How do you configure and run Codex MCP with full capabilities?"
+
+  - category: Response Footer Specification
+    questions:
+      - "How do you format the response footer appended to every AI message?"
+
+  - category: File & Directory Conventions
+    questions:
+      - "How do you choose between YAML vs Markdown and navigate the project's file conventions?"

@@ -1,0 +1,96 @@
+---
+category: instructions
+version: "1.1.0"
+last_updated: "2025-11-02"
+maintainer: "PianoMan"
+subdirs_deployable: true
+files:
+  - name: "index_instructions.yml"
+    description: "Structured index of instruction assets and deployment metadata."
+    size_bytes: 2431
+    estimated_tokens: 695
+    status: "active"
+    audience: "all"
+    deploy:
+      claude_desktop: true
+      chatgpt: true
+      codex: false
+      claude_cli: false
+      gemini: false
+      grok: false
+      perplexity: true
+
+  - name: "instr_index_v1.2.md"
+    description: "Master index summarizing instruction documents and status flags."
+    size_bytes: 2120
+    estimated_tokens: 606
+    status: "active"
+    audience: "all"
+    deploy:
+      claude_desktop: true
+      chatgpt: true
+      codex: false
+      claude_cli: false
+      gemini: false
+      grok: false
+      perplexity: true
+
+  - name: "instr_operating_principles_v1.2.md"
+    description: "Core partnership principles, collaboration expectations, and communication guidance."
+    size_bytes: 3116
+    estimated_tokens: 890
+    status: "active"
+    audience: "all"
+    deploy:
+      claude_desktop: true
+      chatgpt: true
+      codex: false
+      claude_cli: false
+      gemini: false
+      grok: false
+      perplexity: true
+
+  - name: "protocol_development_v1.0.md"
+    description: "Development workflow covering coding standards, language callouts, and review checklist."
+    size_bytes: 3611
+    estimated_tokens: 1032
+    status: "active"
+    audience: "all"
+    deploy:
+      claude_desktop: true
+      chatgpt: true
+      codex: false
+      claude_cli: false
+      gemini: false
+      grok: false
+      perplexity: true
+
+  - name: "spec_js_analysis_playbook_v1.0.yml"
+    description: "Reference playbook and helper scripts for the JavaScript analysis tooling across stacks."
+    size_bytes: 2423
+    estimated_tokens: 692
+    status: "auxiliary"
+    audience: "all"
+    deploy:
+      claude_desktop: true
+      chatgpt: true
+      codex: false
+      claude_cli: false
+      gemini: false
+      grok: false
+      perplexity: false
+
+  - name: ".DS_Store"
+    description: "macOS Finder metadata file held for completeness."
+    size_bytes: 6148
+    estimated_tokens: 1757
+    status: "archived"
+    audience: "system"
+    deploy:
+      claude_desktop: false
+      chatgpt: false
+      codex: false
+      claude_cli: false
+      gemini: false
+      grok: false
+      perplexity: false

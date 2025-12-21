@@ -1,0 +1,223 @@
+---
+# Playbook: How to Update Documentation
+# Source: Claude-Gemini_How_to_Update_Docs.md (3431 lines → condensed)
+# Created: 2025-12-19
+
+metadata:
+  title: Documentation Update Workflow
+  version: 1.0.0
+  created: 2025-12-19
+  source_chat: ai_general/tmp/Claude-Gemini_How_to_Update_Docs.md
+  status: validated
+
+summary: |
+  End-to-end workflow for creating/updating documentation in ai_root.
+  Covers file naming convention, versioning, symlinks, and cross-reference updates.
+
+# CRITICAL LESSON: Always check existing patterns before creating new docs
+meta_lesson:
+  problem: Created playbook without consulting existing examples
+  root_cause: Assumed structure; didn't load playbook_parallel_orchestration.yml first
+  lesson: |
+    BEFORE creating any doc type (playbook, schema, spec, protocol):
+    1. Find existing examples: ls ai_general/docs/{doc_type}/
+    2. Read at least one to understand structure
+    3. Check for schema in 50_schemas/
+    4. THEN create new doc following established pattern
+
+# FILE NAMING CONVENTION (established in this chat)
+file_naming:
+  pattern: "{type}.{slug}.{version}.{variant?}.{ext}"
+  separators:
+    dot: Field separator (parseable with split('.'))
+    underscore: Word separator within a field (whitespace replacement)
+  fields:
+    type: playbook, schema, protocol, spec, instr
+    slug: descriptive_name_with_underscores
+    version: v1_0, v2_1, or "latest" (underscore replaces dot in semver)
+    variant: condensed (optional)
+    ext: md, yml
+  examples:
+    - playbook.gemini_canvas_automation.v1_1.md
+    - playbook.gemini_canvas_automation.v1_1.condensed.yml
+    - playbook.gemini_canvas_automation.latest.md
+    - playbook.gemini_canvas_automation.latest.condensed.yml
+    - schema.playbook.v1_0.yml
+  rationale: |
+    Enables programmatic parsing:
+    split('.') → [type, slug, version, ...variant, ext]
+    Old style (playbook_gemini_canvas_v1.0.md) mixed separators, hard to parse
+
+# DIRECTORY STRUCTURE
+directory_structure:
+  pattern: |
+    ai_general/docs/{doc_type}/
+    ├── versions/
+    │   ├── {type}.{slug}.v1_0.md           # canonical source
+    │   ├── {type}.{slug}.v1_0.condensed.yml # condensed version
+    │   ├── {type}.{slug}.v1_1.md           # next version
+    │   └── {type}.{slug}.v1_1.condensed.yml
+    ├── {type}.{slug}.latest.md → versions/{type}.{slug}.v1_1.md
+    └── {type}.{slug}.latest.condensed.yml → versions/{type}.{slug}.v1_1.condensed.yml
+  rules:
+    - Versioned files live in versions/ subdirectory
+    - Symlinks at doc_type level point to latest versions
+    - Both symlinks use "latest" suffix for consistency
+
+# WORKFLOW STEPS
+steps:
+  1_check_existing:
+    action: Review existing docs of same type
+    commands:
+      - "ls ai_general/docs/{doc_type}/"
+      - "cat ai_general/docs/{doc_type}/some_existing_example.md"
+    rule: Never create without understanding established patterns
+
+  2_create_canonical:
+    action: Write full doc in Markdown format
+    location: "{doc_type}/versions/{type}.{slug}.v{X_Y}.md"
+    requirements:
+      - Metadata section (title, version, created, maintainer, status)
+      - Follow schema structure for doc type
+      - Use ASCII tables per instr_writing.condensed.yml
+
+  3_create_condensed:
+    action: Create condensed YAML version
+    location: "{doc_type}/versions/{type}.{slug}.v{X_Y}.condensed.yml"
+    target: 60-80% token reduction
+    requirements:
+      - Include header comment pointing to full version
+      - Example: "# Full: versions/{type}.{slug}.v{X_Y}.md"
+      - Filename version must match metadata.version
+    patterns:
+      - Prose → structured YAML
+      - Strip conversation, failed attempts, redundant exploration
+      - Preserve: procedures, paths, constraints, decision logic, failure modes
+
+  4_create_symlinks:
+    action: Create symlinks at doc_type level
+    commands: |
+      cd ai_general/docs/{doc_type}/
+      ln -sf versions/{type}.{slug}.v{X_Y}.md {type}.{slug}.latest.md
+      ln -sf versions/{type}.{slug}.v{X_Y}.condensed.yml {type}.{slug}.latest.condensed.yml
+    rule: Both use "latest" suffix for consistency
+
+  5_update_references:
+    action: Update cross-reference files as needed
+    files:
+      glossary:
+        path: docs/20_registries/glossary_knowledge_index.condensed.yml
+        when: New terms/concepts
+        format: "term: {d: \"desc\", r: \"path/to.latest.condensed.yml\"}"
+        also: Update term count, add to domain list
+
+      knowledge_manifest:
+        path: docs/70_instructions/claude/_knowledge_manifest.yml
+        when: Doc should be discoverable by Claude
+        add: Entry with triggers, abstract, answers, depends_on
+        format: |
+          - pointer: REF:ai_general/docs/{path}/to.latest.condensed.yml
+            tokens: ~XXX
+            triggers: [keyword1, keyword2]
+            abstract: |
+              Brief description of what the doc covers.
+            answers:
+              - "Question this doc answers"
+            depends_on:
+              - path/to/dependency.md
+        load_sequence_options:
+          auto: Always loaded at session start (rare, use sparingly)
+          topic: Loaded when triggers match user topic
+          demand: Loaded on explicit request
+          execution: Loaded for specific task execution
+
+      document_registry:
+        path: docs/20_registries/document_registry.yml
+        when: Formal documentation
+        add: Entry with id, path, tags, audience
+
+  6_verify:
+    checklist:
+      - Canonical .md exists in versions/
+      - Condensed .yml exists in versions/
+      - Symlinks point correctly (ls -la {type}.{slug}.*)
+      - References updated (grep {slug} glossary manifest registry)
+
+# PLAYBOOK SCHEMA (required structure)
+playbook_schema:
+  required_fields:
+    metadata: "{title, version, created, maintainer, status, category:playbook}"
+    summary: One-paragraph description
+    when_to_use: Array of applicable scenarios
+    prerequisites: Tools/scripts/conditions needed
+    steps: Numbered with action + details
+  optional_fields:
+    monitoring_commands: Status check commands
+    common_issues: symptom/fix pattern
+    example_deployment: Real-world example
+    related_docs: Links
+    version_history: Changelog
+  step_structure: |
+    steps:
+      1_step_name:
+        action: Brief description
+        example: Optional command/code
+        rule: Optional constraint
+        wait: Optional timing
+        verification: Confirmation method
+
+# COMMON ISSUES
+common_issues:
+  created_without_checking_existing:
+    symptom: New doc doesn't match established patterns
+    fix: Read existing examples first, refactor to match
+
+  symlink_naming_inconsistent:
+    symptom: One uses _latest, other doesn't
+    fix: Both should be {type}.{slug}.latest.{ext}
+
+  glossary_path_wrong:
+    symptom: Term doesn't trigger doc load
+    fix: Verify r: path matches actual symlink name
+
+  version_in_filename_has_dot:
+    symptom: Parsing fails (v1.0 splits to v1, 0)
+    fix: Use underscore in filename (v1_0)
+
+  version_mismatch:
+    symptom: Filename version doesn't match metadata.version
+    fix: Keep synchronized - update both when versioning
+
+# MIGRATION (for existing files)
+migration:
+  old_pattern: "playbook_gemini_canvas_automation_v1.0.md"
+  new_pattern: "playbook.gemini_canvas_automation.v1_0.md"
+  steps:
+    1: Move to versions/ with new name
+    2: Create condensed version with new name
+    3: Create symlinks with .latest. pattern
+    4: Update glossary r: paths
+    5: Update manifest pointer: paths
+    6: Remove old files
+  find_old_files: |
+    # Find files needing migration (underscore before version)
+    find ai_general/docs -name "*_v[0-9]*" -type f
+
+# SCRIPTS & TOOLS REFERENCED
+tools:
+  playbook_schema: 50_schemas/schema.playbook.latest.condensed.yml
+  writing_standards: 70_instructions/instr_writing.condensed.yml
+  schema_evolution: 50_schemas/SCHEMA_EVOLUTION_GUIDE.condensed.yml
+  example_playbook: 60_playbooks/playbook.gemini_canvas_automation.latest.condensed.yml
+
+# COMPLETED IN SOURCE CHAT + LIBRARIAN TASK 0001
+completed_work:
+  - Created playbook_documentation_maintenance → migrated to playbook.documentation_maintenance.v1_0
+  - Created schema_playbook → migrated to schema.playbook.v1_0
+  - Migrated playbook_gemini_canvas_automation to new convention
+  - Updated glossary with new terms
+  - Updated knowledge_manifest with new entries
+  - Updated instr_file_conventions with new naming spec (v4.0)
+
+remaining_work:
+  - Bulk migration of other docs (optional, low priority)

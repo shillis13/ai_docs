@@ -1,0 +1,58 @@
+# Glossary v1.1 | 50 terms | Full: glossary_knowledge_index.v1.1.yml
+terms:
+  ai_root: {d: "Root ~/ai_root/", r: "10_architecture/architecture_overview.condensed.yml"}
+  architectural_layer_model: {d: "3-tier: comms/impl/knowledge", r: "10_architecture/architectural_layer_model.condensed.yml"}
+  at_self_wake: {d: "AT self-prompt; Desktop alarm", r: "30_protocols/protocol_at_self_wake.condensed.yml"}
+  bootstrap_problem: {d: "Know what's IN to know WHEN to load", r: "50_schemas/schema_knowledge_glossary_v1.yml"}
+  chat_continuity_recovery: {d: "Context exhaustion→export→condense", r: "40_specs/spec_chat_continuity_recovery.condensed.yml"}
+  claude_cli: {d: "Autonomous workers; sessions", r: "10_architecture/architecture_overview.condensed.yml"}
+  codex_mcp: {d: "MCP tool; sync 30-60s; OpenAI API (o3/o4-mini); in-context", r: "70_instructions/claude/know_codex_mcp.condensed.yml"}
+  codex_cli: {d: "CLI binary /usr/local/bin/codex; async; OpenAI API; separate process", r: "20_registries/tools_manifest.condensed.yml"}
+  communication_layer: {d: "ai_comms/; tasks/status", r: "10_architecture/architectural_layer_model.condensed.yml"}
+  condensed_files: {d: ".condensed 60-80% smaller", r: "30_protocols/protocol_condensed_resolution.yml"}
+  condensed_resolution_protocol: {d: "Check .condensed first", r: "30_protocols/protocol_condensed_resolution.yml"}
+  context_preservation: {d: "200K limit; pointers save 40-55K", r: "10_architecture/architecture_overview.condensed.yml"}
+  custodian: {d: "CLI: fs hygiene", r: "40_specs/cli_specialized_agent_roles.condensed.md"}
+  desktop_claude: {d: "Coordinator; MCP/memory", r: "10_architecture/architecture_overview.condensed.yml"}
+  desktop_commander: {d: "MCP file/process/search", r: "20_registries/tools_manifest.condensed.yml"}
+  dev_lead: {d: "CLI: review/tasks", r: "40_specs/cli_specialized_agent_roles.condensed.md"}
+  federated_memory: {d: "Per-AI memory + cross-ref", r: "10_architecture/federated_memory_architecture.condensed.yml"}
+  implementation_layer: {d: "ai_claude/; config/runtime", r: "10_architecture/architectural_layer_model.condensed.yml"}
+  in_progress: {d: "Active claimed_TS_PID/", r: "30_protocols/protocol_taskCoordination.condensed.yml"}
+  knowledge_layer: {d: "ai_memories/; digests", r: "10_architecture/architectural_layer_model.condensed.yml"}
+  knowledge_pipeline: {d: "Export→YAML→Index", r: "10_architecture/architecture_overview.condensed.yml"}
+  librarian: {d: "CLI: knowledge/indexes", r: "40_specs/cli_specialized_agent_roles.condensed.md"}
+  mcp_server: {d: "External capability", r: "10_architecture/architecture_overview.condensed.yml"}
+  memory_slots: {d: "30 slots 6KB index", r: "30_protocols/protocol_reference_pointers.condensed.yml"}
+  named_sessions: {d: "CLI -n persist", r: "30_protocols/cli_session_persistence.condensed.yml"}
+  ops: {d: "CLI: execution", r: "40_specs/cli_specialized_agent_roles.condensed.md"}
+  parallel_orchestration: {d: "Multi-CLI + AT", r: "60_playbooks/parallel_orchestration_case_study.yml"}
+  reference_pointers: {d: "REF: PATH/QUERY/RECENT", r: "30_protocols/protocol_reference_pointers.condensed.yml"}
+  response_footer: {d: "AI|Persona|Proj|TS|Msg", r: "40_specs/spec_response_footer.condensed.yml"}
+  session_registry: {d: "session_registry.yml", r: "30_protocols/cli_session_persistence.condensed.yml"}
+  staged: {d: "Pre-pipeline ready", r: "30_protocols/protocol_taskCoordination.condensed.yml"}
+  task_coordination_protocol: {d: "staged→exec→progress→done", r: "30_protocols/protocol_taskCoordination.condensed.yml"}
+  task_lifecycle: {d: "staged→exec→progress→done", r: "30_protocols/protocol_taskCoordination.condensed.yml"}
+  to_execute: {d: "Claimable", r: "30_protocols/protocol_taskCoordination.condensed.yml"}
+  todo_vs_task: {d: "TODO=backlog Task=assigned", r: "10_architecture/architectural_layer_model.condensed.yml"}
+  tools_manifest: {d: "Tool registry", r: "20_registries/tools_manifest.condensed.yml"}
+  working_tasks: {d: "working_tasks/ drafts", r: "10_architecture/architectural_layer_model.condensed.yml"}
+  write_immediate: {d: "Log now never batch", r: "10_architecture/federated_memory_architecture.condensed.yml"}
+  yaml_as_source: {d: "YAML canonical", r: "10_architecture/architecture_overview.condensed.yml"}
+  chatty: {d: "ChatGPT peer", r: "10_architecture/architecture_overview.condensed.yml"}
+  ai_chat_orchestration: {d: "AI-to-AI orchestration", r: "30_protocols/protocol_ai_chat_orchestration.condensed.yml"}
+  load_behaviors: {d: "AUTO/TOPIC/DEMAND", r: "30_protocols/protocol_reference_pointers.condensed.yml"}
+  gemini_canvas: {d: "Gemini code editor; Monaco; Tab×4 to enable", r: "60_playbooks/playbook.gemini_canvas_automation.latest.condensed.yml"}
+  canvas_automation: {d: "Enable/download Canvas artifacts", r: "60_playbooks/playbook_gemini_canvas_automation.condensed.yml"}
+  gemini_automation: {d: "Browser scripts for Gemini", r: "60_playbooks/playbook_gemini_canvas_automation.condensed.yml"}
+  documentation_maintenance: {d: "Doc versioning, symlinks, cross-refs", r: "60_playbooks/playbook.documentation_maintenance.latest.condensed.yml"}
+  doc_versioning: {d: "versions/ + symlinks pattern", r: "60_playbooks/playbook.documentation_maintenance.latest.condensed.yml"}
+  playbook_schema: {d: "Standard playbook structure", r: "50_schemas/schema.playbook.latest.condensed.yml"}
+  playbook_structure: {d: "metadata/summary/steps/issues pattern", r: "50_schemas/schema.playbook.latest.condensed.yml"}
+domains:
+  architecture: [ai_root,architectural_layer_model,communication_layer,federated_memory,implementation_layer,knowledge_layer,memory_slots,working_tasks]
+  protocol: [at_self_wake,claim_prefix,condensed_resolution_protocol,in_progress,named_sessions,reference_pointers,response_footer,staged,task_coordination_protocol,task_lifecycle,to_execute,ai_chat_orchestration,load_behaviors]
+  tool: [codex_mcp,desktop_commander,mcp_server,session_registry,tools_manifest]
+  concept: [bootstrap_problem,condensed_files,context_preservation,todo_vs_task,write_immediate,yaml_as_source,playbook_schema,playbook_structure]
+  workflow: [chat_continuity_recovery,knowledge_pipeline,parallel_orchestration,gemini_canvas,canvas_automation,gemini_automation,documentation_maintenance,doc_versioning]
+  entity: [chatty,claude_cli,codex_cli,custodian,desktop_claude,dev_lead,librarian,ops]

@@ -1,0 +1,242 @@
+---
+metadata:
+  title: AI Workspace Architectural Layer Model
+  version: 1.0.0
+  created: 2025-11-16
+  source_conversation: Chat forking and context implications
+  maintainer: PianoMan
+  status: active
+
+overview: |
+  The AI workspace uses a multi-layer architecture where different directory structures 
+  serve distinct purposes: communication/coordination, implementation/runtime, and 
+  shared knowledge. Each layer has clear boundaries and specific responsibilities.
+
+architectural_layers:
+  
+  communication_layer:
+    directory: ai_comms/
+    purpose: Communication and coordination between actors
+    description: |
+      Official interface for task assignment, status tracking, and work product delivery.
+      This is the "public" coordination space where actors (Desktop Claude, CLI instances, 
+      ChatGPT, Codex, etc.) exchange messages and coordinate work.
+    
+    contains:
+      - Official task status and assignments
+      - Messages between actors
+      - Delivered work products
+      - Structured coordination protocols
+    
+    subdirectories:
+      - claude/: Desktop Claude's mailbox
+      - claude_cli/: CLI coordination hub
+      - codex_cli/: Codex worker tasks
+      - chatgpt/: ChatGPT mailbox
+      - tasks_*/: Specialized task queues (AppleScript, orchestration, etc.)
+    
+    characteristics:
+      - Clean, structured communication
+      - Official handoffs only
+      - What others see
+      - Protocol-driven state management
+    
+    example_workflow: |
+      Task appears in claude/tasks/to_execute/
+      → Moved to in_progress/ when claimed
+      → Final deliverable written to completed/task_xyz/response.md
+
+  implementation_layer:
+    directory: ai_claude/
+    purpose: Configuration, runtime state, and working directories
+    description: |
+      Actor-specific implementation details, working space, and runtime state.
+      This is the "private" workspace where actual work happens, distinct from
+      the clean communication interface.
+    
+    contains:
+      - Persona model configuration
+      - Instructions and behavioral specs
+      - Working directories for active tasks
+      - Runtime operational state
+      - Draft/interim artifacts before delivery
+      - Skills and capabilities
+    
+    subdirectories:
+      - persona_model/: Two-loop persona configuration
+      - instructions/: Operating instructions
+      - specs/: Standards and protocols
+      - skills/: Capabilities
+      - working_tasks/: Active work in progress (runtime)
+      - ai_specific_memories/: Learned patterns (configuration, not state)
+    
+    characteristics:
+      - Messy, iterative reality
+      - Can be chaotic without affecting interface
+      - Private workspace
+      - Configuration AND runtime state
+    
+    distinction: |
+      ai_specific_memories = Configuration (learned patterns, techniques)
+      working_tasks/ = Runtime state (what I'm doing right now)
+    
+    example_workflow: |
+      Task claimed from ai_comms/claude/tasks/in_progress/
+      → Working directory created: ai_claude/working_tasks/task_xyz/
+      → Notes, drafts, experiments, iterations happen here
+      → Final artifact delivered via ai_comms/claude/tasks/completed/
+
+  knowledge_layer:
+    directory: ai_memories/
+    purpose: Shared knowledge base and collective learning
+    description: |
+      Repository of shared knowledge, decisions, digests, and learnings that are
+      accessible to all actors. Not AI-specific by default - this is what we
+      collectively know and can reference.
+    
+    contains:
+      - Conversation histories and exports
+      - Knowledge digests
+      - Decision records
+      - TODO backlog (ideas, research questions)
+      - Shared research and reports
+    
+    subdirectories:
+      - "00_incoming_chats/": Raw conversation exports
+      - "10_exported/": Organized by platform
+      - "30_chat_histories/": Processed conversations
+      - "40_digests/": Extracted knowledge (todos/, decisions/, knowledge/)
+    
+    characteristics:
+      - Shared across all actors
+      - Curated knowledge artifacts
+      - Can have privacy/isolation if needed later
+      - Currently: all memories are common
+    
+    example_workflow: |
+      Conversation completes
+      → Export to 00_incoming_chats/
+      → Process to 30_chat_histories/
+      → Extract knowledge to 40_digests/knowledge/
+      → If actionable: Create TODO in 40_digests/todos/
+
+todo_vs_task_distinction:
+  
+  todos:
+    location: ai_general/todos/
+    purpose: Backlog of ideas, needs, and research questions
+    characteristics:
+      - Not yet actionable
+      - Requires curation/refinement
+      - Shared across all actors
+      - May generate multiple tasks
+    
+    lifecycle: |
+      Idea captured → TODO created → Curated → Task(s) generated → Moved to execution queue
+  
+  tasks:
+    location: ai_comms/{actor}/tasks/
+    purpose: Actionable, prioritized, assigned work
+    characteristics:
+      - Ready to execute
+      - Clear definition and acceptance criteria
+      - Uses coordination protocol structure
+      - Actor-specific queues
+    
+    lifecycle: |
+      to_execute/ → in_progress/ → completed/ (or error/ or cancelled/)
+    
+    working_state:
+      location: ai_claude/working_tasks/
+      description: |
+        Runtime working directory separate from official task status.
+        Links to corresponding ai_comms task but contains messy reality
+        of doing the work.
+
+complete_task_lifecycle_example:
+  
+  step_1_assignment:
+    layer: communication
+    location: ai_comms/claude/tasks/to_execute/
+    action: Task appears in execution queue
+    state: Official assignment
+  
+  step_2_claim:
+    layer: communication
+    location: ai_comms/claude/tasks/in_progress/
+    action: Task moved when claimed
+    state: Official status update - "Started, working in progress"
+  
+  step_3_work:
+    layer: implementation
+    location: ai_claude/working_tasks/task_xyz/
+    action: Create working directory for actual work
+    state: |
+      - Notes, drafts, experiments
+      - Messy, iterative reality
+      - Links to ai_comms task
+  
+  step_4_deliver:
+    layer: communication
+    location: ai_comms/claude/tasks/completed/task_xyz/response.md
+    action: Final artifacts delivered
+    state: Official status - COMPLETED
+  
+  step_5_knowledge:
+    layer: knowledge
+    location: ai_memories/40_digests/
+    action: If reusable knowledge generated, extract to shared repository
+    state: Available to all actors
+  
+  step_6_cleanup:
+    layer: implementation
+    location: ai_claude/working_tasks/
+    action: Archive or cleanup working directory
+    state: Runtime state cleared
+
+key_architectural_principles:
+
+  separation_of_concerns:
+    - Communication layer handles coordination interface
+    - Implementation layer handles actual work and runtime state
+    - Knowledge layer handles collective learning
+    - Each layer can change independently without affecting others
+  
+  clear_boundaries:
+    - Official status lives in ai_comms
+    - Working reality lives in ai_claude
+    - Shared knowledge lives in ai_memories
+    - No ambiguity about "where does this go?"
+  
+  actor_agnostic:
+    - Coordination protocol works for any actor/role
+    - Desktop Claude, CLI instances, ChatGPT, Codex all use same patterns
+    - Roles (orchestrator, worker, etc.) are flexible
+  
+  natural_accommodation:
+    - New use cases find logical homes without forcing
+    - No conflicts or awkward overlaps
+    - Architecture proved itself by handling TODO system naturally
+
+validation_test:
+  use_case: Desktop Claude autonomous TODO/task system
+  requirements:
+    - Communication between actors
+    - Working state tracking
+    - Shared knowledge access
+  
+  result: |
+    Everything found logical home:
+    - TODOs → ai_memories (shared backlog)
+    - Tasks → ai_comms (official coordination)
+    - Working dirs → ai_claude (runtime state)
+    - Dashboard → ai_claude (operational status)
+  
+  conclusion: |
+    Architecture flexible enough to absorb new patterns without breaking
+    existing ones. Clear boundaries with understandable rationales.
+
+cross_references:
+  - ai_root_summary.md: Directory structure overview
+  - coordination_system_v4_digest.md: Task coordination protocol
+  - instr_file_conventions_v2.0.yml: File organization standards

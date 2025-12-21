@@ -1,0 +1,158 @@
+---
+metadata:
+  title: Federated AI Memory Protocol
+  version: 1.0.0
+  created: 2025-12-11
+  status: active
+  priority: high
+  depends_on:
+    - 70_instructions/claude/instr_memory_slot_protocol_v2.yml
+
+purpose: |
+  Defines how multiple AI instances (Desktop Claude, CLI agents, Codex) 
+  maintain and share persistent memory across sessions.
+
+core_principles:
+  write_immediate: "Log observations as they occur, never checkpoint"
+  own_domain: "Each AI controls its own memory structure and content"
+  read_freely: "Any AI can read any other's memories"
+  write_never: "Never write to another AI's memory space"
+  curate_async: "Periodic review to promote/archive/merge"
+
+architecture:
+  ecosystem_registry: ai_general/memories/ai_ecosystem_manifest.yml
+  
+  participants:
+    claude_desktop:
+      manifest: ai_claude/memories/manifest.yml
+      slots: ai_claude/memories/mem_slots/03.yml - 30.yml
+      role: Primary orchestrator, strategic coordination
+      
+    claude_cli_agents:
+      base_path: ai_claude/memories/cli/
+      agents: [librarian, dev-lead, custodian, ops]
+      slots_per_agent: 10
+      persistence: Named sessions (-n flag)
+      
+    codex_cli:
+      manifest: ai_codex/memories/manifest.yml
+      slots: ai_codex/memories/mem_slots/01.yml - 10.yml
+      role: Synchronous task execution
+
+slot_file_format:
+  structure: |
+    # Slot {NN} - purpose defined in manifest.yml
+    entries:
+      - ts: 2025-12-11T07:15:23Z
+        content: "observation text"
+        reads: 0  # optional, increment on access
+      - ts: ...
+  
+  rules:
+    - Always append, never rewrite
+    - Timestamp every entry (ISO 8601)
+    - Keep entries atomic (one observation per entry)
+    - reads field optional, add when accessed
+
+manifest_structure:
+  required_fields:
+    - metadata.owner
+    - metadata.version
+    - metadata.philosophy
+    - slots (01-NN with purpose)
+    - usage_patterns
+  
+  example: |
+    metadata:
+      owner: librarian
+      version: 1.0.0
+      philosophy: "Write observations immediately. Curate later."
+    slots:
+      01: {purpose: query_patterns}
+      02: {purpose: corpus_map}
+      03: {purpose: unassigned}
+    usage_patterns:
+      logging: "Append observations as they occur"
+      format: "YAML list with timestamped entries"
+
+session_patterns:
+  cli_agents:
+    singleton_model: |
+      CLI agents use named sessions for persistence:
+        claude_cli.sh -n librarian "Process query..."
+      Same session resumes → accumulated context preserved
+    
+    first_use: |
+      1. Session starts fresh
+      2. Agent reads own manifest.yml 
+      3. Agent decides slot purposes based on work
+      4. Updates manifest with slot assignments
+      5. Begins logging to slots
+    
+    subsequent_use: |
+      1. Named session resumes (context intact)
+      2. Agent has learned context from prior work
+      3. Continues logging new observations
+      4. May reorganize slots as understanding grows
+  
+  desktop_claude:
+    bootup: |
+      1. Load ecosystem manifest (slot 1 pointer)
+      2. Load own manifest (slot 2 pointer)  
+      3. Load PRIORITY:1 slots as needed
+    
+    runtime: |
+      - Write observations to slots immediately
+      - Update manifest when slot purposes change
+      - Cross-reference other AI memories (read-only)
+
+cross_reference_protocol:
+  reading_others:
+    allowed: always
+    process: |
+      1. Read target's manifest first (understand structure)
+      2. Load relevant slots based on manifest
+      3. Use information, cite source if sharing
+    example: |
+      Desktop Claude needs Librarian's corpus map:
+      → Read ai_claude/memories/cli/librarian/manifest.yml
+      → Find: slot 02 is corpus_map
+      → Read ai_claude/memories/cli/librarian/mem_slots/02.yml
+  
+  sharing_insights:
+    method: "coordination task, not direct write"
+    example: |
+      Librarian discovers something Dev Lead should know:
+      → Creates coordination task with insight
+      → Dev Lead processes task, logs to OWN memory
+
+logging_examples:
+  good:
+    - ts: 2025-12-11T07:15:23Z
+      content: "Query 'pulse system' → found in ai_comms/, not ai_memories/"
+    - ts: 2025-12-11T07:16:01Z
+      content: "User prefers condensed YAML over prose - 75% token savings"
+  
+  bad:
+    - "Learned some things today"  # No timestamp, vague
+    - {batch: [item1, item2, item3]}  # Batched, not immediate
+
+curation_signals:
+  promote: "High reads → core knowledge, move to summary"
+  archive: "Zero reads after 30 days → archive candidate"  
+  merge: "Frequently read together → combine entries"
+  expire: "Contradicted by newer observation → mark stale"
+
+implementation_status:
+  complete:
+    - Directory structure for all participants
+    - Manifest files with slot definitions
+    - Empty slot files ready for use
+    - Ecosystem registry updated
+    - agents.json with logging instructions
+  
+  pending:
+    - Codex CLI instructions update
+    - Read-tracking implementation
+    - Curation automation
+    - Cross-reference tooling

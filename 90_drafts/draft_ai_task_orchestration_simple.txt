@@ -1,0 +1,84 @@
+title "Simple Orchestraton v1.x"
+
+participant PromptSrc
+participant orch
+participant comms_staged as stage
+participant comms_inprogress as inp
+participant cli
+participant notifier
+participant prompt_scheduler as pSched
+
+
+PromptSrc-->orch: Orchestrate Effort to ...
+
+note over orch
+"""
+Decides on appraoch, defines task(s)
+"""
+end note
+
+opt [Stage Task]
+    orch-->+stage: mkdir {req_wxyz}
+    orch->stage: <<writes file>> draft task
+    orch-->stage: <<rename file>> remove "draft_"
+end 
+
+opt [Claim Task]
+
+	orch->*+cli: <<startup cli>> DC start iIterm2 process to launch {cli.sh}
+	cli-->orch: iTerm session id
+	
+	orch-->cli: <<claim task>> 
+	note over cli
+    	send_prompt_cli.sh {cli} {sessionId} "claim & execute Task xxxx"
+    end note
+    
+    cli-->stage: <<add flag>> touch {task}_{actorId}.claimed
+    cli-->stage: <<move dir>> staged => in-progress
+    stage-->+inp: <<dir moves>>
+    destroy stage
+    
+    cli-->+workspace: <<mkdir>> task_workspace 
+    
+    cli-->workspace: <<create symlink>>
+    cli-->inp: <<create symlink>>
+	orch-> pSched: <<check in prompt>>
+end
+
+opt [Watching for Claiming]
+	pSched->orch: <<isBusy ?>>
+	pSched->orch: <<deliver check in prompt>>
+	orch->stage: <<looks for dir>>
+	orch->inp: <<looks for dir>>
+end
+
+opt [Works Task]
+	cli->cli: do work
+	cli->workspace: working files and data
+	cli->workspace: <<create response>>
+	cli->inp: <<create symlink to response>> resp.
+	cli->inp: <<make flag>> response ready
+	cli->notifier: <<send_notice orch>>
+	notifier->orch: <<notify>>
+	pSched->orch: <<deliver check in prompt>>
+	orch->orch: <<check notifications>>
+	orch->inp: <<looks for response links>>
+	inp->orch: <<reponse contents>>
+	orch->inp: <<mark file as read>> change resp to read
+alt [Needs Input]
+	cli->cli: <<waiting for input>>
+	pmptSched->cli: <<isBusy ?>>
+	pmptSched->cli: <<send prompt>> {msg}
+	orch->cli: <<read log/terminal window>>
+	orch->cli: <<send prompt>>
+	cli->cli: <<continue workt>>
+end
+end
+
+opt [Completes Work]
+	cli->workspace: <<writes_report>>
+	cli->workspace: <<writes_summary>>
+	cli<->workspace: <<move Task dir>>
+	cli->inp: <<put Task dir>>
+ 	cli->inp: <<add completion flag>> {task dir}.{dts].comopleted
+end

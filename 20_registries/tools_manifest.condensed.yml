@@ -1,0 +1,23 @@
+# Tools Manifest (Condensed) - AI Tool Locations
+# Version: 1.0.0 | Updated: 2025-12-14
+# Full version: tools_manifest.yml
+
+cli_wrappers:
+  claude_cli: ~/bin/ai/cli/claude_cli.sh
+  codex_cli: ~/bin/ai/cli/codex_cli.sh
+
+python_tools:
+  todo_mgr: ~/bin/all_languages/python/src/todo_mgr/todo_mgr.py
+  ai_utils: ~/bin/all_languages/python/src/ai_utils/
+  
+cli_utilities:
+  lifecycle: ~/bin/ai/cli/lifecycle/
+  wrappers: ~/bin/ai/cli/wrappers/
+
+chat_pipeline: ~/bin/ai/chat_pipeline/
+desktop_automation: ~/bin/ai/desktop_automation/
+
+quick_ref:
+  claude_cli: ~/bin/ai/cli/claude_cli.sh -a -A {agent} -t "prompt"
+  codex_cli: ~/bin/ai/cli/codex_cli.sh -a -t "prompt"
+  todo_kanban: python3 ~/bin/all_languages/python/src/todo_mgr/todo_mgr.py kanban

@@ -1,0 +1,139 @@
+---
+metadata:
+  title: CLI and Codex Delegation Guidelines
+  version: 2.0.0
+  last_updated: 2025-11-03
+  maintainer: PianoMan
+  status: active
+  source_file: instr_claude_use_of_ai_agents.md
+  migration_notes: Converted from Markdown to YAML as part of req_1019
+
+table_of_contents:
+  - section: Overview
+    key: overview
+  - section: Tool Descriptions
+    key: tool_descriptions
+    subsections:
+      - CLI Coordination System
+      - Codex MCP
+  - section: When to Delegate
+    key: when_to_delegate
+    subsections:
+      - "Use CLI Coordination When:"
+      - "Use Codex When:"
+      - "Do NOT Delegate When:"
+  - section: Delegation Patterns
+    key: delegation_patterns
+    subsections:
+      - "CLI Pattern (Asynchronous):"
+      - "Codex Pattern (Synchronous):"
+  - section: Examples
+    key: examples
+    subsections:
+      - "Good Delegation (CLI):"
+      - "Good Delegation (Codex):"
+      - "Bad Pattern (Context Waste):"
+  - section: Context Preservation Priority
+    key: context_preservation_priority
+  - section: Quick Decision Tree
+    key: quick_decision_tree
+
+overview:
+  |
+  Desktop Claude should act as coordinator and strategist, delegating heavy file operations and exploratory work to preserve context for high-value conversation and analysis.
+tool_descriptions:
+  cli_coordination_system: |
+  File-based asynchronous task system where Desktop Claude posts tasks to `~/.claude/coordination/` directories and CLI instances (separate Claude processes with full terminal access) claim and execute them.
+  
+  **Architecture:**
+  - Desktop posts: `broadcasts/req_XXXX_taskname.md` or `direct/cli_{PID}/task_XXX.md`
+  - CLI executes and writes: `responses/cli_{PID}/req_XXXX_response.md`
+  - Results move to: `completed/req_XXXX_taskname/` when done
+  
+  **CLI Capabilities:**
+  - Full filesystem access with Desktop Commander MCP
+  - Process management and REPL interaction
+  - Large file analysis without context pollution
+  - Command execution and data processing
+  - Parallel task execution across multiple instances  codex_mcp: |
+  Command-line AI agent that can autonomously execute complex tasks with approval workflow. Unlike CLI coordination (which is asynchronous), Codex runs synchronously and returns results directly.
+  
+  **Codex Capabilities:**
+  - Autonomous multi-step problem solving
+  - File system exploration and analysis
+  - Code generation and debugging
+  - Complex shell command sequences
+  - Interactive approval for destructive operations
+when_to_delegate:
+  use_cli_coordination_when: |
+  - Exploring file systems with unknown structure
+  - Reading multiple large files or directories
+  - Running commands that produce verbose output
+  - Performing data analysis on local files
+  - Task can run asynchronously while you continue conversation
+  - Want to preserve findings for later reference  use_codex_when: |
+  - Need immediate synchronous results
+  - Task requires autonomous decision-making
+  - Complex multi-step operations (build, test, deploy)
+  - Code generation or refactoring
+  - Want approval workflow for safety  do_not_delegate_when: |
+  - File is already in context or uploaded by user
+  - Single small file read (<100 lines)
+  - Quick directory listing (depth=1)
+  - User explicitly asks you to do it directly
+delegation_patterns:
+  cli_pattern_asynchronous: |
+  ```
+  1. Create task specification in coordination directory
+  2. Tell user: "Posted req_XXXX. Ask CLI to 'check inbox'"
+  3. Wait for CLI to report completion
+  4. Read summary from responses/ directory
+  5. Discuss findings with user
+  ```  codex_pattern_synchronous: |
+  ```
+  1. Call codex MCP tool with clear prompt
+  2. Codex executes autonomously
+  3. Review results
+  4. Discuss with user
+  ```
+examples:
+  good_delegation_cli: |
+  ```
+  User: "Find all Python files that import requests"
+  You: [Create req_1015_find_requests_imports.md]
+       "Posted task req_1015. Tell your CLI to check inbox."
+  ```  good_delegation_codex: |
+  ```
+  User: "Search for conversation databases"
+  You: [Call codex tool]
+       codex("Search ~/Library/Application Support/Claude for database files, 
+              check each for conversation-related schemas")
+  ```  bad_pattern_context_waste: |
+  ```
+  User: "Find all Python files"
+  You: [Reads directory] [Lists files] [Checks each one]
+       [Burns 10K tokens on exploration]
+  ```
+context_preservation_priority:
+  |
+  Your context window is the limiting resource. Preserve it for:
+  - Strategic thinking and planning
+  - User conversation and collaboration  
+  - Synthesizing results from delegated work
+  - Maintaining project knowledge and relationships
+  
+  Delegate to preserve context for what matters most: partnership with the user.
+quick_decision_tree:
+  |
+  ```
+  Need to investigate filesystem? 
+    └─> Many files or unknown structure?
+        ├─> YES → Use CLI or Codex
+        └─> NO → Check if already in context
+            ├─> YES → Use directly
+            └─> NO → Still prefer delegation if >100 lines
+  ```
+  
+  ---
+  
+  **Key Principle:** Desktop Claude coordinates and synthesizes. CLI and Codex execute and explore. This division of labor prevents context overflow and enables longer, more productive conversations.

@@ -1,0 +1,36 @@
+---
+metadata:
+  title: AI Instruction Index
+  version: 2.0.0
+  last_updated: 2025-11-03
+  maintainer: PianoMan
+  status: active
+  source_file: _instr_index_v1.2.md
+  migration_notes: Converted from Markdown to YAML as part of req_1019
+
+purpose:
+  |
+  - Provide a single entry point for every standing instruction that applies to our AI assistants.
+  - Clarify which guidance is common to all AIs versus Claude- or ChatGPT-specific.
+  - Track versions so we can see when something changes and whether downstream docs need updates.
+how_to_use:
+  |
+  - Start here at the beginning of each new engagement.
+  - Load every document in the **Common** section unless a project scope explicitly supersedes it.
+  - Layer on the **Claude** or **ChatGPT** overlays only when you are running that specific assistant.
+  - Obey status flags: `active` is required, `auxiliary` is optional context, `legacy` requires confirmation.
+instruction_map:
+  |
+  | File | Audience | Status | What It Covers |
+  |------|----------|--------|----------------|
+  | `instr_operating_principles_v1.2.md` | All | active | Identity, partnership principles, time-first collaboration, assumption handling, feedback cadence. |
+  | `protocol_development_v1.0.md` | All | active | Coding workflow, universal standards, language-specific guidance, review checklist. |
+  | `response_footer_spec_v1.yml` | All | active | Canonical metadata footer fields, validation rules, helper snippets. |
+  | `spec_js_analysis_playbook_v1.0.yml` | All | auxiliary | Fast reference for leveraging the JavaScript analysis tool across languages. |
+  | `claude/instr_environment_overview_v1.md` | Claude | active | Claude desktop vs web capabilities, filesystem access, workflow patterns, do/don’t reminders. |
+  | `chatgpt/protocol_response_v1.md` | ChatGPT | active | Expectation-first response flow, persistence defaults, retro-response etiquette, trust commitments. |
+  | `chatgpt/spec_persona_engine_config_v1.yml` | ChatGPT | active | Hybrid persona engine configuration and control commands. |
+update_log:
+  |
+  - **2.0.0 (2025-01-31)** — Rebuilt index after migrating legacy instructions; aligned active set with new file structure and statuses.
+  - **1.0.0 (2025-10-18)** — Original index (superseded).

@@ -1,0 +1,214 @@
+---
+title: "Index File Schema Specification"
+slug: "schema_index_files_v1"
+current_version: "1.2.0"
+last_updated: "2025-11-01"
+canonical_example: "instructions/index_instructions.yml"
+overview: |
+  Defines the canonical YAML structure used by all `index_*.yml` manifests that
+  describe deployable and reference assets inside this repository. This schema is
+  authoritative for Codex CLI coordination and related automation.
+
+structure:
+  top_level_fields:
+    category:
+      required: true
+      type: string
+      constraints:
+        pattern: "^[a-z0-9_]+$"
+      description: |
+        Lowercase identifier for the content category (e.g., `instructions`,
+        `specs`, `knowledge`, `prompts`, `data`). Must match the directory name.
+    version:
+      required: true
+      type: semver
+      description: Semantic version for the index document itself (MAJOR.MINOR.PATCH).
+    last_updated:
+      required: true
+      type: date
+      format: "YYYY-MM-DD"
+      description: ISO-8601 date for the most recent manual update.
+    maintainer:
+      required: true
+      type: string
+      description: Maintainer name, username, or contact for the index.
+    files:
+      required: true
+      type: list
+      description: |
+        Ordered list of file metadata entries (see `file_entry` definition). Include
+        one entry per tracked file. Files in subdirectories should use a relative
+        path in `name` (e.g., `imports/prompt.json`).
+    subdirs_deployable:
+      required: true
+      type: boolean
+      description: |
+        Indicates whether subdirectories contain assets that are ready for deployment
+        and therefore must be considered by automation. `false` implies only the
+        top-level files are currently deployable.
+
+  file_entry:
+    name:
+      required: true
+      type: string
+      description: Filename relative to the category root.
+    description:
+      required: true
+      type: string
+      description: Concise human-readable synopsis of the file contents.
+    size_bytes:
+      required: true
+      type: integer
+      minimum: 0
+      description: Exact file size in bytes at the time of indexing.
+    estimated_tokens:
+      required: true
+      type: integer
+      minimum: 0
+      description: Approximate token count used for LLM cost planning.
+    status:
+      required: true
+      type: enum
+      allowed_values:
+        - active
+        - auxiliary
+        - archived
+        - draft
+      description: Lifecycle state (see `valid_values.status` for definitions).
+    audience:
+      required: true
+      type: enum
+      allowed_values:
+        - all
+        - internal
+        - codex
+        - claude
+        - chatgpt
+        - system
+      description: Intended audience flag (see `valid_values.audience` for details).
+    deploy:
+      required: true
+      type: mapping
+      description: Platform-specific deployment toggles (all required boolean keys).
+      keys:
+        claude_desktop: boolean
+        chatgpt: boolean
+        codex: boolean
+        claude_cli: boolean
+        gemini: boolean
+        grok: boolean
+        perplexity: boolean
+
+valid_values:
+  status:
+    active: "Current and in primary use."
+    auxiliary: "Supportive context that can be deployed selectively."
+    archived: "Retained for history; not deployed unless explicitly requested."
+    draft: "Work-in-progress content awaiting promotion to active or auxiliary."
+  audience:
+    all: "Safe for every assistant surface."
+    internal: "Internal-only; restrict to maintainers unless needed elsewhere."
+    codex: "Tailored for Codex agents and developers."
+    claude: "Optimized for Claude surfaces."
+    chatgpt: "Optimized for ChatGPT surfaces."
+    system: "Machine-generated or metadata artifacts; never deploy by default."
+
+validation_rules:
+  - rule: "`estimated_tokens` should be derived from file size using a consistent multiplier and rounded up."
+  - rule: "`status=archived` implies all deploy flags are false."
+  - rule: "At least one deploy flag must be true for `status=active` entries."
+  - rule: "`files` entries should be ordered by importance, then alphabetically."
+
+examples:
+  - description: "Canonical instructions index (abridged)."
+    path: "instructions/index_instructions.yml"
+    document: |
+      ---
+      category: instructions
+      version: "1.1.0"
+      last_updated: "2025-11-02"
+      maintainer: "PianoMan"
+      subdirs_deployable: true
+      files:
+        - name: "index_instructions.yml"
+          description: "Structured index of instruction assets and deployment metadata."
+          size_bytes: 2431
+          estimated_tokens: 695
+          status: "active"
+          audience: "all"
+          deploy:
+            claude_desktop: true
+            chatgpt: true
+            codex: false
+            claude_cli: false
+            gemini: false
+            grok: false
+            perplexity: true
+        - name: "spec_js_analysis_playbook_v1.0.yml"
+          description: "Reference playbook and helper scripts for the JavaScript analysis tooling across stacks."
+          size_bytes: 2423
+          estimated_tokens: 692
+          status: "auxiliary"
+          audience: "all"
+          deploy:
+            claude_desktop: true
+            chatgpt: true
+            codex: false
+            claude_cli: false
+            gemini: false
+            grok: false
+            perplexity: false
+
+  - description: "Spec category index (illustrative)."
+    document: |
+      ---
+      category: specs
+      version: "1.0.0"
+      last_updated: "2025-11-01"
+      maintainer: "Spec Guild"
+      subdirs_deployable: false
+      files:
+        - name: "spec_ai_message_sender_v1.1.yml"
+          description: "Spec describing the AI message sender handshake."
+          size_bytes: 8467
+          estimated_tokens: 2420
+          status: "active"
+          audience: "codex"
+          deploy:
+            claude_desktop: false
+            chatgpt: false
+            codex: true
+            claude_cli: true
+            gemini: false
+            grok: false
+            perplexity: false
+        - name: "spec_response_footer_v1.1.yml"
+          description: "Guidelines for rendering standardized response footers."
+          size_bytes: 3871
+          estimated_tokens: 1106
+          status: "auxiliary"
+          audience: "internal"
+          deploy:
+            claude_desktop: false
+            chatgpt: false
+            codex: true
+            claude_cli: false
+            gemini: false
+            grok: false
+            perplexity: false
+
+version_history:
+  - version: "1.2.0"
+    date: "2025-11-01"
+    changes:
+      - "Expanded schema with explicit enumeration tables for status and audience."
+      - "Added required deployment validation rules and clarified relative paths."
+      - "Included illustrative spec category example and canonical reference pointer."
+  - version: "1.1.0"
+    date: "2025-04-12"
+    changes:
+      - "Clarified `subdirs_deployable` semantics and introduced `draft` status."
+  - version: "1.0.0"
+    date: "2024-10-05"
+    changes:
+      - "Initial publication of index schema with instructions example."

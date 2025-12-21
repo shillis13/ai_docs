@@ -1,0 +1,59 @@
+---
+# Playbook Schema - Condensed
+# Full: versions/schema.playbook.v1_0.md
+
+metadata:
+  title: Playbook Schema
+  version: 1.0.0
+  created: 2025-12-19
+  status: active
+
+purpose: Standard structure for operational playbooks in ai_root.
+
+required_fields:
+  metadata: {title, version, created, maintainer, status, category:"playbook"}
+  summary: One-paragraph description of what playbook covers
+  when_to_use: Array of applicable scenarios
+  prerequisites: Tools/scripts/conditions needed
+  steps: Numbered steps with action + details
+
+optional_fields:
+  monitoring_commands: Status check commands
+  common_issues: Problems with symptom/fix pattern
+  example_deployment: Real-world example with results
+  related_docs: Links to related documentation
+  version_history: Changelog entries
+
+step_structure:
+  pattern: |
+    steps:
+      1_step_name:
+        action: Brief description
+        example: Optional command/code
+        rule: Optional constraint
+        wait: Optional timing
+        verification: Optional confirmation method
+
+common_issues_structure:
+  pattern: |
+    common_issues:
+      issue_name:
+        symptom: What you observe
+        causes: [cause1, cause2]
+        fix: How to resolve
+
+condensed_format:
+  requirements:
+    - Header comment pointing to full version
+    - Preserve all step actions
+    - Collapse examples to inline
+    - Target 60-80% token reduction
+
+validation_checklist:
+  - metadata has all required fields
+  - summary explains purpose clearly
+  - when_to_use lists scenarios
+  - prerequisites complete
+  - steps numbered with action field
+  - common_issues use symptom/fix
+  - Version matches filename

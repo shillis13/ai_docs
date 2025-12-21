@@ -1,0 +1,96 @@
+# Condensed from: protocol_reference_pointers_latest.yml
+# Source: ai_general/docs/30_protocols/protocol_reference_pointers_latest.yml
+# Version: 1.0.0 | Status: active
+
+reference_pointers:
+  purpose: |
+    Transform Claude's 30 native memory slots (6KB total) into an INDEX system
+    referencing unlimited external context, instead of storing content directly.
+
+  constraints:
+    total_slots: 30
+    max_per_slot: 200 chars
+    total_capacity: 6KB
+
+  pointer_format: "<TYPE>:<TARGET> [| <MODIFIER>:<VALUE>]*"
+
+  pointer_types:
+    PATH:
+      purpose: Direct file reference
+      format: "TYPE:relative/path/to/file.yml"
+      resolution: Read via Desktop Commander
+      example: "STARTER:ai_memories/60_knowledge/about_user/identity.yml"
+    QUERY:
+      purpose: Dynamic search against long-term memory
+      format: "QUERY:<search terms> [| modifiers]"
+      resolution: Search ai_memories/ using memory_search tool
+      example: "QUERY:CLI coordination issues | SINCE:14d | LIMIT:5"
+    RECENT:
+      purpose: Retrieve N most recent items from category
+      format: "RECENT:<category> [| modifiers]"
+      categories: [session_summaries, task_completions, decisions, errors]
+      example: "RECENT:session_summaries | COUNT:3"
+
+  load_behaviors:
+    AUTO:
+      description: Load without AI decision at conversation start
+      typical_priority: 1
+      use_for: Identity, core preferences, communication style
+    TOPIC:
+      description: Load when related topic detected in conversation
+      typical_priority: 2
+      use_for: Project context, domain knowledge, tool patterns
+    DEMAND:
+      description: Load only when explicitly needed/referenced
+      typical_priority: 3
+      use_for: Reference material, specs, deep documentation
+
+  destination_file:
+    location: ai_memories/ or ai_general/ hierarchy
+    structure: header (metadata + summary) + content + optional pointers
+
+  workflow:
+    conversation_start:
+      - Claude receives native memory slots
+      - Recognizes pointer format
+      - Loads all PRIORITY:1 + LOAD:AUTO pointers silently
+      - Rich context ready before first response
+    mid_conversation:
+      - User mentions topic matching PRIORITY:2 pointer tags
+      - Claude loads relevant TOPIC pointers
+      - Context expands dynamically
+    on_demand:
+      - Claude needs specific reference info
+      - Explicitly loads PRIORITY:3 pointer
+      - May announce: "Let me check the spec..."
+
+  slot_allocation_guidance:
+    identity_prefs: 3-5
+    current_project: 3-5
+    tool_configs: 2-3
+    reference_material: 5-10
+    reserved: 5-8
+
+  anti_patterns:
+    - storing_content: Don't put facts in slots, put pointers
+    - loading_everything: Lazy load, don't load all upfront
+    - deep_chains: Limit chain depth to 3 (prevent runaway loading)
+    - circular_refs: Track loaded paths to prevent infinite loops
+
+  integration_points:
+    memory_user_edits_tool: CRUD for native memory slots (add/remove/update pointers)
+    desktop_commander: Read destination files (view or read_file for PATH pointers)
+    memory_search: Execute QUERY pointers (search ai_memories/ for relevant chunks)
+
+  success_metrics:
+    - Conversation starts with rich context without user re-explaining
+    - Context grows naturally as topics discussed
+    - Reference material loads only when needed
+    - New Claude instances have same contextual awareness
+
+  related:
+    schema: ../50_schemas/schema_pointer_syntax_latest.yml
+    instructions: ../70_instructions/instr_pointer_loading_latest.yml
+
+  metadata:
+    maintainer: PianoMan

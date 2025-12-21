@@ -1,0 +1,47 @@
+---
+metadata:
+  title: CLI Control System - Complete Documentation
+  version: 1.0.0
+  last_updated: 2025-11-11
+  maintainer: PianoMan
+  status: production_ready
+  location: ~/bin/python/src/ai_utils/cli_controls/
+
+table_of_contents:
+  - section: 1. Overview
+  - section: 2. Critical Concept - Session Names vs PIDs
+  - section: 3. Quick Start
+  - section: 4. File Structure
+  - section: 5. Core Scripts
+  - section: 6. Launch Scripts
+  - section: 7. Utilities
+  - section: 8. Common Patterns
+  - section: 9. Technical Details
+  - section: 10. Requirements
+  - section: 11. Demos
+  - section: 12. Integration
+  - section: 13. Advantages
+  - section: 14. Troubleshooting
+  - section: 15. Next Steps
+
+overview:
+  summary: Control Claude CLI and Codex CLI sessions programmatically
+  features:
+    - Non-blocking operation
+    - Persistent context
+    - Full screen monitoring
+    - Reliable TUI submission
+
+session_names_vs_pids:
+  concept: This system uses SESSION NAMES, NOT process IDs (PIDs)
+  why_session_names:
+    - iTerm2 tabs identified by names not PIDs
+    - AppleScript finds tabs by name matching
+    - Session survives even if underlying process changes
+    - More stable than PID-based tracking
+
+requirements:
+  os: macOS (System Events is macOS-specific)
+  terminal: iTerm2 (scripts use iTerm2 AppleScript API)
+  claude_cli: /usr/local/bin/claude
+  codex_cli: accessible as codex command

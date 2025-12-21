@@ -1,0 +1,128 @@
+metadata:
+  title: "Codex MCP Knowledge Digest"
+  version: "1.0"
+  type: "knowledge_digest"
+  topic: "Codex MCP configuration, usage patterns, and integration"
+  status: "active"
+  created: "2025-11-09"
+  last_updated: "2025-11-09"
+  source_file: "Consolidated from CODEX_REMINDER_ALL_AIS.md and know_mcp_config_and_automaton_v1.1.digest.md"
+
+table_of_contents:
+  - section: "Overview and Purpose"
+    key: "overview_and_purpose"
+  - section: "Configuration"
+    key: "configuration"
+  - section: "Usage Patterns and Syntax"
+    key: "usage_patterns_and_syntax"
+  - section: "Capabilities and Features"
+    key: "capabilities_and_features"
+  - section: "Integration Points"
+    key: "integration_points"
+  - section: "Best Practices and Patterns"
+    key: "best_practices_and_patterns"
+  - section: "Known Issues and Solutions"
+    key: "known_issues_and_solutions"
+  - section: "Examples"
+    key: "examples"
+
+sections:
+  overview_and_purpose:
+    heading: "Overview and Purpose"
+    content: |
+      Codex MCP is the multi-connector control plane that gives every assistant (Desktop Claude, CLI workers, ChatGPT instances, etc.) access to the host automation surface with far larger per-task context than individual agents can carry.
+      Calling Codex first preserves assistant context while delegating deep analysis, file inspection, and automation-heavy tasks to an always-fresh MCP session that can span multiple specialized servers.
+      Strategic value:
+      - Preserve limited chat or CLI context by offloading heavy analysis to Codex MCP before acting.
+      - Provide a single entry point into filesystem, desktop automation, browser automation, PDF tooling, and documentation lookup connectors.
+      - Keep task execution auditable through file-based coordination artifacts and Codex queue workflows.
+  configuration:
+    heading: "Configuration"
+    content: |
+      Core requirements:
+      - Maintain a clean `claude_desktop_config.json` with the known-good five server entries (filesystem, desktop-commander, chrome-control, pdf-tools, context7) to avoid cosmetic connector duplication in the UI.
+      - Ensure chrome-control aware tasks have Chrome launched with `--remote-debugging-port=9222` so content-layer methods can bind to CDP.
+      Full-auto flag:
+      - Codex MCP must be launched with the `--full-auto` flag to gain workspace-write filesystem access and the on-failure approval policy; without it, Codex is restricted to read-only operations.
+      - The `claude_desktop_config.json` entry must list the command arguments in the order `["--full-auto", "mcp-server"]`; reversing the order prevents Codex from acquiring write access.
+      Desktop connector health:
+      - UI-level duplicate connector names are purely visual artifacts; verify the config file instead of removing entries when duplicates appear.
+      - Functional overlap between filesystem and desktop-commander is intentional for redundancy—keep both online for resilience.
+      File structure dependencies:
+      - Desktop prompt injection expects the `~/Documents/AI/Claude/claude_workspace/06_announcements/to_desktop_claude/` tree with a `sent/` archive for processed `.prompt.txt` files.
+      - CLI coordination relies on task dropboxes under `~/Documents/AI/ai_root/ai_comms/codex_cli/` for Codex queueing.
+  usage_patterns_and_syntax:
+    heading: "Usage Patterns and Syntax"
+    content: |
+      Desktop and web agents:
+      - Wrap heavy analysis requests with `codex("<task description>")` before doing the work yourself to leverage Codex context buffers.
+      CLI workers:
+      - Copy task manifests into `ai_comms/codex_cli/to_execute/` so Codex MCP picks them up.
+      - Chain Codex MCP invocations within CLI workflows when bulk file edits or repo-wide analysis is required.
+      File-based prompts:
+      - Create `*.prompt.txt` files in the Desktop Claude queue to trigger MCP-backed AppleScript automation loops that type prompts directly into the active chat.
+      Message sender interface:
+      - Use the Puppeteer-based helper `node bin/send-message.js --ai <claude|chatgpt> --message "..." [--url <chat-url>] [--wait] [--timeout <ms>]` when MCP tasks must drive browser UIs.
+      Cadence and approval:
+      - Expect the workspace-write sandbox and on-failure approval policy when the `--full-auto` flag is honored; otherwise plan around read-only behavior.
+  capabilities_and_features:
+    heading: "Capabilities and Features"
+    content: |
+      Connectors:
+      - filesystem: Run-of-the-mill MCP filesystem CRUD operations across the workstation.
+      - desktop_commander: Process supervision, REPL control, and expanded filesystem access for recovery scenarios.
+      - chrome_control: Browser tab lifecycle management via macOS APIs with optional CDP bridge for content inspection and JavaScript execution.
+      - pdf_tools: PDF manipulation, including form operations, tied into Codex MCP context.
+      - context7: Embedded library/documentation lookup to resolve API questions inline.
+      Automation bridges:
+      - Puppeteer-based message sender supports Chrome debugging sessions on port 9222, response detection, and chat filtering so Codex MCP can converse with Claude or ChatGPT pages hands-free.
+      - Desktop prompt sender script leverages AppleScript to inject Codex MCP prompts into Desktop Claude asynchronously using file queues, cron triggers, and idle detection heuristics.
+      Coordination protocols:
+      - File-based broadcasts/directories enable Codex MCP, Desktop Claude, and CLI workers to exchange tasks and responses without live IPC.
+      - Hybrid workflows mix Puppeteer (web), AppleScript (desktop), and filesystem queues (persisted requests) so Codex can operate across contexts.
+  integration_points:
+    heading: "Integration Points"
+    content: |
+      Desktop Claude:
+      - MCP connectors surface inside Claude Desktop; cosmetic duplicates do not affect availability, but the app must stay running for AppleScript prompt injections and Codex-triggered actions.
+      - Claude Desktop relies on `.prompt.txt` triggers plus cron-driven sender scripts to let Codex MCP or external systems prompt the active chat.
+      CLI stack:
+      - CLI agents deposit task files for Codex MCP, then consume Codex outputs from coordination directories; they can also invoke Codex MCP inline for repo-wide work.
+      - Codex MCP complements the CLI-based chat orchestrator by calling the Puppeteer message sender to drive ChatGPT or Claude web UIs when tasks demand it.
+      ChatGPT and other agents:
+      - The same MCP-backed message sender can operate ChatGPT sessions, enabling Codex to exchange data between Claude Desktop, ChatGPT, and additional agents like Gemini or Grok via shared protocols.
+  best_practices_and_patterns:
+    heading: "Best Practices and Patterns"
+    content: |
+      - Always verify capabilities empirically (e.g., test `list_tabs` vs `execute_javascript`) before assuming connector limitations; error text may mislead.
+      - Reuse proven orchestration components (selectors, response detection logic, CLI wrappers) instead of rebuilding bespoke Codex MCP tooling.
+      - Prefer file-based coordination queues for async durability, crash safety, and observability when Codex MCP has to sync with other agents.
+      - Choose hybrid automation layers deliberately: Puppeteer for DOM-reliable work, AppleScript for desktop-only paths, CLI for process control, and Codex MCP to stitch them together.
+      - Keep Chrome debugging instances alive when any Codex MCP task depends on browser automation.
+  known_issues_and_solutions:
+    heading: "Known Issues and Solutions"
+    content: |
+      - Issue: Claude Desktop shows duplicate MCP connectors with inconsistent casing.
+        Impact: Causes confusion about configuration health.
+        Solution: Accept as UI artifact; confirm uniqueness directly in `claude_desktop_config.json` and leave the five canonical entries untouched.
+      - Issue: Chrome Control content commands (`execute_javascript`, `get_page_content`) fail without CDP.
+        Impact: Codex MCP cannot read/modify tab content even though tab operations succeed.
+        Solution: Launch Chrome with `--remote-debugging-port=9222` and prefer Puppeteer for reliable DOM access.
+      - Issue: Codex MCP launched without `--full-auto` defaults to read-only sandbox and stricter approvals.
+        Impact: Tasks needing filesystem writes silently fail or require manual intervention.
+        Solution: Ensure argument order `["--full-auto", "mcp-server"]` in `claude_desktop_config.json`.
+      - Issue: AppleScript automation cannot easily detect Claude Desktop response completion.
+        Impact: Prompt sender risks typing over active responses or submitting too early.
+        Solution: Use wait-for-idle heuristics (button counts), add delays, or fall back to web interfaces for read/verify loops.
+  examples:
+    heading: "Examples"
+    content: |
+      codex_invocation:
+        codex("Audit the repo for dangling feature flags and summarize")
+      cli_delegate:
+        cp task.md ~/Documents/AI/ai_root/ai_comms/codex_cli/to_execute/
+      puppeteer_sender:
+        node bin/send-message.js --ai chatgpt --message "Run the test suite and report" --wait
+      desktop_prompt_file:
+        echo "Review the latest test results" > \
+          ~/Documents/AI/Claude/claude_workspace/06_announcements/to_desktop_claude/review_001.prompt.txt

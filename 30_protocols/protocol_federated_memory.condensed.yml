@@ -1,0 +1,17 @@
+# Federated AI Memory Protocol (condensed)
+# Full: protocol_federated_memory_v1.yml
+
+principles: [write_immediate, own_domain, read_freely, write_never, curate_async]
+
+participants:
+  claude_desktop: {slots: 03-30, role: orchestrator}
+  claude_cli: {agents: [librarian, dev-lead, custodian, ops], slots_each: 10}
+  codex_cli: {slots: 01-10, role: sync_execution}
+
+slot_format: "YAML list, entries: [{ts: ISO, content: text, reads: N}]"
+
+cli_persistence: "Named sessions (-n flag) preserve context across resumes"
+
+cross_reference: "Read any AI's manifest → load relevant slots. Never write others."
+
+logging: "Append immediately as observations occur. Never batch/checkpoint."

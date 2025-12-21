@@ -1,0 +1,49 @@
+---
+# CLI Agent Operations - Condensed
+wrapper: ~/bin/ai/cli/claude_cli.sh
+agents_config: ~/.claude/agents.json
+
+agents:
+  dev-lead: Curate todos, create Task files, code review
+  librarian: Process chat exports (10→20→30→40), maintain summaries
+  custodian: Directory structure, *_latest symlinks, naming conventions
+  ops: Execute from to_execute/, write responses
+
+usage:
+  interactive: claude_cli.sh -A <agent> -a
+  with_prompt: claude_cli.sh -A <agent> "prompt"
+  background: claude_cli.sh -A <agent> -t "prompt"
+  continue: claude_cli.sh -c "prompt"
+  resume_id: claude_cli.sh -r <session_id> "prompt"
+  resume_name: claude_cli.sh -n <name> "prompt"
+  task_file: claude_cli.sh task <path_to_task.md>
+
+flags:
+  -t, --tmux: Background tmux session
+  -a, --auto-approve: Skip prompts
+  -A, --agent: Load agent persona
+  -c, --continue: Continue last session
+  -r, --resume: Resume by ID
+  -n, --named: Resume by name
+  --no-mcp: Run without MCP
+
+queries:
+  list: claude_cli.sh list <project_dir> [limit]
+  latest: claude_cli.sh latest <project_dir>
+  info: claude_cli.sh info <session_id>
+  registry: claude_cli.sh registry [--verbose]
+  register: claude_cli.sh register <name> <session_id> <project_dir> [description]
+
+task_file_front_matter:  # YAML in task .md files
+  session_mode: new | continue | auto
+  project_dir: /path/to/working/directory
+
+# Codex CLI (OpenAI)
+codex_cli:
+  wrapper: ~/bin/ai/cli/codex_cli.sh
+  when: Code debugging, sandbox tasks, autonomous multi-step coding
+  usage:
+    interactive: codex_cli.sh -i
+    prompt: codex_cli.sh "prompt"
+    background: codex_cli.sh -t -s <session> -p -a "prompt"
+  flags: -t (tmux), -s (session), -w (workdir), -p (print), -a (auto), -i (interactive)

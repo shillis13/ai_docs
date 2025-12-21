@@ -1,0 +1,217 @@
+metadata:
+  title: "File Conventions v3.0"
+  version: "3.0.0"
+  date: "2025-12-11"
+  status: "active"
+  replaces: "v2.0"
+  maintainer: "PianoMan"
+
+purpose: |
+  Establish Markdown as canonical source format for documentation.
+  Define the generation pipeline: md → yml → condensed.
+  Document directory structure patterns for navigation.
+
+document_format_pipeline:
+  canonical_format_hierarchy: |
+    md (canonical)     # Human writes and reviews
+      ↓ script
+    yml (structured)   # Machine-parseable, schema-validated
+      ↓ AI
+    condensed          # Token-efficient for AI consumption
+  file_relationships:
+    - file: "`doc_v3.0.md`"
+      role: "Canonical source"
+      created_by: "Human"
+    - file: "`doc_v3.0.yml`"
+      role: "Structured version"
+      created_by: "Script (doc_converter.py)"
+    - file: "`doc_v3.0.condensed.yml`"
+      role: "Token-optimized"
+      created_by: "AI task"
+    - file: "`doc_latest.yml`"
+      role: "Symlink"
+      created_by: "Points to condensed if exists, else yml"
+    - file: "`doc.condensed.yml`"
+      role: "Symlink"
+      created_by: "Points to latest condensed version"
+  latest_symlink_resolution: |
+    _latest → condensed (if exists)
+           → yml (if no condensed)
+           → md (if no yml)
+  version_directory_structure: |
+    docs/30_protocols/
+    ├── protocol_taskCoordination_latest.yml    # Symlink → versions/...condensed.yml
+    ├── protocol_taskCoordination.condensed.yml # Symlink → versions/...condensed.yml
+    └── versions/
+        ├── protocol_taskCoordination_v5.0.yml
+        ├── protocol_taskCoordination_v5.0.condensed.yml
+        ├── protocol_taskCoordination_v6.0.md        # Canonical
+        ├── protocol_taskCoordination_v6.0.yml       # Generated
+        └── protocol_taskCoordination_v6.0.condensed.yml  # Generated
+  when_to_use_each_format:
+    - format: "md"
+      read_when: "Human reviewing, editing, approving"
+      write_when: "Creating/updating documentation"
+    - format: "yml"
+      read_when: "Programmatic access, validation"
+      write_when: "Never (generated)"
+    - format: "condensed"
+      read_when: "AI consumption, context efficiency"
+      write_when: "Never (generated)"
+
+markdown_structure_convention:
+  guidance: |
+    For md→yml conversion to work predictably, use this structure:
+  sample_structure: |
+    ```markdown
+    # Document Title vX.Y
+
+    ## Metadata
+    - **version:** X.Y.Z
+    - **date:** YYYY-MM-DD
+    - **status:** active|draft|deprecated
+    - **field:** value
+
+    ## Section Name
+
+    Content as paragraphs or lists.
+
+    ### Subsection
+
+    More content.
+
+    ## Another Section
+
+    | Column1 | Column2 |
+    |---------|---------|
+    | data    | data    |
+    ```
+  mapping_rules:
+    - markdown: "`# Title`"
+      yaml: "`title:` (root)"
+    - markdown: "`## Section`"
+      yaml: "Top-level key"
+    - markdown: "`### Subsection`"
+      yaml: "Nested key"
+    - markdown: "`- **key:** value`"
+      yaml: "Key-value in metadata"
+    - markdown: "Bullet list"
+      yaml: "Array"
+    - markdown: "Table"
+      yaml: "Array of objects or nested structure"
+    - markdown: "Code block"
+      yaml: "Literal block scalar"
+    - markdown: "Paragraph"
+      yaml: "String value"
+
+directory_structure_conventions:
+  numeric_prefixes:
+    - range: "00-09"
+      purpose: "Temporary (inbox, scratch)"
+    - range: "10-19"
+      purpose: "Architecture, foundational"
+    - range: "20-29"
+      purpose: "Registries, indexes"
+    - range: "30-39"
+      purpose: "Protocols, patterns"
+    - range: "40-49"
+      purpose: "Specifications"
+    - range: "50-59"
+      purpose: "Schemas"
+    - range: "60-69"
+      purpose: "Playbooks, guides"
+    - range: "70-79"
+      purpose: "Instructions (explicit rules)"
+    - range: "80-89"
+      purpose: "Templates (instructional by example)"
+    - range: "90-99"
+      purpose: "Drafts, archives"
+  file_prefixes:
+    - prefix: "`instr_`"
+      purpose: "Instruction files"
+    - prefix: "`spec_`"
+      purpose: "Specifications"
+    - prefix: "`protocol_`"
+      purpose: "Protocol definitions"
+    - prefix: "`schema_`"
+      purpose: "Data schemas"
+    - prefix: "`req_NNNN_`"
+      purpose: "CLI coordination requests"
+  version_suffixes:
+    - suffix: "_vX.Y.md"
+      description: "Version number"
+    - suffix: "_latest.yml"
+      description: "Symlink to current version"
+    - suffix: ".condensed.yml"
+      description: "Token-optimized version"
+    - suffix: "_draft.md"
+      description: "Work in progress"
+
+context_optimization:
+  size_guidelines:
+    - size: "<5KB"
+      recommendation: "md acceptable for auto-load"
+    - size: "5-15KB"
+      recommendation: "Use condensed for AI consumption"
+    - size: ">15KB"
+      recommendation: "Condensed required, consider splitting"
+  loading_priority:
+    - "Check for `.condensed.yml` first (lowest tokens)"
+    - "Fall back to `.yml` (structured, moderate tokens)"
+    - "Use `.md` for human review or if others unavailable"
+
+tool_selection:
+  doc_converter_py:
+    location: "~/bin/all_languages/python/src/ai_utils/chat_processing/doc_converter.py"
+    functions:
+      - "md → yml conversion"
+      - "Validates against schema conventions"
+      - "Preserves structure and metadata"
+  desktop_commander:
+    capabilities:
+      - "File operations (read, write, move)"
+      - "Search (content and filename)"
+      - "Process management"
+
+migration_from_v2_0:
+  summary: |
+    v2.0 said YAML was canonical. v3.0 flips this:
+  differences:
+    - aspect: "Canonical"
+      v2_0: "yml"
+      v3_0: "md"
+    - aspect: "Generated"
+      v2_0: "md (pretty-print)"
+      v3_0: "yml, condensed"
+    - aspect: "Human edits"
+      v2_0: "yml"
+      v3_0: "md"
+    - aspect: "_latest points to"
+      v2_0: "yml"
+      v3_0: "condensed → yml → md"
+  migration_steps:
+    - "For new docs: Write md first, generate yml"
+    - "For existing docs: Keep yml as-is OR regenerate md as new canonical"
+    - "Update symlinks to point to condensed versions"
+
+quick_reference:
+  decision_tree: |
+    Creating/editing documentation?
+    ├─ YES → Write/edit .md file
+    │        Run doc_converter.py to generate .yml
+    │        Request AI condensed version if needed
+    │        Update _latest symlink
+    └─ NO → Reading documentation?
+            ├─ As AI → Load .condensed.yml
+            ├─ As human → Read .md
+            └─ Programmatically → Parse .yml
+  common_locations: |
+    ~/Documents/AI/ai_root/
+    ├── ai_general/docs/           # Shared documentation
+    │   ├── 10_architecture/
+    │   ├── 30_protocols/
+    │   ├── 50_schemas/
+    │   └── 70_instructions/
+    ├── ai_comms/                  # Coordination
+    │   └── claude_cli/tasks/
+    └── ai_memories/               # Memory processing

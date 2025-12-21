@@ -1,0 +1,36 @@
+# Source: instr_environment_overview_latest.yml (v2.0.0)
+
+platforms:
+  mac_desktop_app: filesystem read/write to approved dirs, bash (excluding git)
+  web_ui: no filesystem - rely on uploads/summaries
+  detection: "in the app" = desktop connector active
+
+filesystem:
+  writable_roots:
+    - /Users/shawnhillis/bin
+    - /Users/shawnhillis/Documents/AI/Claude
+  tools: rg, sed, small scripts (NOT git)
+
+workspace:
+  primary_root: /Users/shawnhillis/Documents/AI/ai_root/
+  key_folders:
+    ai_general/apps: applications (chat orchestration)
+    ai_general/script: primary scripts (~/bin/ai symlinks here)
+    ai_general/todo: documented backlog
+    ai_comm: comms and coordination across workers
+    ai_memories: histories (40_), knowledge (60_), decisions (60_)
+    ai_claude: working data/workspace for Claude
+
+communication:
+  style: directness, brutal honesty, initiative
+  behavior: skip fluff, no repeating captured facts, push back when better approach exists
+  uncertainty: say so plainly, propose verification work
+  fact_checking: use tools instead of speculating
+
+do:
+  - Use connector commands for fact gathering, editing, artifacts
+  - Update memories proactively with reusable knowledge
+dont:
+  - Claim missing access without checking allowed directories
+  - Force users into manual conversions/repetitive uploads
+  - Re-discover foundational workspace facts (should be in digests)

@@ -1,0 +1,170 @@
+---
+metadata:
+  title: Task Coordination Protocol
+  version: "7.0"
+  date: 2025-12-13
+  status: active
+  supersedes: "6.0 (2025-12-11)"
+  source: protocol_taskCoordination_v7.0.md
+  summary: >
+    Directory-first coordination model with explicit milestone vs completion
+    files, nested subtasks, and symlinks for child result discovery.
+
+changes_from_v6:
+  - id: response_file_types
+    description: Separate milestone reporting from final completion.
+    patterns:
+      milestone: "{task}.$$.response.md"
+      completion: "{task}.$$.completion.md"
+    rationale: Clearer monitoring semantics for orchestrators watching children.
+
+  - id: subtask_nesting
+    description: Tasks may contain nested subtasks inside the parent directory.
+    naming:
+      subtask: "{parent}_t{N}.md"
+      nested: "{parent}_t{N}.{M}.md"
+    example: |
+      orch_o1_task/
+      ├── orch_o1_task.$$.md
+      ├── orch_o1_task_t1.md
+      ├── orch_o1_task_t2.md
+      └── artifacts/
+
+  - id: symlinks_to_children
+    description: Parents create symlinks that point to completed child task directories.
+    benefit:
+      - Inspect child outputs without knowing worker locations
+      - Preserve delegation audit trail
+      - Keep full task tree visible from parent directory
+    example: |
+      orch_o1_task/
+      ├── orch_o1_task.$$.md
+      ├── orch_o1_task_t1@ -> ../../../claude_cli/Tasks/completed/orch_o1_task_t1/
+      └── orch_o1_task_t2@ -> ../../../codex_cli/Tasks/completed/orch_o1_task_t2/
+
+  - id: claim_format
+    description: Directory prefix remains authoritative for claimed work.
+    prefix: "claimed_{timestamp}_{pid}_"
+    note: "$$ in filename is secondary marker; prefix determines claimed status."
+
+directories:
+  staged:
+    purpose: Pre-pipeline holding (not yet released)
+    contents: Task directories, bundle directories
+  to_execute:
+    purpose: Ready for workers to claim
+    contents: Task directories or bundles with claimable phases
+  in_progress:
+    purpose: Active work
+    contents: Task directories with claimed_ prefix
+    claim_mechanism: "mv to add claimed_{timestamp}_{pid}_ prefix"
+  completed:
+    purpose: Finished work
+    contents: Task directories with claim prefix removed
+  error:
+    purpose: Failed tasks
+    contents: Task directories with error reports
+
+lifecycle:
+  flow: [staged, to_execute, in_progress, completed, error]
+  transitions:
+    claim: >
+      Worker moves directory from to_execute/ to in_progress/ with
+      claimed_{timestamp}_{pid}_ prefix and renames task file to {task}.$$.md.
+    complete: >
+      Write {task}.$$.completion.md in claimed dir, then move to completed/
+      stripping the claim prefix.
+    error: >
+      On failure, move task dir to error/ with error report while retaining claim prefix.
+  commands:
+    claim: |
+      cd to_execute/
+      TASK="orch_o1_task"
+      TIMESTAMP=$(date +%Y%m%dT%H%M%S)
+      PID=$$
+      mv "$TASK" "../in_progress/claimed_${TIMESTAMP}_${PID}_${TASK}"
+      cd "../in_progress/claimed_${TIMESTAMP}_${PID}_${TASK}"
+      mv "${TASK}.md" "${TASK}.$$.md"
+    complete: |
+      CLAIMED_DIR="claimed_20251213T143022_12345_orch_o1_task"
+      TASK="orch_o1_task"
+      echo "completed: $(date -Iseconds)" > "${TASK}.$$.completion.md"
+      mv "$CLAIMED_DIR" "../completed/${TASK}"
+    milestone: |
+      echo "milestone: checkpoint-1" > "${TASK}.$$.response.md"
+      echo "status: awaiting_input" >> "${TASK}.$$.response.md"
+
+orchestration:
+  hierarchy_example: |
+    Claude Desktop (top orchestrator)
+    ├── Task: orch_o1_task
+    │   ├── SubTask: orch_o1_task_t1 → claude_cli [clA]
+    │   │   ├── SubTask: orch_o1_task_t1.1 → claude_cli [clB]
+    │   │   └── SubTask: orch_o1_task_t1.2 → claude_cli [clC]
+    │   └── SubTask: orch_o1_task_t2 → codex_cli [coA]
+  orchestrator_responsibilities:
+    - Decompose tasks into subtasks
+    - Distribute subtasks to worker queues (to_execute/)
+    - Monitor for .response.md milestones and .completion.md finals
+    - Coordinate inter-task dependencies
+    - Aggregate results via symlinks to completed child dirs
+    - Complete parent task after children finish
+  worker_responsibilities:
+    - Claim tasks from to_execute/
+    - Execute and optionally decompose/delegate
+    - Report milestones via .response.md
+    - Complete via .completion.md then move to completed/
+    - Notify parent (implementation-specific)
+  delegation_flow: |
+    Orchestrator → to_execute/task/
+    Worker claims → in_progress/claimed_*_task/
+    Worker writes .response.md → orchestrator reviews
+    Worker writes .completion.md → move to completed/task/
+    Orchestrator creates symlink child@ → completed/child_task/
+  symlink_pattern:
+    naming: "{subtask}@"
+    target: "relative path to completed/{subtask}/"
+    when: "After child task completes and before parent closes"
+
+file_formats:
+  task_file:
+    names: ["{task}.md", "{task}.$$.md"]
+    required_fields: [title, type, priority, posted, description, expected_response]
+    optional_fields: [target_worker, session, entry_criteria, exit_criteria, subtasks]
+    schema_ref: ai_general/docs/50_schemas/schema_taskFile_latest.yml
+  response_file:
+    name: "{task}.$$.response.md"
+    schema: |
+      milestone: "checkpoint-name"
+      status: "awaiting_input|blocked|continuing"
+      summary: "What was accomplished"
+      needs: "What is needed to continue (if any)"
+      timestamp: "ISO timestamp"
+  completion_file:
+    name: "{task}.$$.completion.md"
+    schema: |
+      completed: "ISO timestamp"
+      status: "success|partial|failed"
+      summary: "Final outcome"
+      artifacts:
+        - path: "relative/path/to/output"
+          description: "What this artifact is"
+
+migration_from_v6:
+  - Rename response.md used as finals to .completion.md
+  - Directory model remains unchanged
+  - Add symlinks to completed child task directories for orchestrated tasks
+
+version_history:
+  - version: "7.0"
+    date: 2025-12-13
+    changes: "Response/completion distinction, subtask nesting, symlinks"
+  - version: "6.0"
+    date: 2025-12-11
+    changes: "Directory-always model, bundle support"
+  - version: "5.0"
+    date: 2025-11-23
+    changes: "Directory-based with flat-to-folder transition"
+  - version: "4.0"
+    date: 2025-11-02
+    changes: "Original directory-based coordination"

@@ -1,0 +1,52 @@
+metadata:
+  title: Claude Desktop Instructions Manifest
+  version: 2025.12.10
+  generated: '2025-12-10T18:34:48.469733'
+  generator: generate_project_manifest.py
+  root_path: /Users/shawnhillis/Documents/AI/ai_root
+  source_dirs:
+  - ai_general/docs/70_instructions/
+  - ai_general/docs/70_instructions/claude/
+  note: 'AUTO-GENERATED from directory scan.
+
+    Priority read from file metadata.load_priority (default: demand).
+
+    Run: python ai_general/scripts/generate_project_manifest.py'
+load_sequence:
+  auto:
+    description: Load at conversation start - core operational docs
+    files:
+    - pointer: REF:ai_general/docs/70_instructions/instr_operating_principles.condensed.yml
+      tokens: ~1037
+    - pointer: REF:ai_general/docs/70_instructions/claude/instr_claude_context_conservations.condensed.yml
+      tokens: ~742
+    - pointer: REF:ai_general/docs/70_instructions/claude/instr_environment_overview.condensed.yml
+      tokens: ~349
+  topic:
+    description: Load when related topic arises - architecture and active projects
+    files:
+    - pointer: REF:ai_general/docs/70_instructions/claude/claude_context_quick_notes.md
+      tokens: ~219
+    - pointer: REF:ai_general/docs/70_instructions/claude/instr_claude_specific.condensed.yml
+      tokens: ~54
+    - pointer: REF:ai_general/docs/70_instructions/claude/instr_claude_use_of_ai_agents.condensed.yml
+      tokens: ~808
+    - pointer: REF:ai_general/docs/70_instructions/claude/instr_memory_slot_protocol.condensed.yml
+      tokens: ~482
+    - pointer: REF:ai_general/docs/70_instructions/claude/instr_pointer_loading.condensed.yml
+      tokens: ~724
+    - pointer: REF:ai_general/docs/70_instructions/claude/know_codex_mcp.condensed.yml
+      tokens: ~941
+    - pointer: REF:ai_general/docs/70_instructions/claude/user_settings_personal_preferences_field.md
+      tokens: ~1446
+    - pointer: REF:ai_general/docs/70_instructions/instr_development.condensed.yml
+      tokens: ~771
+    - pointer: REF:ai_general/docs/70_instructions/instr_file_conventions.condensed.yml
+      tokens: ~1126
+    - pointer: REF:ai_general/docs/70_instructions/instr_writing.condensed.yml
+      tokens: ~1150
+  demand:
+    description: Load only when explicitly needed - specs, schemas, playbooks
+    files:
+    - pointer: REF:ai_general/docs/70_instructions/_README_instructions.condensed.yml
+      tokens: ~471

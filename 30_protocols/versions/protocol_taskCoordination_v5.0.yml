@@ -1,0 +1,779 @@
+# Task Coordination Protocol Specification v5.0
+
+definitions:
+  components_and_roles:
+    ai_component: "An entity that participates in coordination: User, Web UI, AI app (Claude Desktop), agent (Claude CLI, Codex CLI), or MCP server"
+    roles:
+      prompter: "Component that directly causes a Prompt to be given to a Worker (e.g., User, Claude Desktop)"
+      delegator: "Component that delegates work via Tasks (e.g., User, Claude Desktop, Claude CLI)"
+      worker: "Component that executes Tasks or Prompts independently (e.g., Claude Desktop, Claude CLI, Codex CLI)"
+      orchestrator: "Component that launches, directs, and monitors Workers (e.g., User, Claude Desktop, Claude CLI)"
+    role_notes:
+      - "Components may hold multiple roles simultaneously"
+      - "Roles may be held briefly or persistently"
+      - "Role transitions occur naturally during workflow"
+  
+  artifacts_and_structures:
+    prompt: "Direct instruction from Prompter to Worker, delivered via CLI parameter, direct input, or injection"
+    task: "Structured instruction set defining work to be executed, stored as file in coordination system"
+    task_discrete: "Atomic task not intended to be subdivided or delegated"
+    task_targeted: "Task assigned to specific Worker instance"
+    orchestration_plan: "Ordered set of Tasks with dependencies, entry/exit criteria, and Worker assignments. Scope: single-task (crawl) to multi-phase (run)"
+    response: "Feedback from Worker containing results, work products, or status updates"
+    notification: "Alert from Worker to Orchestrator about state changes"
+    instant_message: "Append-only bidirectional communication within task context"
+
+metadata:
+  name: Task Coordination Protocol
+  version: 5.0.0
+  date: 2025-11-23
+  status: active
+  replaces: spec_cli_coordination_protocol_v1.4
+  scope_stage: crawl
+  description: Directory-based task coordination system for CLI instances
+  applies_to:
+    - Claude CLI
+    - Codex CLI
+
+architecture:
+  type: directory-based
+  location_pattern: "~/.{cli}/coordination → ~/Documents/AI/ai_comms/{cli}_cli/"
+  state_transitions:
+    - to_execute → in_progress → completed
+    - to_execute → in_progress → error
+    - to_execute → in_progress → cancelled
+
+directory_structure:
+  coordination_root: string           # ~/.claude/coordination or ~/.codex/coordination
+  directories:
+    staged:
+      purpose: "Pre-pipeline holding area for tasks ready from Delegator but not yet released to pipeline"
+      contents: "Task definition files (*.md)"
+      file_pattern: "req_XXXX_slug.md"
+      lifecycle: "Delegator creates here, Orchestrator moves to to_execute when ready"
+      scope_stage: crawl
+    to_execute:
+      purpose: New tasks from Desktop
+      contents: Task definition files (*.md)
+      file_pattern: req_XXXX_slug.md
+    
+    in_progress:
+      purpose: Active work in task folders
+      contents: Task folders with responses
+      folder_pattern: req_XXXX_slug/
+      folder_contents:
+        - req_XXXX_slug.md              # Original task
+        - response_NNN_cli_PID.md       # CLI responses (numbered)
+        - followup_NNN.md               # Desktop additions (optional)
+      claim_mechanism:
+        prefix_pattern: "claimed_{timestamp}_{pid}_"
+        timestamp_format: "YYYYMMDD_HHMMSS"
+        example: "claimed_20251123_153000_12345_req_1001_task/"
+        purpose: "Prevents race conditions when multiple Workers check inbox"
+        stale_detection: "Claims older than 1 hour without progress may be considered abandoned"
+        scope_stage: crawl
+    
+    completed:
+      purpose: Finished tasks with full history
+      contents: Task folders (same structure as in_progress)
+      retention: permanent
+    
+    error:
+      purpose: Failed tasks with error reports
+      contents: Task folders plus error_cli_PID.md
+      retention: until resolved
+    
+    cancelled:
+      purpose: Cancelled tasks
+      contents: Task folders
+      retention: archival
+    
+    logs:
+      purpose: System-level logs
+      contents: Log files from coordination system
+
+instant_messaging:
+  location: "coordination/instant_messaging/"
+  purpose: "Bidirectional async communication between Orchestrator and Worker during task execution"
+  scope_stage: crawl
+  
+  directories:
+    active:
+      purpose: "Current IM threads for in-progress tasks"
+      structure: "One folder per task matching task ID"
+    archive:
+      purpose: "Completed IM threads"
+      retention: "Moved here when task completes"
+  
+  file_pattern:
+    orchestrator_to_worker: "o2w_{timestamp}.md"
+    worker_to_orchestrator: "w2o_{timestamp}.md"
+  
+  usage:
+    non_blocking: "Progress updates, suggestions, acknowledgements"
+    blocking: "Use Prompt injection for urgent interrupts (ESC+ESC for CLI)"
+  
+  worker_responsibility: "Check IM before marking task complete"
+  orchestrator_responsibility: "Monitor IM, respond promptly, ensure Worker not blocked"
+
+task_selection:
+  scope_stage: crawl
+  
+  methods:
+    targeted:
+      description: "Task specifies Worker instance by PID or type"
+      field: "target_worker in task file"
+    
+    first_available:
+      description: "Oldest task by timestamp, highest priority wins ties"
+      default: true
+    
+    filtered:
+      description: "Apply criteria from Prompt or Instructions"
+      scope_stage: walk
+    
+    workers_choice:
+      description: "Worker selects from filtered list"
+      scope_stage: run
+
+  claim_workflow:
+    1: "Worker scans to_execute/ or staged/ as directed"
+    2: "Worker adds claim prefix to task folder"
+    3: "Worker requests approval (unless auto-approve set)"
+    4: "On approval, move to in_progress/"
+    5: "On rejection, remove claim prefix"
+
+communication_patterns:
+  scope_stage: crawl
+  
+  worker_outgoing:
+    invitational:
+      description: "Input welcomed but not required"
+      mechanism: "@Orchestrator: tag in output + IM"
+      example: "Made a design choice here, let me know if you want changes"
+    
+    progress_report:
+      description: "Status update, acknowledgement expected"
+      mechanism: "IM message with timestamp"
+      frequency: "At meaningful progress points (inch-stones)"
+    
+    non_blocking_request:
+      description: "Input needed but work continues on other parts"
+      mechanism: "IM message flagged as request"
+    
+    blocking_request:
+      description: "Cannot continue without input"
+      mechanism: "Prompt to Orchestrator (unless prohibited)"
+      fallback: "IM with BLOCKED flag"
+  
+  orchestrator_responsibilities:
+    - "Monitor IM channel"
+    - "Acknowledge Worker messages"
+    - "Detect and resolve Worker blockage"
+    - "Use Prompt injection for urgent course corrections"
+
+phase_summary:
+  - phase: 0
+    name: "Definitions"
+    actor: "N/A"
+    action: "Establish terminology"
+    artifacts: "None (reference only)"
+  
+  - phase: 1
+    name: "Task Creation"
+    actor: "Delegator"
+    action: "Creates Task in staged/ or to_execute/"
+    artifacts: "task.md, task folder"
+  
+  - phase: 2
+    name: "Worker Initiation"
+    actor: "Orchestrator"
+    action: "Launches or selects Worker"
+    artifacts: "Worker instance, startup Prompt"
+  
+  - phase: 3
+    name: "Task Selection"
+    actor: "Worker"
+    action: "Claims task with prefix"
+    artifacts: "Claim prefix on folder"
+  
+  - phase: 4
+    name: "Task Orchestration"
+    actor: "Worker-as-Orchestrator"
+    action: "Subdivides if needed, creates plan"
+    artifacts: "Orchestration plan (Walk stage)"
+    scope_stage: walk
+  
+  - phase: 5
+    name: "Task Execution"
+    actor: "Worker"
+    action: "Executes, communicates, produces"
+    artifacts: "Work products, IM logs, progress.md"
+  
+  - phase: 6
+    name: "Peer Review"
+    actor: "Reviewer"
+    action: "Reviews work products"
+    artifacts: "review_response.md"
+    scope_stage: walk
+  
+  - phase: 7
+    name: "Completion"
+    actor: "Worker"
+    action: "Moves to completed/, notifies"
+    artifacts: "response.md, notification"
+
+notification_system:
+  purpose: Multi-tier notification delivery from CLI to Desktop Claude
+  location: ~/.{cli}/notifications/
+  
+  directories:
+    pending:
+      purpose: Unprocessed notifications from CLI instances
+      contents: Notification files (*.txt)
+      file_pattern: SSSS_req_XXXX_slug_cli_PID.txt
+      lifecycle: Created by CLI, consumed by Desktop
+    
+    processed:
+      purpose: Archive of handled notifications
+      contents: Processed notification files
+      retention: Archival (for audit trail)
+  
+  notification_tiers:
+    tier_1_file:
+      purpose: Always-reliable fallback
+      mechanism: Write notification to pending/ directory
+      reliability: 100% (filesystem-based)
+      latency: Processed when Desktop checks
+    
+    tier_2_applescript:
+      purpose: Direct message injection when Desktop idle
+      mechanism: AppleScript to Claude Desktop app
+      reliability: High when Desktop is idle
+      latency: Immediate
+      fallback: Skip if Desktop busy or unavailable
+    
+    tier_3_system:
+      purpose: macOS system notification
+      mechanism: osascript display notification
+      reliability: High
+      latency: Immediate
+      limitations: Requires user attention
+  
+  notification_file_format:
+    filename_pattern: SSSS_req_XXXX_slug_source_PID.txt
+    filename_components:
+      - SSSS: 4-digit sequence number (0001, 0002, ...)
+      - req_XXXX: Request/task identifier
+      - slug: Task description slug
+      - source: CLI type (claude_cli, codex_cli)
+      - PID: Process ID of CLI that created notification
+    
+    required_fields:
+      - seq: integer                  # Sequence number
+      - timestamp: datetime           # ISO 8601 UTC format
+      - source: string                # CLI type
+      - pid: integer                  # Creating process ID
+      - task_id: string               # req_XXXX identifier
+      - task_name: string             # Full task name
+      - status: string                # completed, error, in_progress
+      - location: string              # Path to task results
+      - priority: string              # normal, high, critical
+      - message: string               # Multi-line message for Desktop
+  
+  cli_notification_workflow:
+    step_1_write_file:
+      script: write_notification.sh
+      args: [task_name, status, priority]
+      output: Notification file in pending/
+    
+    step_2_try_applescript:
+      script: check_claude_state.scpt
+      condition: If Desktop is idle
+      action: Send via notify_desktop_claude.scpt
+      fallback: Continue to tier 3 if busy or failed
+    
+    step_3_system_notification:
+      mechanism: osascript display notification
+      always_executes: true (fallback)
+  
+  desktop_notification_workflow:
+    step_1_check_pending:
+      user_command: "check notifications"
+      script: process_notifications.sh
+      args: [optional_count]
+    
+    step_2_display:
+      format: Formatted output with emoji, timestamps, locations
+      action: Move from pending/ to processed/
+    
+    step_3_action:
+      desktop_response: Suggest reviewing task results
+      user_decision: Navigate to task location or continue
+
+  integration_points:
+    cli_task_completion:
+      script: notify_desktop_task_complete.sh
+      calls: notify_desktop_smart.sh
+      triggers: All three notification tiers
+    
+    desktop_check_command:
+      documented_in: ~/.claude/CLAUDE.md
+      command: "check notifications"
+      executes: process_notifications.sh
+
+file_formats:
+  naming_convention:
+    current_pattern: "task_XXXX_slug.md"
+    legacy_pattern: "req_XXXX_slug.md"
+    migration_note: "Existing req_* files are grandfathered. Use task_* for new tasks."
+    
+  file_types_summary:
+    # | Type | Pattern | Author | Purpose |
+    - type: task_definition
+      pattern: "task_XXXX_slug.md"
+      author: Delegator
+      purpose: "The contract - what is being asked"
+      
+    - type: execution_log
+      pattern: "execution_log.md"
+      author: Worker
+      purpose: "Working notes, time tracking, step-by-step journal"
+      
+    - type: progress_update
+      pattern: "progress_NNN_YYYYMMDD_author.md"
+      author: Worker
+      purpose: "Interim updates (optional, for multi-day tasks)"
+      
+    - type: report_final
+      pattern: "report_final_YYYYMMDD_author.md"
+      author: Worker
+      purpose: "Completion deliverable"
+      
+    - type: question
+      pattern: "question_NNN_YYYYMMDD_asker.md"
+      author: "Worker or Orchestrator"
+      purpose: "Blocking or non-blocking question"
+      
+    - type: answer
+      pattern: "answer_NNN_YYYYMMDD_responder.md"
+      author: "Orchestrator or Worker"
+      purpose: "Response to question (references question_NNN)"
+      
+    - type: feedback
+      pattern: "feedback_NNN_YYYYMMDD.md"
+      author: Orchestrator
+      purpose: "Guidance, course correction, input"
+      
+    - type: review_request
+      pattern: "review_request_NNN_YYYYMMDD.md"
+      author: "Orchestrator or Worker"
+      purpose: "What to review, criteria, instructions"
+      
+    - type: review_response
+      pattern: "review_response_NNN_YYYYMMDD_reviewer.md"
+      author: Reviewer
+      purpose: "The actual peer review"
+      
+    - type: review_followup
+      pattern: "review_followup_NNN_YYYYMMDD_worker.md"
+      author: Worker
+      purpose: "Response to review findings"
+      
+    - type: error_report
+      pattern: "error_YYYYMMDD_author.md"
+      author: Worker
+      purpose: "Error details when task fails"
+
+  lifecycle_timestamps:
+    in_task_file:
+      - field: Posted
+        meaning: "When task was created"
+        set_by: Delegator
+      - field: Claimed
+        meaning: "When worker took the task"
+        set_by: Worker
+      - field: Completed
+        meaning: "When task finished"
+        set_by: Worker
+    in_execution_log:
+      - "Step start/end times"
+      - "Estimates vs actuals"
+      - "Working notes per step"
+
+  task_definition:
+    filename_pattern: "task_XXXX_slug.md (or legacy req_XXXX_slug.md)"
+    template: ~/Documents/AI/ai_root/ai_general/templates/task_template_v1.0.md
+    required_fields:
+      - title: string                 # Header line (# Task #XXXX: Title)
+      - type: string                  # Research, Development, Automation, Peer Review, etc.
+      - priority: string              # NORMAL, HIGH, CRITICAL
+      - posted: datetime              # When task was created
+      - author: string                # Who created the task
+      - orchestrator: string          # Who manages execution (default: Author)
+      - why: string                   # Purpose, problem solved, what it enables
+      - goal: string                  # What success looks like
+      - deliverables: string          # Explicit outputs expected
+      - requirements: string          # Non-negotiable constraints
+    optional_fields:
+      - claimed: datetime             # When worker took task
+      - assigned: string              # Who is working on it
+      - completed: datetime           # When task finished
+      - phases: list                  # Stages with gates/dependencies
+      - considerations: string        # Knowns, unknowns, preferences, guidance
+      - testing: string               # Verification criteria
+      - error_handling: string        # What to do on failure
+      - impacts: string               # Systems/docs affected
+      - delegation: string            # Single worker or subdivide allowed
+  
+  execution_log:
+    filename_pattern: execution_log.md
+    location: "Inside task folder"
+    purpose: "Track steps, estimates vs actuals, working notes"
+    required_fields:
+      - claimed: datetime             # When work started
+      - worker: string                # Who is doing the work
+    optional_fields:
+      - completed: datetime           # When work finished
+      - total_time: string            # Duration summary
+      - steps: list                   # Step-by-step log with estimates/actuals
+  
+  report_final:
+    filename_pattern: report_final_YYYYMMDD_author.md
+    purpose: "Completion deliverable"
+    required_fields:
+      - worker: string                # Who completed it
+      - completed: datetime           # When finished
+      - results: string               # Summary of findings/deliverables
+
+  question:
+    filename_pattern: question_NNN_YYYYMMDD_asker.md
+    purpose: "Question from worker or orchestrator"
+    required_fields:
+      - from: string                  # Who is asking
+      - timestamp: datetime
+      - blocking: boolean             # Can work continue?
+      - question: string
+
+  answer:
+    filename_pattern: answer_NNN_YYYYMMDD_responder.md
+    purpose: "Response to specific question"
+    required_fields:
+      - to: string                    # Who asked
+      - references: string            # question_NNN being answered
+      - timestamp: datetime
+      - answer: string
+
+  review_request:
+    filename_pattern: review_request_NNN_YYYYMMDD.md
+    purpose: "Request for peer review"
+    required_fields:
+      - what_to_review: string        # Files or deliverables
+      - criteria: string              # What to evaluate
+      - instructions: string          # How to conduct review
+
+  review_response:
+    filename_pattern: review_response_NNN_YYYYMMDD_reviewer.md
+    purpose: "The actual peer review"
+    required_fields:
+      - reviewer: string
+      - timestamp: datetime
+      - verdict: string               # Approved, needs changes, rejected
+      - findings: string              # Detailed feedback
+
+workflow:
+  step_1_task_creation:
+    actor: Desktop Claude
+    action: Write task to to_execute/
+    file_created: to_execute/req_XXXX_slug.md
+    
+  step_2_task_discovery:
+    actor: CLI Instance
+    trigger: User says "check inbox"
+    checks:
+      - to_execute/*.md               # New tasks
+      - in_progress/*/followup_*.md   # Ongoing work
+    reports: Task titles and counts
+    
+  step_3_task_claiming:
+    actor: CLI Instance
+    approval: Required from user
+    actions:
+      - Create folder in_progress/req_XXXX_slug/
+      - Move task file into folder
+    result: Task now owned by CLI
+    scope_stage: crawl
+    
+  step_4_task_execution:
+    actor: CLI Instance
+    reads: Task commands section
+    executes: Commands in sequence
+    logs: All output captured
+    
+  step_5_response_writing:
+    actor: CLI Instance
+    creates: response_001_cli_PID.md in task folder
+    includes:
+      - CLI instance PID
+      - Timestamp
+      - Results summary
+      - Commands executed
+      - Command outputs
+    
+  step_6_followup_optional:
+    actor: Desktop Claude
+    condition: More work needed
+    creates: followup_001.md in in_progress folder
+    next: CLI checks inbox again, finds followup
+    
+  step_7_continuation:
+    actor: CLI Instance
+    reads: followup file
+    executes: Additional commands
+    creates: response_002_cli_PID.md
+    repeats: Until task complete
+    
+  step_8_completion:
+    actor: CLI Instance or Desktop Claude
+    action: Move folder from in_progress/ to completed/
+    preserves: All files (task + responses + followups)
+    
+  step_9_notification:
+    actor: CLI Instance
+    action: Notify Desktop Claude of completion
+    method: AppleScript message to Claude Desktop App
+    script: ~/bin/scripts/notify_desktop_task_complete.sh
+    message_format: |
+      ✅ Task req_XXXX completed by {CLI_TYPE} (PID: {PID})
+      
+      Results available at:
+      `{COORD_DIR}/completed/{TASK_NAME}/`
+      
+      Check the response file for details.
+    timing: Immediately after moving to completed/
+    optional: false                   # Strongly recommended
+    benefits:
+      - Desktop Claude sees completion immediately
+      - Can review results without manual checking
+      - Enables immediate follow-up if needed
+      - Creates audit trail in Desktop chat
+
+error_handling:
+  on_task_failure:
+    actor: CLI Instance
+    action: Move folder to error/
+    creates: error_cli_PID.md with details
+    
+  on_cancellation:
+    actor: Desktop Claude or User
+    action: Move folder to cancelled/
+    optional: Add cancellation reason file
+
+cli_initialization:
+  checklist:
+    - Export CLI_INSTANCE_ID (PID)
+    - Create liveness marker (~/.{cli}/.cli_instance_PID)
+    - Set EXIT trap for cleanup
+    - Check for pending tasks
+    - Report findings to user
+  
+  commands:
+    export_pid: export CLI_INSTANCE_ID=$$
+    create_marker: touch ~/.{cli}/.cli_instance_$CLI_INSTANCE_ID
+    set_trap: trap "rm -f ~/.{cli}/.cli_instance_$CLI_INSTANCE_ID" EXIT
+    check_tasks: ls ~/.{cli}/coordination/to_execute/*.md
+
+response_file_naming:
+  pattern: response_{sequence}_{cli}_{pid}.md
+  sequence:
+    format: zero-padded 3 digits
+    examples: ["001", "002", "010", "100"]
+  cli_identifier:
+    claude: cli
+    codex: codex
+  pid:
+    type: integer
+    source: Process ID of CLI instance
+  
+  examples:
+    - response_001_cli_65179.md       # Claude CLI first response
+    - response_002_cli_65179.md       # Claude CLI second response
+    - response_001_codex_61012.md     # Codex CLI first response
+
+multi_step_tasks:
+  enabled: true
+  mechanism: followup files
+  scope_stage: walk
+  process:
+    - CLI writes response_001
+    - Desktop reviews, writes followup_001
+    - CLI detects followup on next inbox check
+    - CLI executes, writes response_002
+    - Repeats until Desktop marks complete
+  
+  completion_decision:
+    by_cli: When all commands complete successfully
+    by_desktop: When results meet requirements
+
+peer_review_workflow:
+  scope_stage: walk
+  status: planned
+  description: "Reviewer examines work products, writes review_response.md, and Worker addresses feedback"
+
+orchestration_patterns_library:
+  scope_stage: run
+  status: future
+  description: "Template library for recurring orchestration plans and task sets"
+
+task_lifecycle_states:
+  unclaimed:
+    location: to_execute/
+    status: Available for any CLI
+    
+  claimed:
+    location: in_progress/TASK_NAME/
+    status: Being worked on by specific CLI
+    
+  completed:
+    location: completed/TASK_NAME/
+    status: Done and archived
+    contains: Full history
+    
+  failed:
+    location: error/TASK_NAME/
+    status: Execution failed
+    contains: Task + responses + error report
+    
+  cancelled:
+    location: cancelled/TASK_NAME/
+    status: Cancelled by user or system
+    contains: Task + any partial work
+
+comparison_v3_to_v4:
+  v3_1_structure:
+    broadcasts: Tasks for any CLI
+    direct: CLI-specific subdirectories
+    responses: CLI-specific subdirectories
+    
+  v4_0_structure:
+    to_execute: Flat list of tasks
+    in_progress: Task folders with responses
+    completed: Task folders with history
+    
+  improvements:
+    - Simpler structure (no CLI subdirectories)
+    - Complete history in one folder
+    - Natural multi-step support
+    - Easier to track lifecycle
+    - Matches Codex pattern
+    - Desktop notification on completion
+
+notification_system:
+  purpose: Inform Desktop Claude when tasks complete
+  
+  scripts:
+    applescript:
+      path: ~/bin/scripts/notify_desktop_claude.scpt
+      usage: osascript notify_desktop_claude.scpt "message"
+      function: Sends message to Claude Desktop App
+      
+    wrapper:
+      path: ~/bin/scripts/notify_desktop_task_complete.sh
+      usage: notify_desktop_task_complete.sh req_XXXX_task_name
+      function: Formats and sends completion notification
+      auto_detects: CLI type (Claude or Codex) and PID
+      
+  message_format:
+    success: |
+      ✅ Task {REQ_NUM} completed by {CLI_TYPE} (PID: {PID})
+      
+      Results available at:
+      `{COORD_DIR}/completed/{TASK_NAME}/`
+      
+      Check the response file for details.
+      
+    error: |
+      ❌ Task {REQ_NUM} failed in {CLI_TYPE} (PID: {PID})
+      
+      Error details at:
+      `{COORD_DIR}/error/{TASK_NAME}/`
+      
+      Review error report for troubleshooting.
+      
+  workflow_integration:
+    when: After moving task folder to completed/ or error/
+    command: ~/bin/scripts/notify_desktop_task_complete.sh $TASK_NAME
+    blocking: false                   # Fire and forget
+    timing: Immediate (< 1 second)
+    
+  benefits:
+    - Real-time feedback loop
+    - No manual checking needed
+    - Enables immediate follow-up
+    - Creates audit trail in chat
+    - Works across CLI types
+
+implementation_notes:
+  filesystem_operations:
+    use_bash: true                    # Not filesystem connector
+    reason: Read-before-write requirement
+    
+  directory_trust:
+    required: true
+    prompt: CLI may ask to trust coordination directory
+    response: User presses enter to approve
+    
+  liveness_markers:
+    optional: true
+    purpose: Track active CLI instances
+    location: ~/.{cli}/.cli_instance_PID
+    cleanup: EXIT trap removes on clean exit
+    
+  symlinks:
+    claude: ~/.claude/coordination → ~/Documents/AI/ai_comms/claude_cli/
+    codex: ~/.codex/coordination → ~/Documents/AI/ai_comms/codex_cli/
+
+automation:
+  applescript:
+    purpose: Launch CLI and execute tasks automatically
+    location: ~/bin/scripts/launch_{cli}_cli_task.scpt
+    capabilities:
+      - Open iTerm window
+      - Execute cli command
+      - Send return keys
+      - Handle directory trust
+      - Approve task execution
+    
+  timing:
+    initialization: 3 seconds
+    directory_trust: immediate
+    check_inbox: 3 seconds
+    approval: immediate
+
+multi_step_orchestration:
+  scope_stage: walk
+  description: "Support for orchestrator-driven task subdivision and sequencing"
+
+testing:
+  test_task_pattern: req_XXXX_protocol_test.md
+  verification_steps:
+    - Task appears in to_execute/
+    - CLI claims and creates in_progress folder
+    - Task file moves into folder
+    - Response file created
+    - Folder moves to completed/
+  
+  success_criteria:
+    - All steps complete without errors
+    - Response contains expected output
+    - Folder structure correct
+    - File naming matches spec
+
+references:
+  canonical_location: ~/Documents/AI/ai_root/ai_general/specs_and_protocols/protocol_taskCoordination_v5.0.yml
+  templates_directory: ~/Documents/AI/ai_root/ai_general/templates/
+  cli_instructions: ~/.claude/CLAUDE.md (Coordination Protocol v5.0 section)
+  codex_readme: ~/Documents/AI/ai_comms/codex_cli/README_coordination.md
+  supersedes:
+    - spec_cli_coordination_protocol_v1.4.yaml
+    - protocol_v04.0_directory_based.md

@@ -1,0 +1,72 @@
+metadata:
+  title: Gemini Canvas Automation Playbook
+  version: 1.1.0
+  updated: 2025-12-19
+  status: validated
+
+summary: |
+  End-to-end Gemini Canvas automation: new chat → enable Canvas → upload → prompt → download.
+  Canvas uses Monaco editor (NOT HTML5 canvas). Artifacts appear as "Open" buttons.
+
+when_to_use:
+  - Automating code generation in Gemini
+  - Batch downloading Canvas artifacts with filters
+  - Integrating Gemini into AI orchestration pipelines
+
+prerequisites:
+  browser: Chrome with Gemini session, JS from Apple Events enabled
+  tools: cliclick (brew install), Desktop Commander MCP
+  scripts:
+    download: ai_general/scripts/gemini_chat/gemini_download_canvas_filtered.js
+    enable: ~/bin/applescript/gemini_canvas_enable.scpt
+    upload: ~/bin/applescript/gemini_file_upload.scpt, gemini_drag_drop_upload.scpt
+
+steps:
+  1_new_chat:
+    action: Navigate to https://gemini.google.com/app
+    wait: 2s
+
+  2_enable_canvas:
+    action: Run gemini_canvas_enable.scpt
+    rule: Focus input first. Tab×4 to Canvas (4th in Tools menu).
+    verification: Canvas panel appears on right
+
+  3_upload_file:
+    action: Attach file (optional)
+    example: osascript ~/bin/applescript/gemini_file_upload.scpt "/path/to/file.pdf"
+    wait: 2-5s
+
+  4_send_prompt:
+    action: Type prompt and send
+    wait: 5-15s depending on complexity
+
+  5_download_artifacts:
+    action: Set config and run download script
+    example: |
+      window.GEMINI_CANVAS_CONFIG = { extFilter: '.py' };
+      // Execute gemini_download_canvas_filtered.js
+    rule: Check window.GEMINI_CANVAS_RESULTS for status
+
+filter_options:
+  extFilter: ".py" or [".py", ".js"] - filter by extension
+  nameFilter: "fibonacci" - partial match on title/content
+  newest: 3 - only N most recent
+  oldest: 2 - only N oldest
+  dryRun: true - list without downloading
+
+common_issues:
+  canvas_not_enabling:
+    symptom: Canvas panel doesn't appear
+    fix: Verify input focused, increase delays, check menu order (4 tabs)
+
+  no_artifacts_found:
+    symptom: Empty artifacts array
+    fix: Check for "Open" buttons, use inline script if no Canvas, wait longer
+
+  wrong_extension:
+    symptom: .js saved as .txt
+    fix: Use nameFilter instead, download all then rename
+
+canvas_vs_inline:
+  canvas: "Open" button → gemini_download_canvas_filtered.js
+  inline: Code block in chat → gemini_download_filtered.js

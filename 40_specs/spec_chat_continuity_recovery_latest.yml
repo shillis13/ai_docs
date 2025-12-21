@@ -1,0 +1,135 @@
+---
+metadata:
+  title: Chat Continuity Recovery System
+  version: 1.0.0
+  created: 2025-11-24
+  status: design
+  maintainer: PianoMan
+
+overview:
+  purpose: |
+    Automated recovery from broken chats with user control over the process.
+    Detects context exhaustion, provides countdown with controls, then executes
+    multi-step recovery to continue work in fresh chat with preserved context.
+
+trigger:
+  detection: |
+    Log monitoring detects "prompt is too long" in claude.ai-web.log
+  notification:
+    type: interactive
+    elements:
+      - title: "🚨 Chat Continuity Recovery"
+      - message: "Initiating recovery in XX seconds..."
+      - countdown: true
+      - buttons:
+          - pause: "Pauses countdown timer"
+          - cancel: "Aborts recovery entirely"
+          - continue: "Immediately starts recovery (skip countdown)"
+      - links:
+          - https_url: "https://claude.ai/chat/{chat_id}"
+          - claude_url: "claude://claude.ai/chat/{chat_id}"
+
+recovery_sequence:
+  step_1_export:
+    action: "Export chat from web UI"
+    method: "ClaudeExporter extension or Puppeteer automation"
+    output: "JSON/MD file in known location"
+    
+  step_2_condensed_history:
+    action: "Generate Condensed Chat History"
+    method: "Upload export to AI (Claude or ChatGPT)"
+    prompt: "Extensive prompt for condensing chat history"
+    output: "condensed_chat_{id}.md"
+    
+  step_3_faux_context_digest:
+    action: "Generate faux Context Digest from history"
+    method: "Same AI session continues"
+    basis: |
+      - Claude's inner monologue / thinking blocks
+      - Connecting dots across conversation
+      - Key decisions and their rationale
+      - Current task state and next steps
+    output: "faux_context_digest_{id}.md"
+    
+  step_4_download:
+    action: "Download generated files"
+    files:
+      - condensed_chat_{id}.md
+      - faux_context_digest_{id}.md
+    location: "~/Documents/AI/ai_root/ai_memories/40_digests/chat_mems/"
+    
+  step_5_placeholder:
+    action: "PLACEHOLDER - Rewind broken chat"
+    description: |
+      Future enhancement: Rewind broken chat to ~70% context,
+      replay prompts 70%→100% in fresh chat as participant,
+      generate true Context Digest at new 85%.
+    status: "not_implemented"
+    
+  step_6_new_chat:
+    action: "Create new project chat"
+    target: "Desktop app or web UI"
+    project: "Same project as broken chat"
+    
+  step_7_attach_files:
+    action: "Attach recovery files"
+    files:
+      - condensed_chat_{id}.md
+      - faux_context_digest_{id}.md
+      
+  step_8_continuation_prompt:
+    action: "Write continuation prompt"
+    template: |
+      This is a continuation of chat "{chat_title}" at {url}.
+      
+      Attached are:
+      - Condensed Chat History: Summary of our conversation
+      - Context Digest: Reconstructed working context
+      
+      Please review these files and continue where we left off.
+      
+  step_9_submit:
+    action: "Submit prompt"
+    method: "Automated or manual"
+
+technical_components:
+  notification_ui:
+    challenge: "macOS notifications are not interactive enough"
+    options:
+      - terminal_app: "Custom Swift/Electron app with buttons"
+      - web_ui: "localhost webpage with controls"
+      - applescript_dialog: "Modal dialog with buttons (blocking)"
+      - menu_bar_app: "Persistent menu bar with dropdown"
+    recommendation: "AppleScript dialog for MVP, web UI for v2"
+    
+  export_automation:
+    options:
+      - claude_exporter: "Browser extension - may need manual trigger"
+      - puppeteer: "Full automation via CDP"
+      - api: "If/when available"
+      
+  ai_processing:
+    options:
+      - chatgpt_api: "Programmatic, but costs money"
+      - claude_api: "Same"
+      - web_ui_automation: "Free tier, Puppeteer-based"
+      - cli_claude: "claude CLI with appropriate prompt"
+
+open_questions:
+  - "Can ClaudeExporter be triggered programmatically?"
+  - "Which AI should process the condensed history? (cost vs reliability)"
+  - "How to handle the interactive notification on macOS?"
+  - "Desktop app vs web UI for new chat creation?"
+  - "How to reliably get chat_id from broken chat?"
+
+dependencies:
+  existing:
+    - chatUrl.py: "Get current chat URL"
+    - detectBrokenChat.sh: "Monitor for errors"
+    - brokenChatDaemon.sh: "Polling daemon"
+    - chat_orchestrator: "Puppeteer-based browser automation"
+  needed:
+    - interactive_notification: "UI with countdown and buttons"
+    - export_trigger: "Programmatic chat export"
+    - ai_processor: "Generate condensed history + digest"
+    - continuation_injector: "Create and submit new chat"

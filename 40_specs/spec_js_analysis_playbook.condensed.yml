@@ -1,0 +1,30 @@
+# JavaScript Analysis Playbook (Condensed)
+# Source: spec_js_analysis_playbook_v1.0.yml
+version: 1.0.0
+status: auxiliary
+
+purpose: Use JS REPL for linting, pattern-matching, and summarizing files across languages
+
+core_checks:
+  python:
+    - Imports before code (no imports after def/class)
+    - Unused imports, missing docstrings, snake_case drift
+  powershell:
+    - param blocks, [CmdletBinding()], unified logging
+    - Naming conventions, synopsis headers
+  javascript_typescript:
+    - Import/export symmetry, unused variables
+    - JSDoc presence, function declaration style
+  markdown_yaml_shell:
+    - Heading hierarchy, fenced code, duplicate keys, unquoted vars
+
+helpers:
+  validatePythonStructure: Detect imports after function definitions
+  analyzeFileStructure: Count pattern matches by language
+
+patterns:
+  - Batch process files: Object.entries(files).map(([name, content]) => ({name, metrics}))
+  - Build dependency graphs from call sites
+  - Aggregate metrics dashboards (LOC, functions, comments, complexity)
+
+future: Pluggable rule sets, visual outputs, CI/pre-commit integration

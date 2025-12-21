@@ -1,0 +1,174 @@
+---
+metadata:
+  title: Reference Pointer Syntax Schema
+  version: 1.0.0
+  created: 2025-12-05
+  maintainer: PianoMan
+  status: active
+  related:
+    protocol: ../30_protocols/protocol_reference_pointers_v1.0.yml
+    instructions: ../70_instructions/claude/instr_pointer_loading_v1.0.yml
+
+grammar:
+  pointer: "<TYPE>:<TARGET> [| <KEY>:<VALUE>]*"
+  max_length: 200  # Characters - must fit in native memory slot
+
+types:
+  STARTER:
+    description: "Core identity and preferences - load first"
+    target_format: "relative/path/to/file.yml"
+    example: "STARTER:ai_memories/60_knowledge/about_user/identity.yml"
+    
+  PROJECT:
+    description: "Current work context"
+    target_format: "relative/path/to/file.yml"
+    example: "PROJECT:ai_claude/work/current_focus.yml"
+    
+  PREFS:
+    description: "Communication and behavior preferences"
+    target_format: "relative/path/to/file.yml"
+    example: "PREFS:ai_claude/instructions/comm_style.yml"
+    
+  CONTEXT:
+    description: "Situational context (time-sensitive)"
+    target_format: "relative/path/to/file.yml"
+    example: "CONTEXT:ai_comms/claude_cli/status_summary.yml"
+    
+  TOOL:
+    description: "Tool configurations and patterns"
+    target_format: "relative/path/to/file.yml"
+    example: "TOOL:ai_general/docs/40_specs/cli_coordination.yml"
+    
+  REF:
+    description: "Reference material - on-demand only"
+    target_format: "relative/path/to/file.yml"
+    example: "REF:ai_general/docs/40_specs/spec_full_detail.yml"
+    
+  QUERY:
+    description: "Dynamic search against long-term memory"
+    target_format: "search terms (free text)"
+    example: "QUERY:CLI timeout solutions | LIMIT:5 | SINCE:30d"
+    
+  RECENT:
+    description: "Retrieve N most recent items"
+    target_format: "category name"
+    categories: [session_summaries, task_completions, decisions, errors]
+    example: "RECENT:session_summaries | COUNT:3"
+
+modifiers:
+  PRIORITY:
+    values: [1, 2, 3]
+    default: 2
+    meaning:
+      1: "Load at conversation start"
+      2: "Load when topic area arises"
+      3: "Load only when explicitly referenced"
+      
+  LOAD:
+    values: [AUTO, TOPIC, DEMAND]
+    default: TOPIC
+    meaning:
+      AUTO: "Load without AI decision"
+      TOPIC: "Load when related topic detected"
+      DEMAND: "Load only when explicitly requested"
+      
+  SCOPE:
+    values: [GLOBAL, PROJECT, SESSION]
+    default: GLOBAL
+    meaning:
+      GLOBAL: "Applies across all contexts"
+      PROJECT: "Applies to specific project"
+      SESSION: "Temporary, current session only"
+      
+  TTL:
+    format: "YYYY-MM-DD or Nd (N days)"
+    meaning: "Review/refresh after this date"
+    example: "TTL:7d"
+
+query_modifiers:  # Additional modifiers for QUERY type
+  LIMIT:
+    type: integer
+    default: 5
+    meaning: "Max results to return"
+    
+  SINCE:
+    format: "Nd or Nw or Nm (days/weeks/months)"
+    meaning: "Only results updated within window"
+    
+  SOURCE:
+    values: [histories, summaries, knowledge, all]
+    default: all
+    meaning: "Which memory tier to search"
+    
+  SORT:
+    values: [relevance, recent, oldest]
+    default: relevance
+
+destination_file_schema:
+  required_fields:
+    header:
+      title: {type: string, required: true}
+      type: {type: string, values: [identity, preferences, context, project, tool_config, reference]}
+      updated: {type: date, required: true}
+      summary: {type: string, max_chars: 500, purpose: "Quick orientation if full content not loaded"}
+      
+  optional_fields:
+    version: {type: string}
+    tags: {type: array, purpose: "For TOPIC matching"}
+    
+  content_section:
+    format: "Freeform YAML - structure varies by type"
+    
+  pointers_section:
+    purpose: "Links to related content for lazy loading"
+    structure:
+      - path: string
+        rel: string   # relationship type (current_state, domain_knowledge, etc.)
+        load: string  # AUTO | TOPIC | DEMAND
+        note: string  # Why this link exists
+
+validation_rules:
+  pointer_string:
+    - Must be <= 200 characters
+    - TYPE must be recognized value
+    - TARGET must not be empty
+    - Modifiers must use valid keys
+    
+  path_targets:
+    - Must be relative to ai_root/
+    - Must end in .yml or .yaml
+    - Should resolve to existing file (warning if not)
+    
+  query_targets:
+    - Should contain substantive keywords
+    - Avoid generic terms like "the", "and"
+
+examples:
+  minimal:
+    pointer: "STARTER:ai_memories/60_knowledge/about_user/identity.yml"
+    chars: 56
+    
+  with_modifiers:
+    pointer: "PROJECT:ai_claude/work/current_focus.yml | PRIORITY:2 | LOAD:TOPIC | SCOPE:PROJECT"
+    chars: 88
+    
+  query_pointer:
+    pointer: "QUERY:chat orchestrator design decisions | LIMIT:3 | SINCE:30d"
+    chars: 66
+    
+  max_complexity:
+    pointer: "CONTEXT:ai_comms/claude_cli/status_summary.yml | PRIORITY:1 | LOAD:AUTO | TTL:1d | SCOPE:SESSION"
+    chars: 100
+
+regex_patterns:
+  pointer_full: |
+    ^(?P<type>[A-Z]+):(?P<target>[^\|]+?)(?:\s*\|\s*(?P<mods>.+))?$
+    
+  modifier_pair: |
+    (?P<key>[A-Z]+):(?P<value>[^\|]+)
+    
+  path_target: |
+    ^[a-z_/]+\.ya?ml$
+    
+  query_target: |
+    ^[^|]+$

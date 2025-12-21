@@ -1,0 +1,67 @@
+---
+# CONDENSED: schema_pointer_syntax_v1.0
+# Full version: 50_schemas/versions/schema_pointer_syntax_v1.0.yml
+metadata:
+  title: Reference Pointer Syntax Schema (Condensed)
+  version: 1.0.0-condensed
+  source: versions/schema_pointer_syntax_v1.0.yml
+
+grammar:
+  format: "<TYPE>:<TARGET> [| <KEY>:<VALUE>]*"
+  max_length: 200 chars  # Must fit in native memory slot
+
+types:
+  STARTER: Core identity/preferences - load first
+  PROJECT: Current work context
+  PREFS: Communication/behavior preferences
+  CONTEXT: Situational context (time-sensitive)
+  TOOL: Tool configurations and patterns
+  REF: Reference material - on-demand only
+  QUERY: Dynamic search against long-term memory
+  RECENT: Retrieve N most recent items
+
+modifiers:
+  PRIORITY: {values: [1, 2, 3], default: 2}
+    # 1=conversation start, 2=topic arises, 3=explicit reference
+  LOAD: {values: [AUTO, TOPIC, DEMAND], default: TOPIC}
+    # AUTO=no decision, TOPIC=related topic detected, DEMAND=explicit request
+  SCOPE: {values: [GLOBAL, PROJECT, SESSION], default: GLOBAL}
+  TTL: {format: "YYYY-MM-DD or Nd", desc: "Review/refresh after date"}
+
+query_modifiers:
+  LIMIT: {type: int, default: 5}
+  SINCE: {format: "Nd/Nw/Nm"}
+  SOURCE: {values: [histories, summaries, knowledge, all], default: all}
+  SORT: {values: [relevance, recent, oldest], default: relevance}
+
+destination_file_schema:
+  required_header:
+    title: string
+    type: {enum: [identity, preferences, context, project, tool_config, reference]}
+    updated: date
+    summary: {max: 500 chars, purpose: "Quick orientation if not fully loaded"}
+  optional: [version, tags]
+  pointers_section:
+    - path: string
+    - rel: string    # relationship type
+    - load: string   # AUTO|TOPIC|DEMAND
+    - note: string   # Why this link exists
+
+validation:
+  pointer_string:
+    - "<= 200 characters"
+    - TYPE must be recognized
+    - TARGET not empty
+    - Modifiers use valid keys
+  path_targets:
+    - Relative to ai_root/
+    - End in .yml or .yaml
+    - Should resolve (warning if not)
+  query_targets:
+    - Substantive keywords
+    - Avoid generic terms
+
+examples:
+  minimal: "STARTER:ai_memories/60_knowledge/about_user/identity.yml"
+  with_modifiers: "PROJECT:ai_claude/work/current_focus.yml | PRIORITY:2 | LOAD:TOPIC"
+  query: "QUERY:chat orchestrator design decisions | LIMIT:3 | SINCE:30d"

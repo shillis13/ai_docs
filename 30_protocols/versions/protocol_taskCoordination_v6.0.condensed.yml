@@ -1,0 +1,111 @@
+---
+# Condensed from: protocol_taskCoordination_v6.0.yml
+# Full version: versions/protocol_taskCoordination_v6.0.yml
+# Token reduction: ~40%
+metadata: {version:"6.0",date:"2025-12-11",status:"active"}
+
+title: "TaskCoordination_v6.0"
+
+summary_of_changes:
+  directory_always_model:
+    change: "v6:tasks=dirs+task.md;artifacts stay;v5:flat→dir_on_claim"
+    example_comparison: |
+      # v5.0 (old)
+      to_execute/req_1001_task.md          # Flat file
+      in_progress/req_1001_task/           # Becomes folder when claimed
+
+      # v6.0 (new)  
+      to_execute/req_1001_task/            # Always a directory
+      ├── req_1001_task.md                 # Task definition inside
+      └── (artifacts accumulate here)
+  bundle_support:
+    purpose: "Bundle=phase-orchestration"
+    structure: |
+      req_XXXX_bundle_name/
+      ├── req_XXXX_bundle_name.md          # Bundle overview (status, flow, phases)
+      ├── req_XXXXa_phase_name/
+      │   ├── req_XXXXa_phase_name.md      # Phase task definition
+      │   └── response.md                  # Phase deliverable
+      ├── req_XXXXb_phase_name/
+      │   └── req_XXXXb_phase_name.md
+      └── req_XXXXc_phase_name/
+          └── req_XXXXc_phase_name.md
+    overview_must_contain: ["Phase-table+owners","Flow","Blocks","State-summary"]
+    phase_naming: "`req_XXXXa/b` suffix"
+
+  bundle_lifecycle:
+    rules: ["State-dirs=staged|to_execute|in_progress|completed","Move=orchestrator/all-done"]
+    state_transitions: |
+      staged/           # Bundle not yet released
+        ↓ (orchestrator releases)
+      to_execute/       # Phases available for claiming
+        ↓ (worker claims phase)
+      in_progress/      # At least one phase active
+        ↓ (all phases complete)
+      completed/        # Bundle done
+    parallel_phases: "Parallel-phase-claims-ok."
+  updated_directory_structure:
+    structure_yaml: |
+      ```yaml
+      coordination_root:
+        staged/:
+          purpose: "Pre-pipeline holding - bundles and tasks not yet released"
+          contents: "Task directories, bundle directories"
+          
+        to_execute/:
+          purpose: "Ready for workers to claim"
+          contents: "Task directories, bundle directories with claimable phases"
+          
+        in_progress/:
+          purpose: "Active work"
+          contents: "Task directories, bundle directories with active phases"
+          claim_mechanism: "claimed_{timestamp}_{pid}_\" prefix on directory name
+          
+        completed/:
+          purpose: "Finished work"
+          contents: "Task directories, bundle directories (all phases done)"
+          
+        error/:
+          purpose: "Failed tasks"
+          contents: "Task directories with error reports"
+      ```
+
+  task_file_naming: {discrete_tasks:"req_XXXX_slug/req_XXXX_slug.md",bundle_phases:"req_XXXXa_slug/req_XXXXa_slug.md"}
+
+  response_file_location:
+    rule: "Responses→task/phase-dir."
+    example: |
+      req_1001_task/
+      ├── req_1001_task.md
+      └── response.md              # Or response_NNN_cli_PID.md for multiple
+    note: "No-responses/dir."
+  session_persistence:
+    problem: "Ephemeral forget;persistent-remember."
+    registry: "~/.claude/session_registry.yml"
+    core_persistent_agents_table: |
+      Agent | Session ID     | Purpose
+      -------|---------------|---------
+      Librarian | librarian-001 | Condensing, chat processing, memory management
+      Custodian | custodian-001 | Maintenance, cleanup, organization
+      Reviewer | reviewer-001 | Code quality, PR reviews
+    launch_patterns: |
+      ```bash
+      # Persistent agent (continues prior context)
+      claude --project ~/Documents/AI/ai_root --session-id librarian-001 "process chats"
+
+      # Ephemeral task (fresh context)
+      claude --project ~/Documents/AI/ai_root "one-off task"
+      ```
+    when_to_use_persistent: ["Role-agents","Long-running","Memory-heavy-work"]
+    when_to_use_ephemeral: ["One-off","Parallel-same-type","Experiments","Fresh-eyes"]
+    expertise_capture: "Persistent→memory-slots."
+
+migration_notes: |
+  Existing flat files in to_execute/ should be converted to directories:
+  ```bash
+  # For each req_XXXX_slug.md in to_execute/
+  mkdir req_XXXX_slug
+  mv req_XXXX_slug.md req_XXXX_slug/
+  ```
+
+version_history: [{version:"6.0",date:"2025-12-11",notes:"Dir-always+bundle-support"},{version:"5.0",date:"2025-11-23",notes:"Flat→folder-transition"}]

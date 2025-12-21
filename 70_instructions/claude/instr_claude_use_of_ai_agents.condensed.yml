@@ -1,0 +1,90 @@
+---
+# CONDENSED: instr_claude_use_of_ai_agents
+# Full version: 70_instructions/claude/instr_claude_use_of_ai_agents_latest.yml
+metadata:
+  title: CLI and Codex Delegation Guidelines (Condensed)
+  version: 2.1.0-condensed-r2
+  source: instr_claude_use_of_ai_agents_latest.yml
+
+principle: Desktop Claude coordinates and synthesizes. CLI/Codex execute and explore.
+
+tools:
+  cli_coordination:
+    type: async, file-based
+    base_path: ~/.claude/coordination/
+    paths:
+      broadcast: broadcasts/req_XXXX_taskname.md
+      direct: direct/cli_{PID}/task_XXX.md
+      responses: responses/cli_{PID}/req_XXXX_response.md
+      completed: completed/req_XXXX_taskname/
+    capabilities:
+      - full filesystem access (Desktop Commander MCP)
+      - process management, REPL interaction
+      - large file analysis without context pollution
+      - command execution, data processing
+      - parallel execution across multiple instances
+    use_for:
+      - async work (continues while you converse)
+      - parallel tasks
+      - verbose output
+      - preserve findings for later
+      - complex multi-step orchestration
+
+  codex_mcp:
+    type: sync, immediate results
+    capabilities:
+      - autonomous multi-step problem solving
+      - file system exploration and analysis
+      - code generation and debugging
+      - complex shell command sequences
+      - interactive approval for destructive operations
+    constraints:
+      - focused single-task prompts only
+      - NO multi-step "do 1,2,3 and report" instructions
+      - break complex work into discrete calls
+      - avoid approval-policy parameter (causes execution failures)
+    use_for:
+      - immediate synchronous results
+      - single-purpose focused tasks
+      - file system exploration, command execution
+      - code generation/refactoring (discrete)
+      - simple data analysis/transformation
+    fallback: For complex orchestration, use CLI Coordination instead
+
+delegate_when:
+  - filesystem exploration (unknown structure)
+  - multiple/large files (>3 files OR >500 lines)
+  - verbose command output
+  - data analysis on local files
+
+do_NOT_delegate:
+  - file already in context or uploaded by user
+  - single small file (<100 lines)
+  - quick directory listing (depth=1)
+  - user explicitly asks direct action
+
+patterns:
+  cli_async:
+    1: Create task spec in coordination directory
+    2: Start CLI instance with prompt "Claim and execute req_XXXX"
+    3: CLI claims, executes, writes to responses/
+    4: Results move to completed/ when done
+    5: Read summary, discuss with user
+  codex_sync:
+    1: Call codex with focused single-task prompt
+    2: Review results
+    3: For multi-step work, make MULTIPLE discrete calls
+    4: "Example: codex('Step 1'), then codex('Step 2'), then codex('Step 3')"
+
+decision_tree:
+  need_filesystem_operation:
+    many_files_or_unknown: 
+      prefer: CLI (async, parallel)
+      alt: Codex (if immediate result needed)
+    in_context: use directly
+    ">100_lines": prefer delegation
+  complex_orchestration: use CLI, not Codex
+
+context_priority: |
+  Preserve context for: strategic thinking, user collaboration, synthesis, project knowledge/relationships.
+  Delegate: exploration, execution, data processing.

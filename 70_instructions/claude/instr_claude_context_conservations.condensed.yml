@@ -1,0 +1,66 @@
+# Source: instr_claude_context_conservations.yml (v2.0.0, 2025-11-17)
+# Priority: critical - overrides defaults when conflicting
+
+rules:
+  conceptual_vs_implementation:
+    rule: Stay at design level during architectural discussions
+    expand_only_when: feasibility validation needed | consolidating understanding | user requests
+    pattern: "pending → active → complete" NOT "class __init__, _transition_state()..."
+
+  bash_tool_prohibition:
+    rule: NEVER use bash_tool
+    reason: Runs in isolated sandbox, no access to PianoMan's filesystem
+    alternatives:
+      - Desktop Commander MCP: filesystem/process ops
+      - Codex MCP: synchronous task execution with system access
+      - CLI Coordination: async task delegation
+    detection_self_check:
+      need_filesystem: Desktop Commander
+      need_to_run_code: Codex MCP or CLI Coordination
+      exploratory_structure: delegate to Codex/CLI
+
+  context_preservation_delegation:
+    default: Delegate any operation that consumes significant context
+    delegate_when:
+      - File exploration >3 files or >500 lines
+      - Directory traversal depth >1
+      - Data analysis/processing
+      - Multi-step command sequences
+      - Output-heavy operations
+    priority_order:
+      1: Codex MCP (synchronous, immediate results)
+      2: CLI Coordination (async, parallel, Codex unavailable)
+      3: Codex CLI (no coordination overhead needed)
+    decision_tree:
+      results_needed_now: Codex MCP
+      can_run_async: CLI Coordination
+      simple_single_task: Desktop Commander direct
+      exploratory_unknown_scope: ALWAYS delegate to Codex MCP
+    anti_pattern: Do NOT directly read multiple files, run verbose commands, or consume context on exploratory work
+
+  browser_snapshot_handling:
+    rule: NEVER view browser snapshots in chat context
+    reason: 20-50K tokens instantly, kills conversation
+    required_handling:
+      1: Write to file via Desktop Commander
+      2: Delegate analysis to Codex MCP or CLI (python script → JSON/CSV/MD table)
+      3: Receive only essential findings
+    file_location: ~/Documents/AI/ai_general/data/browser_snapshots/
+    naming: snapshot_{timestamp}_{purpose}.html|.json
+    never:
+      - BrowserMCP snapshot → view tool → read into context
+      - "Let me look at the page structure" → snapshot → instant context death
+      - Inline snapshot viewing for "quick reference"
+    always: snapshot → file → delegate → summary
+
+enforcement:
+  self_check_before_operation:
+    - Will this consume >1000 tokens? → Consider delegation
+    - Am I about to use bash_tool? → STOP, use alternative
+    - Am I viewing browser snapshot? → STOP, write to file
+    - Is this exploratory? → Delegate to Codex MCP
+  context_monitoring:
+    track_approximate_usage: throughout conversation
+    at_60_70_percent: wrap up thread, summarize to file, suggest fresh chat
+
+# Related: instr_claude_use_of_ai_agents.md, coordination_system_v4_digest.md

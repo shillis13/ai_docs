@@ -1,0 +1,96 @@
+# Condensed from: chat_pipeline/PIPELINE.md
+# Source: ai_general/docs/30_protocols/chat_pipeline/PIPELINE.md
+
+chat_history_pipeline:
+  purpose: Convert raw chat exports to normalized, chunked format for search/analysis/context loading
+
+  directory_structure:
+    10_exported/: "Stage 0 - Raw exports by platform (chatgpt/, claude/)"
+    20_preprocessed/: "Optional multi-chat splits (pending/, converted/)"
+    30_converted/: "Stage 2 output - v2.0 schema JSON (chatgpt/, claude/)"
+    40_histories/: "Stage 4 output - Final chunked histories"
+    final_structure: |
+      40_histories/{platform}/{platform}_{YYYYMMDD}_{uuid8}_{title_slug}/
+        {dirname}.001.yml
+        _intermediate/  (converted YAML provenance)
+        _source/        (symlink to original in 10_exported)
+
+  stages:
+    stage_0_export:
+      type: manual
+      platforms:
+        ChatGPT: "Settings → Data controls → Export (single JSON all chats)"
+        Claude: "claude-exporter tool or manual (individual JSON per chat)"
+      output: "10_exported/{platform}/"
+
+    stage_1_split:
+      script: chat_export_splitter.py
+      location: bin/python/src/ai_utils/chat_processing/
+      input: Single JSON with all conversations
+      output: Individual JSON files per conversation
+      command: "python -m chat_processing.chat_export_splitter /path/to/export.json -o .../10_exported/chatgpt/archive/bulk_export_YYYYMMDD/"
+
+    stage_2_convert:
+      script: chat_converter.py
+      location: bin/python/src/ai_utils/chat_processing/
+      input: Platform-native JSON/Markdown
+      output: v2.0 schema JSON or YAML
+      formats_supported: [ChatGPT JSON, Claude JSON, Markdown, HTML share pages]
+      command: "python -m chat_processing.chat_converter input.json -o output_v2.json -f json"
+
+    stage_3_chunk:
+      script: chat_chunker.py
+      location: bin/python/src/ai_utils/chat_processing/
+      input: v2.0 schema YAML
+      output: Multiple chunk files (.001.yml, .002.yml, etc.)
+      target_size: ~4000 tokens
+      preserves: Q&A coherence
+      command: "python -m chat_processing.chat_chunker input_v2.yaml -o chunks/ --target-size 4000"
+
+    stage_4_organize:
+      script: process_stage4.py
+      location: ai_general/scripts/chat_pipeline/ (symlinked from ai_memories/scripts/)
+      input: Files in 30_converted/{platform}/
+      output: Organized directories in 40_histories/{platform}/
+      command: "python scripts/process_stage4.py --platform chatgpt"
+
+  naming_conventions:
+    directory: "{platform}_{YYYYMMDD}_{uuid8}_{title_slug}/"
+    chunk_file: "{dirname}.{NNN}.{ext}"
+    extension: yml for ChatGPT, yaml for Claude
+    title_slug: max 50 chars, lowercase, underscores
+
+  supporting_scripts:
+    chatgpt_tree_converter.py: Convert ChatGPT tree exports to v2 YAML (LiteralDumper for newlines)
+    process_to_histories.py: Chunk and organize into year/month structure
+    rename_histories.py: Bulk rename dirs/chunks to new naming convention
+    validate_v2_json.py: Validate v2.0 schema compliance
+    count_chunks.py: Count chunks across directories
+    archive_chatgpt_bulk.sh: Archive bulk export to dated directory
+    reset_pipeline_test.sh: Reset pipeline for testing
+
+  schema_reference:
+    location: ai_general/docs/50_schemas/chat_history_v2.0.yml
+    versions: "2.0, 2.1 (with thinking field)"
+    key_fields:
+      - schema_version: "2.0" or "2.1"
+      - chat_id: unique conversation ID
+      - platform: source platform
+      - title: conversation title
+      - created_at, updated_at: ISO timestamps
+      - messages[]: role (user/assistant/system), content, thinking (v2.1), timestamp
+
+  quick_reference:
+    full_pipeline_chatgpt: |
+      1. Split: python -m chat_processing.chat_export_splitter ~/Downloads/export.json -o .../bulk_export_$(date +%Y%m%d)/
+      2. Convert: for f in .../*.json; do python -m chat_processing.chat_converter "$f" -o "${f%.json}_v2.json"; done
+      3. Move: mv ...*_v2.json .../30_converted/chatgpt/
+      4. Process: python scripts/process_stage4.py --platform chatgpt
+    single_conversation: |
+      python -m chat_processing.chat_converter input.json -o output_v2.yaml -f yaml
+      python -m chat_processing.chat_chunker output_v2.yaml -o chunks/
+
+  related:
+    schema: ai_general/docs/50_schemas/chat_history_v2.0.yml
+    architecture: ai_general/docs/10_architecture/
+    scripts: ai_general/scripts/chat_pipeline/

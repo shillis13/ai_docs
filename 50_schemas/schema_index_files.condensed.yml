@@ -1,0 +1,55 @@
+---
+# CONDENSED: schema_index_files_v1
+# Full version: 50_schemas/versions/schema_index_files_v1.yml
+metadata:
+  title: Index File Schema (Condensed)
+  version: 1.2.0-condensed
+  source: versions/schema_index_files_v1.yml
+
+purpose: Structure for index_*.yml manifests describing deployable/reference assets.
+
+top_level_fields:
+  category: {required: true, pattern: "^[a-z0-9_]+$", desc: "Lowercase category ID matching directory"}
+  version: {required: true, type: semver}
+  last_updated: {required: true, format: "YYYY-MM-DD"}
+  maintainer: {required: true, type: string}
+  subdirs_deployable: {required: true, type: boolean}
+  files: {required: true, type: list, desc: "File metadata entries"}
+
+file_entry:
+  name: {required: true, desc: "Filename relative to category root"}
+  description: {required: true, desc: "Concise synopsis"}
+  size_bytes: {required: true, type: int, min: 0}
+  estimated_tokens: {required: true, type: int, min: 0}
+  status: {required: true, enum: [active, auxiliary, archived, draft]}
+  audience: {required: true, enum: [all, internal, codex, claude, chatgpt, system]}
+  deploy: {required: true, type: mapping}
+
+deploy_flags:
+  - claude_desktop
+  - chatgpt
+  - codex
+  - claude_cli
+  - gemini
+  - grok
+  - perplexity
+
+status_definitions:
+  active: Current and in primary use
+  auxiliary: Supportive context, deploy selectively
+  archived: Retained for history, not deployed
+  draft: WIP, awaiting promotion
+
+audience_definitions:
+  all: Safe for every assistant surface
+  internal: Maintainers only unless needed elsewhere
+  codex: Tailored for Codex agents
+  claude: Optimized for Claude
+  chatgpt: Optimized for ChatGPT
+  system: Machine-generated, never deploy by default
+
+validation_rules:
+  - estimated_tokens from file size with consistent multiplier, round up
+  - status=archived implies all deploy flags false
+  - status=active requires at least one deploy flag true
+  - files ordered by importance, then alphabetically

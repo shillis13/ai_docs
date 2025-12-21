@@ -1,0 +1,75 @@
+---
+# CONDENSED: schema_taskFile_v1.0
+# Full version: 50_schemas/versions/schema_taskFile_v1.0.yml
+metadata:
+  title: Task File Schema (Condensed)
+  version: 1.0.0-condensed
+  source: versions/schema_taskFile_v1.0.yml
+  used_by: protocol_taskCoordination_latest.yml
+
+naming:
+  file: req_XXXX_slug.md  # e.g., req_1001_system_info.md
+  folder: req_XXXX_slug/
+  claimed: claimed_{YYYYMMDD_HHMMSS}_{pid}_req_XXXX_slug/
+  id_source: _NNNN_next_req_id (plain text, increment after creation)
+
+required_fields:
+  title:
+    format: "# Request #XXXX: Title"
+    validation: XXXX must match filename
+  type:
+    format: "**Type:** {value}"
+    values: [Standard, Research, Installation, Testing, Emergency, Maintenance]
+    default: Standard
+  priority:
+    format: "**Priority:** {value}"
+    values: [LOW, NORMAL, HIGH, URGENT, CRITICAL]
+    default: NORMAL
+  posted:
+    format: "**Posted:** {ISO 8601}"
+  description:
+    format: "## Task Description\n{content}"
+    min: 1 sentence
+  expected_response:
+    format: "## Expected Response\n{content}"
+    purpose: Sets completion criteria
+
+optional_fields:
+  commands: "## Task Commands\n```bash\n{cmds}\n```"
+  discrete: "**Discrete:** true|false"  # if true, no subdivision
+  target_worker: "**Target Worker:** {type} or {type}:{pid}"
+  entry_criteria: "## Entry Criteria\n{list}"
+  exit_criteria: "## Exit Criteria\n{list}"
+  depends_on: "**Depends On:** req_XXXX, req_YYYY"  # Task Sets
+  sequence_id: "**Sequence:** {NNN}"  # Task Sets
+  notes: "## Notes\n{context}"
+
+validation:
+  - filename_matches_title: XXXX in filename == #XXXX in title (error)
+  - required_sections_present: All required fields exist (error)
+  - valid_type: Type in allowed values (error)
+  - valid_priority: Priority in allowed values (error)
+  - valid_timestamp: Posted is ISO 8601 (error)
+  - description_not_empty: Content exists (error)
+  - expected_response_not_empty: Content exists (warning)
+
+template: |
+  # Request #XXXX: {Title}
+
+  **Type:** Standard
+  **Priority:** NORMAL
+  **Posted:** {ISO 8601 timestamp}
+
+  ## Task Description
+  {What needs to be done, context, requirements}
+
+  ## Task Commands
+  ```bash
+  {commands - optional}
+  ```
+
+  ## Expected Response
+  {What Worker should return - format, content, files}
+
+  ## Notes
+  {Optional: Additional context}

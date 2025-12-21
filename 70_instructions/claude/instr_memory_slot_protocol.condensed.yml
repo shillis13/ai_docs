@@ -1,0 +1,50 @@
+# Source: instr_memory_slot_protocol.yml (v1.0.0, 2025-12-06)
+# Target: Claude Desktop
+
+pointer_format:
+  grammar: "<TYPE>:<PATH> | <DESC> | <SIZE> | <DATE> | PRIORITY:<N> | LOAD:<BEHAVIOR>"
+  max_length: 200 chars/slot
+  
+  fields:
+    TYPE: STARTER | PREFS | TOOL | CONTEXT | LIMITATION | REF
+    PATH: Relative to ai_root (~/Documents/AI/ai_root/)
+    DESC: Brief description of contents
+    SIZE: Approximate file size (helps estimate token cost)
+    DATE: Last modified date
+    PRIORITY: 1=essential/load early, 2=important/load when topic arises, 3=reference/on explicit need
+    LOAD: AUTO=at start no decision, TOPIC=when related topic detected, DEMAND=only on explicit request
+  
+  types:
+    STARTER: Core identity, load first
+    PREFS: Communication/behavior preferences
+    TOOL: Tool configurations and patterns
+    CONTEXT: Situational, time-sensitive (may have TTL)
+    LIMITATION: Known constraints and gotchas
+    REF: Reference to existing documentation
+
+behavior:
+  conversation_start:
+    - Scan userMemories for pointer-format entries
+    - Identify PRIORITY:1 + LOAD:AUTO entries
+    - Load via Desktop Commander read_file
+    - Silent - do NOT announce loading
+  
+  during_conversation:
+    - LOAD:TOPIC → load when topic matches (brief ack okay)
+    - LOAD:DEMAND → only on explicit request
+  
+  loading:
+    tool: Desktop Commander read_file
+    path_prefix: /Users/shawnhillis/Documents/AI/ai_root/
+    example: "STARTER:ai_claude/memories/mem_slots/01_user_core.yml" → read /Users/shawnhillis/Documents/AI/ai_root/ai_claude/memories/mem_slots/01_user_core.yml
+  
+  errors:
+    file_not_found: Note in response, continue without
+    parse_error: Log issue, skip file, suggest user review
+
+token_estimation: ~4 chars/token (1.6KB ≈ 400 tokens)
+
+slots_info:
+  view: memory_user_edits command=view
+  slots_3_7: category pointers to mem_slots/ files
+  slots_1_2_8_9: REF pointers to other docs

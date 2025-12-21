@@ -1,0 +1,219 @@
+---
+metadata:
+  title: AI-to-AI Chat Orchestration Protocol
+  version: 0.1.0
+  created: 2025-12-09
+  maintainer: PianoMan
+  status: stub
+  purpose: |
+    Define how AI agents conduct conversations with each other,
+    including direct driving of web UIs and orchestrated multi-party chats.
+
+overview:
+  description: |
+    This protocol covers two modes of AI-to-AI conversation:
+    1. Direct driving - One AI (typically Desktop Claude) controls another AI's web UI
+    2. Orchestrated chat - A coordination layer manages message flow between participants
+  
+  goals:
+    - Enable collaboration between different AI platforms (Claude, ChatGPT, Gemini, Grok)
+    - Leverage each model's unique strengths
+    - Provide optional human oversight without blocking autonomous operation
+    - Capture conversation artifacts for memory system integration
+
+direct_driving_mode:
+  description: |
+    Desktop Claude uses automation tools to interact with web-based AI interfaces.
+  
+  mechanisms:
+    applescript:
+      use_case: macOS native apps, basic browser automation
+      capabilities: [click, type, read_text, window_management]
+    
+    puppeteer:
+      use_case: Complex web UI interaction, form filling, response extraction
+      capabilities: [full_dom_access, screenshot, wait_for_element, evaluate_js]
+    
+    browser_mcp:
+      use_case: When MCP-based browser control is available
+      note: Watch for context cost of snapshots
+  
+  workflow:
+    - step: 1
+      action: Navigate to target AI's web interface
+    - step: 2
+      action: Inject prompt into input field
+    - step: 3
+      action: Submit and wait for response generation
+    - step: 4
+      action: Extract response text
+    - step: 5
+      action: Process response, decide on continuation
+  
+  challenges:
+    - Response detection timing (knowing when AI has finished)
+    - Rate limiting and session management
+    - UI changes breaking automation
+    - Context window management (both AIs accumulate context)
+
+
+orchestrated_chat_mode:
+  description: |
+    A coordination layer (script, human, or AI) manages message flow between
+    two or more AI participants. Messages pass through a checkpoint where they
+    can be approved, edited, redirected, or blocked.
+  
+  participants:
+    initiator:
+      description: The AI or human that starts the conversation
+      examples: [Desktop Claude, Human, Scheduled task]
+    
+    respondents:
+      description: AIs that receive and respond to messages
+      examples: [ChatGPT, Gemini, Grok, Claude Web]
+    
+    coordinator:
+      description: Entity managing message flow
+      modes:
+        autonomous: No human approval, messages flow freely
+        supervised: Human reviews each message before forwarding
+        hybrid: Human approves first N exchanges, then autonomous
+  
+  message_flow:
+    - step: 1
+      action: Initiator generates message
+      output: message_queue/outbound/
+    
+    - step: 2
+      action: Coordinator reviews (if supervised mode)
+      options:
+        approve: Forward as-is
+        edit: Modify content, add context
+        redirect: Send to different participant
+        block: Stop message, log reason
+        inject: Add coordinator's own message
+    
+    - step: 3
+      action: Deliver to respondent via automation
+    
+    - step: 4
+      action: Extract response
+      output: message_queue/inbound/
+    
+    - step: 5
+      action: Coordinator processes response
+      options:
+        forward: Send to initiator
+        summarize: Condense before forwarding
+        branch: Start parallel thread
+        terminate: End conversation
+    
+    - step: 6
+      action: Loop until conversation complete
+
+  coordination_directory:
+    base: ai_comms/chat_orchestration/
+    structure:
+      sessions/: Active conversation sessions
+      message_queue/: Pending messages (inbound/outbound)
+      transcripts/: Completed conversation logs
+      templates/: Prompt templates for different conversation types
+
+
+conversation_types:
+  peer_review:
+    description: One AI reviews another's work
+    pattern: Claude generates → ChatGPT critiques → Claude revises
+    use_case: Code review, document editing, architectural validation
+  
+  research_synthesis:
+    description: Multiple AIs contribute knowledge on a topic
+    pattern: Round-robin or directed questioning
+    use_case: Gathering diverse perspectives, fact-checking
+  
+  debate:
+    description: AIs argue different positions
+    pattern: Thesis → Antithesis → Synthesis
+    use_case: Exploring trade-offs, stress-testing decisions
+  
+  interview:
+    description: One AI systematically queries another
+    pattern: Structured questions, follow-ups based on responses
+    use_case: Knowledge extraction, capability probing
+  
+  collaborative_creation:
+    description: AIs build something together iteratively
+    pattern: Draft → Feedback → Revision cycles
+    use_case: Document creation, code development, design work
+
+integration:
+  memory_system:
+    description: Conversations feed into ai_memories/ pipeline
+    actions:
+      - Export transcript to 10_exported/
+      - Process through standard pipeline
+      - Tag with participants and conversation_type
+  
+  task_system:
+    description: Conversations can generate tasks
+    trigger: When conversation identifies actionable work
+    output: Task file in coordination system
+  
+  todo_system:
+    description: Insights become TODO items
+    trigger: When conversation surfaces future work ideas
+    output: TODO in ai_general/todos/pending/
+
+
+implementation_status:
+  direct_driving:
+    applescript_chatgpt: 
+      status: working
+      notes: Successfully tested Claude → ChatGPT conversations
+    applescript_gemini:
+      status: working
+      notes: Successfully tested Claude → Gemini conversations
+    puppeteer:
+      status: partial
+      notes: Framework exists, needs refinement for response detection
+    browser_mcp:
+      status: experimental
+      notes: Context cost concerns, prefer file-based snapshot analysis
+  
+  orchestrated_chat:
+    basic_framework:
+      status: conceptual
+      notes: Directory structure and message flow defined
+    coordinator_script:
+      status: not_started
+      notes: Need to implement message queue processing
+    human_approval_ui:
+      status: not_started
+      notes: Could be CLI-based or simple web UI
+
+todos:
+  - title: Implement chat_orchestrator.py coordinator script
+    priority: medium
+    scope: Message queue processing, automation hooks
+  
+  - title: Define session file schema
+    priority: high
+    scope: What metadata a conversation session needs
+  
+  - title: Build response detection heuristics
+    priority: high
+    scope: Reliably know when target AI has finished responding
+  
+  - title: Create transcript export format
+    priority: medium
+    scope: How to store completed conversations for memory pipeline
+  
+  - title: Test multi-party conversations (3+ AIs)
+    priority: low
+    scope: Coordination complexity increases significantly
+
+related_documents:
+  - ai_general/docs/10_architecture/ai_communication_architecture_latest.md
+  - ai_general/docs/10_architecture/architecture_overview.md
+  - ai_general/docs/30_protocols/protocol_taskCoordination_latest.yml
+  - ai_general/docs/60_playbooks/cli_agent_operations.yml

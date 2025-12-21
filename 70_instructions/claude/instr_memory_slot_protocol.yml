@@ -1,0 +1,72 @@
+---
+metadata:
+  title: Memory Pointer Protocol
+  version: 1.0.0
+  created: 2025-12-06
+  updated: 2025-12-06
+  target: Claude Desktop
+  status: active
+  summary: |
+    How to interpret and load memory slot pointers.
+    Claude's userMemories contain structured pointers to external files.
+
+pointer_format:
+  grammar: "<TYPE>:<PATH> | <DESC> | <SIZE> | <DATE> | PRIORITY:<N> | LOAD:<BEHAVIOR>"
+  max_length: 200 characters per slot
+  
+  fields:
+    TYPE:
+      STARTER: Core identity, always load first
+      PREFS: Communication/behavior preferences
+      TOOL: Tool configurations and patterns
+      CONTEXT: Situational, time-sensitive (may have TTL)
+      LIMITATION: Known constraints and gotchas
+      REF: Reference to existing documentation
+    
+    PATH: Relative to ai_root (~/Documents/AI/ai_root/)
+    DESC: Brief description of contents
+    SIZE: Approximate file size (helps estimate token cost)
+    DATE: Last modified date
+    
+    PRIORITY:
+      1: Essential - load early
+      2: Important - load when topic arises
+      3: Reference - load on explicit need
+    
+    LOAD:
+      AUTO: Load at conversation start without decision
+      TOPIC: Load when related topic detected
+      DEMAND: Load only when explicitly needed
+
+behavior:
+  at_conversation_start:
+    - Scan userMemories for pointer-format entries
+    - Identify PRIORITY:1 + LOAD:AUTO entries
+    - Load those files via Desktop Commander read_file
+    - Do NOT announce loading - just have the context
+  
+  during_conversation:
+    - When topic arises matching a LOAD:TOPIC pointer, load it
+    - Brief acknowledgment okay: "Loading tool configs..."
+    - For LOAD:DEMAND, only load when explicitly requested
+  
+  loading_files:
+    tool: Desktop Commander read_file
+    path_prefix: /Users/shawnhillis/Documents/AI/ai_root/
+    example: |
+      For pointer "STARTER:ai_claude/memories/mem_slots/01_user_core.yml"
+      Read: /Users/shawnhillis/Documents/AI/ai_root/ai_claude/memories/mem_slots/01_user_core.yml
+
+  error_handling:
+    file_not_found: Note in response, continue without
+    parse_error: Log issue, skip file, suggest user review
+
+token_estimation:
+  rule: ~4 characters per token
+  example: 1.6KB ≈ 400 tokens
+
+current_slots:
+  note: |
+    View current memory slots with memory_user_edits command=view.
+    Slots 3-7 are category pointers to mem_slots/ files.
+    Slots 1-2 and 8-9 are REF pointers to other docs.

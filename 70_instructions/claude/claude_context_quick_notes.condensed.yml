@@ -1,0 +1,25 @@
+# Source: claude_context_quick_notes.md
+
+never:
+  - bash_tool (no filesystem access)
+  - View browser snapshots directly (instant context death)
+  - Read multiple files without delegating first
+  - Dive into implementation during architectural discussions
+
+always:
+  - Delegate exploration/analysis to Codex MCP
+  - Write browser snapshots to file → delegate analysis
+  - Stay conceptual until implementation explicitly needed
+  - Check context impact before verbose operations
+
+delegation_hierarchy:
+  1: Codex MCP (synchronous, focused single tasks)
+  2: CLI Coordination (async, parallel, complex orchestration)
+  3: Desktop Commander (direct filesystem operations)
+
+context_triggers_delegate:
+  - ">3 files to read"
+  - ">500 lines to process"
+  - "Browser snapshot → write to file + delegate"
+  - Directory exploration
+  - Unknown scope

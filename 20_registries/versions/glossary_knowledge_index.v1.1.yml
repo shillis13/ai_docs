@@ -1,0 +1,509 @@
+# Knowledge Glossary + Index
+# Version: 1.0.0
+# Schema: schema_knowledge_glossary_v1
+# Purpose: Enable Claude instances to recognize domain terms and know where to find details
+# Load: AUTO (include in every session's initial context)
+
+metadata:
+  title: AI Root Knowledge Glossary
+  version: 1.1.0
+  schema_version: schema_knowledge_glossary_v1
+  generated: 2025-12-19T10:30:00-06:00
+  generator: Desktop Claude
+  term_count: 43
+  file_count: 18
+
+  purpose: |
+    Solves the bootstrap problem: Claude needs to know what's IN files
+    to know WHEN to load them. This glossary provides term recognition
+    and pointer resolution without loading full documents.
+
+  usage: |
+    When Claude encounters a term from this glossary in conversation:
+    1. Use definition for immediate context
+    2. Load primary_ref if details needed
+    3. Check also_in for related context
+
+terms:
+
+  ai_root:
+    term: AI Root
+    aliases: [ai_root, workspace]
+    domain: architecture
+    definition: |
+      The root directory (~/Documents/AI/ai_root/) containing all AI-related
+      workspaces, memories, coordination systems, and shared resources.
+    primary_ref: REF:ai_general/docs/10_architecture/architecture_overview.condensed.yml
+    also_in:
+      - REF:ai_general/docs/10_architecture/architectural_layer_model.condensed.yml
+    related_terms: [communication_layer, implementation_layer, knowledge_layer]
+
+  architectural_layer_model:
+    term: Architectural Layer Model
+    aliases: [layer model, three-layer model]
+    domain: architecture
+    definition: |
+      Three-tier architecture separating communication (ai_comms), implementation
+      (ai_claude), and knowledge (ai_memories) concerns. Public coordination vs
+      private workspace vs shared learning.
+    primary_ref: REF:ai_general/docs/10_architecture/architectural_layer_model.condensed.yml
+    related_terms: [communication_layer, implementation_layer, knowledge_layer]
+
+  at_self_wake:
+    term: AT Self-Wake
+    aliases: [AT alarm, self-wake pattern]
+    domain: protocol
+    definition: |
+      Pattern where Desktop Claude schedules AT jobs to self-prompt after delegating
+      long-running work. AT is Desktop's wake-up alarm, not CLI's doorbell.
+    primary_ref: REF:ai_general/docs/30_protocols/protocol_at_self_wake.condensed.yml
+    also_in:
+      - REF:ai_general/docs/60_playbooks/parallel_orchestration_case_study.yml
+    related_terms: [cli_coordination, desktop_claude]
+
+  bootstrap_problem:
+    term: Bootstrap Problem
+    aliases: [context bootstrap]
+    domain: concept
+    definition: |
+      The challenge that Claude needs to know what's IN files to know WHEN to load
+      them. Solved by glossary providing term recognition without full file loading.
+    primary_ref: REF:ai_general/docs/50_schemas/schema_knowledge_glossary_v1.yml
+    related_terms: [reference_pointers, knowledge_manifest]
+
+  chat_continuity_recovery:
+    term: Chat Continuity Recovery
+    aliases: [broken chat recovery, context exhaustion recovery]
+    domain: workflow
+    definition: |
+      Automated recovery from broken chats caused by context exhaustion. Detects
+      "prompt is too long", exports chat, condenses, and continues in new chat with digest.
+    primary_ref: REF:ai_general/docs/40_specs/spec_chat_continuity_recovery.condensed.yml
+    related_terms: [context_preservation]
+
+  claim_prefix:
+    term: Claim Prefix
+    aliases: [claimed prefix]
+    domain: protocol
+    definition: |
+      When a worker claims a task, it renames with prefix claimed_{YYYYMMDD_HHMMSS}_{PID}_
+      to prevent race conditions with multiple workers.
+    primary_ref: REF:ai_general/docs/30_protocols/protocol_taskCoordination.condensed.yml
+    related_terms: [task_lifecycle, in_progress]
+
+  claude_cli:
+    term: Claude CLI
+    aliases: [CLI, claude_cli, CLI worker]
+    domain: entity
+    definition: |
+      Autonomous execution workers running Claude in terminal via claude_cli.sh wrapper.
+      Supports named sessions, agent profiles, and background execution.
+    primary_ref: REF:ai_general/docs/10_architecture/architecture_overview.condensed.yml
+    also_in:
+      - REF:ai_general/docs/40_specs/cli_specialized_agent_roles.condensed.md
+    related_terms: [librarian, dev_lead, custodian, ops]
+
+  codex_mcp:
+    term: Codex MCP
+    aliases: [codex:codex]
+    domain: tool
+    definition: |
+      Synchronous MCP tool invoked via codex:codex function call. Uses OpenAI API
+      (models: o3, o4-mini, etc.). 30-60 second timeout. For immediate in-context
+      results, code review, validation. Runs within Desktop Claude's MCP session.
+    primary_ref: REF:ai_general/docs/70_instructions/claude/know_codex_mcp.condensed.yml
+    also_in:
+      - REF:ai_general/docs/60_playbooks/parallel_orchestration_case_study.yml
+    related_terms: [codex_cli, mcp_server]
+
+  codex_cli:
+    term: Codex CLI
+    aliases: [codex binary]
+    domain: entity
+    definition: |
+      Async CLI binary at /usr/local/bin/codex (OpenAI). Wrapped by
+      ~/bin/ai/cli/codex_cli.sh. Runs as separate process, no timeout constraint.
+      For longer async tasks. Uses OpenAI API. Distinct from Codex MCP.
+    primary_ref: REF:ai_general/docs/20_registries/tools_manifest.condensed.yml
+    also_in:
+      - REF:ai_general/docs/10_architecture/architecture_overview.condensed.yml
+    related_terms: [codex_mcp, claude_cli]
+
+  communication_layer:
+    term: Communication Layer
+    aliases: [ai_comms]
+    domain: architecture
+    definition: |
+      Official interface for task assignment, status tracking, and work product delivery.
+      Located in ai_comms/. Public coordination space where actors exchange messages.
+    primary_ref: REF:ai_general/docs/10_architecture/architectural_layer_model.condensed.yml
+    related_terms: [implementation_layer, knowledge_layer, task_lifecycle]
+
+  condensed_files:
+    term: Condensed Files
+    aliases: [condensed version, .condensed.yml]
+    domain: concept
+    definition: |
+      Compressed versions of documentation files reducing tokens by 60-80% while
+      preserving essential semantics. Preferred for loading over full versions.
+    primary_ref: REF:ai_general/docs/30_protocols/protocol_condensed_resolution.yml
+    related_terms: [reference_pointers]
+
+  condensed_resolution_protocol:
+    term: Condensed Resolution Protocol
+    aliases: [condensed lookup]
+    domain: protocol
+    definition: |
+      When resolving REF:/see: pointers, check for {basename}.condensed.yml first.
+      Load condensed if exists, original if not.
+    primary_ref: REF:ai_general/docs/30_protocols/protocol_condensed_resolution.yml
+    related_terms: [reference_pointers, condensed_files]
+
+  context_preservation:
+    term: Context Preservation
+    aliases: [context conservation, context window management]
+    domain: concept
+    definition: |
+      Strategy for managing 200K token limit. Memory pointers save 40-55K vs auto-loaded
+      content. Monitor at 60%, handoff before 90%.
+    primary_ref: REF:ai_general/docs/10_architecture/architecture_overview.condensed.yml
+    related_terms: [reference_pointers, federated_memory]
+
+  custodian:
+    term: Custodian
+    aliases: [repo maintainer, repo-maint]
+    domain: entity
+    definition: |
+      CLI agent role for filesystem hygiene and versioning. Validates structure,
+      naming conventions, fixes broken symlinks, maintains *_latest links.
+    primary_ref: REF:ai_general/docs/40_specs/cli_specialized_agent_roles.condensed.md
+    related_terms: [librarian, dev_lead, ops]
+
+  desktop_claude:
+    term: Desktop Claude
+    aliases: [Claude Desktop, claude_desktop]
+    domain: entity
+    definition: |
+      Architect/Systems strategic coordinator. Has MCP servers (Desktop Commander,
+      filesystem, Chrome, PDF), web search/fetch, artifacts, memory system.
+    primary_ref: REF:ai_general/docs/10_architecture/architecture_overview.condensed.yml
+    related_terms: [claude_cli, codex_cli]
+
+  desktop_commander:
+    term: Desktop Commander
+    aliases: [DC, desktop-commander]
+    domain: tool
+    definition: |
+      MCP server providing file operations (read, write, edit), process management,
+      search, and directory operations. Preferred over bash for file operations.
+    primary_ref: REF:ai_general/docs/20_registries/tools_manifest.condensed.yml
+    related_terms: [mcp_server]
+
+  dev_lead:
+    term: Dev Lead
+    aliases: [dev-lead]
+    domain: entity
+    definition: |
+      CLI agent role for development coordination. Code/architecture review, task
+      breakdown, specs, assignment, status tracking, quality oversight.
+    primary_ref: REF:ai_general/docs/40_specs/cli_specialized_agent_roles.condensed.md
+    related_terms: [librarian, custodian, ops]
+
+  federated_memory:
+    term: Federated Memory
+    aliases: [federated memory architecture]
+    domain: architecture
+    definition: |
+      Distributed AI memory federation with autonomous per-AI persistent memory and
+      shared cross-reference. Each AI writes to own slots, reads others freely.
+    primary_ref: REF:ai_general/docs/10_architecture/federated_memory_architecture.condensed.yml
+    also_in:
+      - REF:ai_general/docs/30_protocols/protocol_federated_memory.condensed.yml
+    related_terms: [memory_slots, cross_reference]
+
+  implementation_layer:
+    term: Implementation Layer
+    aliases: [ai_claude]
+    domain: architecture
+    definition: |
+      Configuration, runtime state, and working directories - private workspace.
+      Contains persona model, instructions, working_tasks/, draft artifacts.
+    primary_ref: REF:ai_general/docs/10_architecture/architectural_layer_model.condensed.yml
+    related_terms: [communication_layer, knowledge_layer]
+
+  in_progress:
+    term: In Progress
+    aliases: [in_progress]
+    domain: protocol
+    definition: |
+      Task lifecycle state for active work. Contains claimed task folders with claim
+      prefix: claimed_{TS}_{PID}_{taskname}/.
+    primary_ref: REF:ai_general/docs/30_protocols/protocol_taskCoordination.condensed.yml
+    related_terms: [to_execute, completed, task_lifecycle]
+
+  knowledge_layer:
+    term: Knowledge Layer
+    aliases: [ai_memories]
+    domain: architecture
+    definition: |
+      Shared knowledge base and collective learning accessible to all actors. Contains
+      conversation histories, knowledge digests, decision records.
+    primary_ref: REF:ai_general/docs/10_architecture/architectural_layer_model.condensed.yml
+    related_terms: [communication_layer, implementation_layer]
+
+  knowledge_pipeline:
+    term: Knowledge Pipeline
+    aliases: [memory pipeline, chat pipeline]
+    domain: workflow
+    definition: |
+      Multi-stage processing of chat exports: Export → Preprocess → Convert to YAML
+      → Index → Generate summaries → Build threads.
+    primary_ref: REF:ai_general/docs/10_architecture/architecture_overview.condensed.yml
+    also_in:
+      - REF:ai_general/docs/30_protocols/chat_pipeline.condensed.yml
+    related_terms: [librarian, ai_memories]
+
+  librarian:
+    term: Librarian
+    aliases: [librarian agent]
+    domain: entity
+    definition: |
+      CLI agent role for knowledge pipeline and ai_memories/ management. Runs files
+      through pipeline, quality checks, creates indexes/summaries.
+    primary_ref: REF:ai_general/docs/40_specs/cli_specialized_agent_roles.condensed.md
+    also_in:
+      - REF:ai_general/docs/60_playbooks/parallel_orchestration_case_study.yml
+    related_terms: [dev_lead, custodian, ops, knowledge_pipeline]
+
+  mcp_server:
+    term: MCP Server
+    aliases: [Model Context Protocol server]
+    domain: tool
+    definition: |
+      External service providing Claude with capabilities beyond native tools.
+      Examples: Desktop Commander, filesystem, Chrome control.
+    primary_ref: REF:ai_general/docs/10_architecture/architecture_overview.condensed.yml
+    related_terms: [desktop_commander]
+
+  memory_slots:
+    term: Memory Slots
+    aliases: [native memory, slot]
+    domain: architecture
+    definition: |
+      Claude's 30 native memory slots (6KB total, 200 chars each). Used as index
+      system via reference pointers rather than storing content directly.
+    primary_ref: REF:ai_general/docs/30_protocols/protocol_reference_pointers.condensed.yml
+    also_in:
+      - REF:ai_general/docs/10_architecture/federated_memory_architecture.condensed.yml
+    related_terms: [reference_pointers, federated_memory]
+
+  named_sessions:
+    term: Named Sessions
+    aliases: [persistent sessions]
+    domain: protocol
+    definition: |
+      Claude CLI feature for session persistence across resumes. Use -n flag with
+      session name. Sessions preserve context accumulation.
+    primary_ref: REF:ai_general/docs/30_protocols/cli_session_persistence.condensed.yml
+    related_terms: [claude_cli, session_registry]
+
+  ops:
+    term: Ops
+    aliases: [ops agent]
+    domain: entity
+    definition: |
+      CLI agent role for task execution from coordination system. Handles operational
+      execution and task processing.
+    primary_ref: REF:ai_general/docs/40_specs/cli_specialized_agent_roles.condensed.md
+    related_terms: [librarian, dev_lead, custodian]
+
+  parallel_orchestration:
+    term: Parallel Orchestration
+    aliases: [parallel workers, multi-worker pattern]
+    domain: workflow
+    definition: |
+      Pattern of launching multiple CLI workers simultaneously for parallel execution,
+      with Desktop Claude monitoring via AT self-wake.
+    primary_ref: REF:ai_general/docs/60_playbooks/parallel_orchestration_case_study.yml
+    related_terms: [at_self_wake, claude_cli]
+
+  reference_pointers:
+    term: Reference Pointers
+    aliases: [REF:, memory pointers, pointer format]
+    domain: protocol
+    definition: |
+      System transforming memory slots into index referencing unlimited external context.
+      Format: <TYPE>:<TARGET> [| <MODIFIER>:<VALUE>]*. Types: PATH, QUERY, RECENT.
+    primary_ref: REF:ai_general/docs/30_protocols/protocol_reference_pointers.condensed.yml
+    related_terms: [memory_slots, load_behaviors]
+
+  response_footer:
+    term: Response Footer
+    aliases: [footer spec, metadata footer]
+    domain: protocol
+    definition: |
+      Canonical metadata footer format for AI responses: AI_Name | Persona:vX.X[Δ] |
+      Proj:Name | Chat:Title | Timestamp | Msg:N | Usage:~X%|NA | Artifacts:N | Tags:...
+    primary_ref: REF:ai_general/docs/40_specs/spec_response_footer.condensed.yml
+    related_terms: [persona]
+
+  session_registry:
+    term: Session Registry
+    aliases: [session_registry.yml]
+    domain: tool
+    definition: |
+      YAML file tracking CLI session metadata at ~/.claude/session_registry.yml.
+      Maps session names to project directories.
+    primary_ref: REF:ai_general/docs/30_protocols/cli_session_persistence.condensed.yml
+    related_terms: [named_sessions, claude_cli]
+
+  staged:
+    term: Staged
+    aliases: [staged/]
+    domain: protocol
+    definition: |
+      Pre-pipeline task state in coordination system. Tasks here are prepared but
+      not yet released to workers for execution.
+    primary_ref: REF:ai_general/docs/30_protocols/protocol_taskCoordination.condensed.yml
+    related_terms: [to_execute, task_lifecycle]
+
+  task_coordination_protocol:
+    term: Task Coordination Protocol
+    aliases: [CLI coordination, task protocol]
+    domain: protocol
+    definition: |
+      Directory-based task lifecycle management: staged → to_execute → in_progress →
+      completed|error. Defines file formats, claim mechanism, orchestration patterns.
+    primary_ref: REF:ai_general/docs/30_protocols/protocol_taskCoordination.condensed.yml
+    related_terms: [claim_prefix, task_lifecycle]
+
+  task_lifecycle:
+    term: Task Lifecycle
+    aliases: [task flow]
+    domain: protocol
+    definition: |
+      Movement of tasks through states: staged → to_execute → in_progress (claimed)
+      → completed|error. Directories represent states.
+    primary_ref: REF:ai_general/docs/30_protocols/protocol_taskCoordination.condensed.yml
+    related_terms: [staged, to_execute, in_progress, completed]
+
+  to_execute:
+    term: To Execute
+    aliases: [to_execute]
+    domain: protocol
+    definition: |
+      Task lifecycle state for tasks ready to be claimed by workers. Entry point
+      for pipeline execution.
+    primary_ref: REF:ai_general/docs/30_protocols/protocol_taskCoordination.condensed.yml
+    related_terms: [staged, in_progress, task_lifecycle]
+
+  todo_vs_task:
+    term: TODO vs Task
+    aliases: [todos vs tasks]
+    domain: concept
+    definition: |
+      TODOs are backlog items in ai_general/todos/ - ideas not yet actionable.
+      Tasks are actionable assigned work in ai_comms/{actor}/tasks/ ready to execute.
+    primary_ref: REF:ai_general/docs/10_architecture/architectural_layer_model.condensed.yml
+    related_terms: [task_lifecycle]
+
+  tools_manifest:
+    term: Tools Manifest
+    aliases: [tools registry]
+    domain: registry
+    definition: |
+      Registry of tool locations including CLI wrappers (claude_cli.sh, codex_cli.sh),
+      Python tools, and utilities.
+    primary_ref: REF:ai_general/docs/20_registries/tools_manifest.condensed.yml
+    related_terms: [claude_cli, codex_cli, desktop_commander]
+
+  working_tasks:
+    term: Working Tasks
+    aliases: [working_tasks/]
+    domain: architecture
+    definition: |
+      Runtime working directory at ai_claude/working_tasks/. Contains messy reality
+      - notes, drafts, experiments for active tasks before delivery.
+    primary_ref: REF:ai_general/docs/10_architecture/architectural_layer_model.condensed.yml
+    related_terms: [implementation_layer, task_lifecycle]
+
+  write_immediate:
+    term: Write Immediate
+    aliases: [log immediately, never checkpoint]
+    domain: concept
+    definition: |
+      Memory logging principle: append observations immediately as they occur.
+      Never batch insights then save later.
+    primary_ref: REF:ai_general/docs/10_architecture/federated_memory_architecture.condensed.yml
+    also_in:
+      - REF:ai_general/docs/30_protocols/protocol_federated_memory.condensed.yml
+    related_terms: [federated_memory, memory_slots]
+
+  yaml_as_source:
+    term: YAML as Source
+    aliases: [YAML-first]
+    domain: concept
+    definition: |
+      Pattern where YAML is the canonical source format for documentation, enabling
+      structured data with narrative. Markdown generated from YAML when needed.
+    primary_ref: REF:ai_general/docs/10_architecture/architecture_overview.condensed.yml
+    related_terms: [condensed_files]
+
+  chatty:
+    term: Chatty
+    aliases: [ChatGPT peer]
+    domain: entity
+    definition: |
+      ChatGPT instance configured as peer collaborator in multi-AI system. Used for
+      peer review, diverse perspectives, and AI-to-AI conversation.
+    primary_ref: REF:ai_general/docs/10_architecture/architecture_overview.condensed.yml
+    also_in:
+      - REF:ai_general/docs/30_protocols/protocol_ai_chat_orchestration.condensed.yml
+    related_terms: [desktop_claude, ai_chat_orchestration]
+
+  ai_chat_orchestration:
+    term: AI Chat Orchestration
+    aliases: [chat orchestration, orchestrated chat]
+    domain: protocol
+    definition: |
+      AI-to-AI conversation protocols covering direct UI driving (AppleScript,
+      Puppeteer) and orchestrated multi-party coordination with message queues.
+    primary_ref: REF:ai_general/docs/30_protocols/protocol_ai_chat_orchestration.condensed.yml
+    related_terms: [chatty, desktop_claude]
+
+  load_behaviors:
+    term: Load Behaviors
+    aliases: [AUTO, TOPIC, DEMAND]
+    domain: protocol
+    definition: |
+      Reference pointer loading modes: AUTO (load at conversation start), TOPIC
+      (load when related topic detected), DEMAND (load only when explicitly needed).
+    primary_ref: REF:ai_general/docs/30_protocols/protocol_reference_pointers.condensed.yml
+    related_terms: [reference_pointers, memory_slots]
+
+# Domain categories for filtering
+domains:
+  architecture:
+    description: System design patterns, layer models, structural concepts
+    terms: [ai_root, architectural_layer_model, communication_layer, federated_memory,
+            implementation_layer, knowledge_layer, memory_slots, working_tasks]
+  protocol:
+    description: Communication patterns, coordination rules, handoff procedures
+    terms: [at_self_wake, claim_prefix, condensed_resolution_protocol, in_progress,
+            named_sessions, reference_pointers, response_footer, staged,
+            task_coordination_protocol, task_lifecycle, to_execute, ai_chat_orchestration,
+            load_behaviors]
+  tool:
+    description: MCP servers, utilities, external integrations
+    terms: [codex_mcp, desktop_commander, mcp_server, session_registry, tools_manifest]
+  concept:
+    description: Mental models, principles, named patterns
+    terms: [bootstrap_problem, condensed_files, context_preservation, todo_vs_task,
+            write_immediate, yaml_as_source]
+  workflow:
+    description: Multi-step procedures, operational sequences
+    terms: [chat_continuity_recovery, knowledge_pipeline, parallel_orchestration]
+  entity:
+    description: Named systems, agents, platforms
+    terms: [chatty, claude_cli, codex_cli, custodian, desktop_claude, dev_lead,
+            librarian, ops]

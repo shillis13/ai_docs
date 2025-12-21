@@ -1,0 +1,80 @@
+# Source: instr_pointer_loading_latest.yml (v1.0.0, 2025-12-05)
+# Related: protocol_reference_pointers_latest.yml, schema_pointer_syntax_latest.yml
+
+recognition:
+  pattern: "<TYPE>:<PATH_OR_QUERY> [| <KEY>:<VALUE>]*"
+  types_path: STARTER, PROJECT, PREFS, CONTEXT, TOOL, REF
+  types_search: QUERY
+  types_category: RECENT
+  action: Parse each pointer, categorize by type and load behavior
+
+load_sequence:
+  1_conversation_start:
+    condition: "PRIORITY:1 AND LOAD:AUTO"
+    action: Load via Desktop Commander immediately
+    silent: true
+    max_files: 5
+  
+  2_topic_triggered:
+    condition: "PRIORITY:2 AND LOAD:TOPIC AND topic_matches"
+    action: Load when conversation enters relevant domain
+    announce: optional/brief
+    matching: Use tags field in destination file
+  
+  3_on_demand:
+    condition: "PRIORITY:3 OR LOAD:DEMAND"
+    action: Load only when explicitly needed
+    announce: yes - explain why loading
+
+execution_methods:
+  PATH_pointers:
+    tool: Desktop Commander read_file
+    path_base: ~/Documents/AI/ai_root/
+  
+  QUERY_pointers:
+    tool: memory_search or Desktop Commander start_search
+    fallback: ripgrep-based search of ai_memories/
+  
+  RECENT_pointers:
+    tool: list_directory + read_file
+    method: List category dir, sort by date, read top N
+    categories:
+      session_summaries: ai_claude/work/session_summaries/
+      task_completions: ai_comms/claude_cli/completed/
+      decisions: ai_memories/60_decisions/
+
+pointer_chaining:
+  when: Destination file contains 'pointers' section
+  behavior: Treat nested pointers same as memory slot pointers, follow based on rel type and load hint
+  depth_limit: 3
+  circular_prevention: Track loaded paths, skip already-loaded, warn on circular
+
+context_conservation:
+  principle: Load what's needed, not everything available
+  max_auto_load: 5 files at conversation start
+  prefer_summaries: Use header.summary when full content not needed
+  token_awareness: Each loaded file consumes context; prefer small focused files; large files use PRIORITY:3/LOAD:DEMAND
+
+error_handling:
+  file_not_found: Note in thinking, continue without (silent)
+  parse_error: Log, skip, suggest review (brief announce if relevant)
+  search_no_results: Note, continue (announce only if user asked)
+
+integration:
+  native_memory_content:
+    status: Coexists during transition
+    priority: Pointers take precedence over raw content
+    migration: Gradually replace content with pointers
+  project_files:
+    status: Separate system, loads normally
+    relationship: Pointers can reference project file locations
+  user_preferences:
+    status: Separate system (Anthropic-handled)
+    relationship: Pointers supplement with deeper context
+
+do_not:
+  - Load all pointers at once
+  - Announce every file load
+  - Follow chains deeper than 3 levels
+  - Re-load already loaded files in same session
+  - Guess at file contents if load fails

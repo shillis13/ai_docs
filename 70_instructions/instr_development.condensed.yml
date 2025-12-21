@@ -1,0 +1,68 @@
+---
+# Development Protocol - Condensed
+# Full: versions/instr_development_v2.0.yml
+
+metadata:
+  version: 2.0.0
+  last_updated: 2025-11-03
+  maintainer: PianoMan
+  status: active
+
+purpose: |
+  Deliver readable, reusable, maintainable, and reliable code.
+  Minimize back-and-forth by providing implementation-ready outputs with clear assumptions.
+  Preserve trust through precise change tracking and immediate error correction.
+
+collaboration_workflow:
+  understand_overview_implement: Confirm intent, outline plan (assumptions + trade-offs), then code
+  minimal_diff_responses: Show only changed lines with context; full files only when requested
+  integrity_preservation: |
+    Treat existing behavior and comments as requirements.
+    If change breaks compatibility, flag impact and rationale.
+  information_gaps: |
+    State missing inputs instead of inventing placeholders.
+    Offer concrete next steps (files to upload, values to confirm).
+  tone_clarity: Concise, direct, professional; highlight risks/questions before detail
+  reuse_existing: Prefer existing helpers when practical; call out modularization opportunities
+
+universal_coding_standards:
+  - Single return per function; return a variable, not inline expression
+  - No nested function calls in parameter lists—assign intermediate results
+  - Prefer if/elseif/else over switch/case
+  - One function per code block (except first-pass scaffolds)
+  - Docstrings/descriptors immediately above function definition
+  - Reuse existing helpers; call out modularization opportunities
+
+language_specific:
+  powershell:
+    - Use [CmdletBinding()] by default
+    - Header template: "#region FunctionName, .SYNOPSIS, #endregion"
+    - No Write-Host; use Write-Verbose/Debug or shared Log
+    - Separate entry logic into wrapper (e.g., Invoke-Main)
+  python:
+    - Full docstring: summary, Args, Returns, example when helpful
+    - Type hints, enums, named constants over literals
+    - Return variables; avoid inline expressions in return
+    - Targeted try/except with actionable messages
+  vba:
+    - Keep data members Private; expose via Property Get/Let/Set
+    - Prefer Private Sub with Friend Function wrappers for external access
+    - Test naming: Test_<Subject>
+    - Error handling via On Error with informative messages
+  power_query_m:
+    - Descriptive unique step names
+    - Brief // comment on major transformations
+    - Validate inputs in custom functions before work
+
+logging_error_handling:
+  powershell: Shared logging switches (-Dbg, -Info, -Warn, -Err, -Always, -DryRun)
+  python: Log through project logger; actionable context in exceptions
+  vba: Capture Err.Number/Description; surface clear remediation steps
+  general: Report skipped items and partial failures explicitly
+
+final_review_checklist:
+  - Goal alignment confirmed
+  - Protocol rules followed (returns, naming, descriptors, error handling)
+  - Changes limited to intended scope; side-effects noted
+  - Tests or verification steps suggested when appropriate
+  - Response format supports quick application (diffs, commands, patch blocks)

@@ -1,0 +1,328 @@
+metadata:
+  title: Documentation Regression Test - Answer Key & Rubric
+  purpose: Grade AI responses to regression test questions
+  generated: "2025-12-08"
+  updated: "2025-12-11"
+  note: |
+    DO NOT share with test subjects.
+    This file contains source document references and expected answers.
+    Use doc_regression_test_questions.yml to administer the test.
+
+test_categories:
+  - category: Orchestration Entry Points & Scheduling
+    source_docs:
+      - 10_architecture/architecture_latest.yml
+      - 10_architecture/README.md
+    discovery_hints:
+      - "Should find via manifest load_sequence or search for 'orchestration' or 'entry points'"
+      - "Memory pointer REF to architecture docs"
+    questions:
+      - basic: "How do you check if an AI is available and send prompts/notifications?"
+        verification: "Describe the flat-plus-internal scripts layout, core entry points (ai_isBusy, send_prompt, send_notification, monitor), and the scheduling triple (set_scheduled_prompt, send_scheduled_prompt, scheduled_prompts_daemon) including their default paths and router pattern."
+        expected_references:
+          - scripts root at ~/Documents/AI/ai_root/ai_general/scripts
+          - _internal channel implementations behind each entry point
+          - coordination dir at ~/.claude/coordination and scheduling at ~/.claude/coordination/scheduling
+          - logs under scripts/logs
+        gap_indicator: "If AI omits scheduling triple, misstates paths, or references pulse-only legacy layout."
+
+  - category: CLI Orchestration Patterns
+    source_docs:
+      - 10_architecture/cli_orchestration_latest.md
+    discovery_hints:
+      - "Search for 'CLI orchestration' or 'delegation patterns'"
+      - "Follow depends_on from task coordination protocol"
+    questions:
+      - basic: "How do you delegate a simple task from Desktop Claude to a CLI worker?"
+        verification: "Explain the three communication patterns (simple task, complex with questions, orchestrator fan-out) and how non-response communication uses instant_messaging/active plus progress/notification channels."
+        expected_references:
+          - coordination to_execute → in_progress → completed folder flow
+          - instant_messaging/active per task for blockers/questions
+          - response files written back under task folders
+          - desktop ↔ CLI orchestrator fan-out pattern (subtasks to multiple CLIs)
+        gap_indicator: "If AI forgets instant messaging threads, misplaces task folders, or treats CLI as executor-only."
+
+  - category: Task Coordination Protocol v5
+    source_docs:
+      - 30_protocols/protocol_taskCoordination_latest.yml
+    discovery_hints:
+      - "Should find via LOAD:TOPIC pointer when 'task' or 'coordination' mentioned"
+      - "Search for 'claim task' or 'coordination protocol'"
+    questions:
+      - basic: "How does a CLI claim a task and mark it complete?"
+        verification: "Detail the coordination directory structure (staged, to_execute, in_progress, completed, error, cancelled, logs), claim prefix format with timestamp+PID, state transitions, and instant_messaging file naming."
+        expected_references:
+          - claim prefix example claimed_YYYYMMDD_HHMMSS_PID_req_xxxx
+          - task folder contents req_xxxx.md + response_NNN_cli_PID.md
+          - instant_messaging o2w_*/w2o_* naming under coordination/instant_messaging/active
+          - orchestrator/worker responsibilities for monitoring IM before completion
+        gap_indicator: "If AI cites v3.1 file-per-task rules, wrong prefixes, or omits staged/instant_messaging folders."
+
+  - category: CLI Session Persistence
+    source_docs:
+      - 30_protocols/cli_session_persistence.md
+    discovery_hints:
+      - "Search for 'session persistence' or 'resume CLI'"
+      - "May find via CLI-related playbooks"
+    questions:
+      - basic: "How do you resume a previous Claude CLI session?"
+        verification: "Explain history.jsonl fields (display, project, sessionId, timestamp), per-project scoping, session-env/file-history/debug folders, and wrapper commands (new/continue/resume/auto/task) with note that conversation text lives server-side."
+        expected_references:
+          - ~/.claude/history.jsonl schema and project scoping
+          - session folders under session-env/, file-history/, debug/
+          - claude_cli_session.sh commands new/continue/resume/auto/task
+          - claude -r <sessionId> behavior for server-stored history
+        gap_indicator: "If AI assumes chats are stored locally, ignores project scoping, or misses wrapper commands."
+
+  - category: Reference Pointer Protocol & Loading
+    source_docs:
+      - 30_protocols/protocol_reference_pointers_latest.yml
+      - 70_instructions/instr_pointer_loading_latest.yml
+    discovery_hints:
+      - "Should find via memory slot content itself (pointers reference pointer docs)"
+      - "Search for 'pointer' or 'memory slot'"
+    questions:
+      - basic: "What are reference pointers and why use them instead of storing raw memory content?"
+        verification: "Give pointer format (<TYPE>:<TARGET> | modifiers), types PATH/QUERY/RECENT, load behaviors (AUTO/TOPIC/DEMAND with priorities), lazy loading sequence, Desktop Commander + search resolution, and pointer chaining depth/duplicate prevention."
+        expected_references:
+          - pointer string limit (~200 chars) and examples like STARTER:ai_memories/... | PRIORITY:1
+          - load sequence: AUTO at conversation start (max 5 files), TOPIC trigger, DEMAND on request
+          - execution methods for PATH (read_file), QUERY (search), RECENT (list/sort)
+          - chaining depth_limit 3 and circular prevention list
+        gap_indicator: "If AI tries to stuff full content into memory slots, ignores load hints, or skips QUERY/RECENT handling."
+
+  - category: AI Message Sender
+    source_docs:
+      - 40_specs/spec_ai_message_sender_latest.yml
+    discovery_hints:
+      - "Search for 'send message' or 'message sender'"
+      - "May find via orchestration architecture references"
+    questions:
+      - basic: "How do you send a message to Claude or ChatGPT automatically?"
+        verification: "State the send_ai_message.sh interface (app param claude/chatgpt, message param), behavior (activates app, keystroke timing, enter submission), one-way nature (no response read), and concurrency caution."
+        expected_references:
+          - script path /Users/shawnhillis/bin/projects/chat_orchestrators/send_ai_message.sh
+          - activation delay then message_input via AppleScript
+          - return codes 0/1 and sample commands for claude/chatgpt/multi-line
+          - warning about non-thread-safe concurrent calls
+        gap_indicator: "If AI claims responses are captured, omits activation/timing, or offers invalid app values."
+
+  - category: Chat Continuity Recovery
+    source_docs:
+      - 40_specs/spec_chat_continuity_recovery_latest.yml
+    discovery_hints:
+      - "Search for 'continuity' or 'broken chat' or 'prompt too long'"
+      - "May find via chat orchestration references"
+    questions:
+      - basic: "What do you do when a Claude chat hits 'prompt is too long'?"
+        verification: "Describe detection via claude.ai-web.log, interactive notification with countdown/pause/cancel/continue buttons and links, and recovery sequence (export chat, condensed history, faux context digest, download to ai_memories/40_digests/chat_mems, create new chat, attach files, continue)."
+        expected_references:
+          - trigger string "prompt is too long" and notification elements
+          - steps 1–4 outputs condensed_chat_{id}.md and faux_context_digest_{id}.md
+          - download path ~/Documents/AI/ai_root/ai_memories/40_digests/chat_mems/
+          - placeholder rewind step noted as not_implemented
+        gap_indicator: "If AI only says 'start new chat' without export/digest steps or misses controls for pause/cancel/continue."
+
+  - category: JS Analysis Playbook
+    source_docs:
+      - 40_specs/spec_js_analysis_playbook_latest.yml
+    discovery_hints:
+      - "Search for 'analysis playbook' or 'code validation'"
+      - "Found via specs index"
+    questions:
+      - basic: "When should you use the JavaScript analysis playbook?"
+        verification: "List core checks across languages (Python import ordering, PowerShell param/[CmdletBinding], JS/TS import-export symmetry and unused vars, Markdown/YAML heading/dup key rules), mention reusable helpers validatePythonStructure/analyzeFileStructure, and principle of small composable helpers with future enhancements."
+        expected_references:
+          - version 1.0.0 overview emphasizing REPL-driven checks
+          - helper function names and purposes
+          - cross-language check examples (imports before code, param blocks, heading hierarchy)
+          - note on building dashboards/metrics and planned pluggable rule sets
+        gap_indicator: "If AI thinks it's a TypeScript library, skips non-JS checks, or omits helper names."
+
+  - category: CLI MCP Configuration
+    source_docs:
+      - 60_playbooks/cli_mcp_configuration.md
+    discovery_hints:
+      - "Search for 'MCP configuration' or 'CLI MCP'"
+      - "Found via playbooks directory listing"
+    questions:
+      - basic: "How do you enable Desktop Commander and BrowserMCP for CLI instances?"
+        verification: "Provide Codex config (~/.codex/config.toml mcp_servers.desktop-commander/browsermcp using npx), Claude CLI commands (claude mcp add ... with stdio/user scope), verification via mcp list, and note restart requirement."
+        expected_references:
+          - setup_cli_mcp_servers.sh script mention
+          - toml snippet with command="npx" args [-y, @modelcontextprotocol/server-desktop-commander] and @browsermcp/mcp
+          - claude mcp add desktop-commander/browsermcp commands
+          - active servers list including pdf-tools and codex for Desktop
+        gap_indicator: "If AI mentions only desktop-commander, forgets browsermcp, or cites wrong config paths."
+
+  - category: Codex CLI Install & Coordination
+    source_docs:
+      - 60_playbooks/install_cli_codex_coordination_latest.md
+    discovery_hints:
+      - "Search for 'Codex install' or 'coordination install'"
+      - "Found via playbooks or Codex MCP knowledge doc"
+    questions:
+      - basic: "How do you wire Codex CLI into the coordination system?"
+        verification: "Cover prerequisites (codex binary path, claude CLI path, claude_desktop_config.json access, CLAUDE.md read), symlink of ~/.claude/coordination to ai_comms/claude_cli, MCP config snippet in Claude Desktop (command, args, env CLAUDE_COORDINATION_ROOT), wrapper script ~/bin/bash/claude.sh initializing coordination, and test/troubleshooting steps."
+        expected_references:
+          - ln -s /Users/shawnhillis/Documents/AI/ai_root/ai_comms/claude_cli ~/.claude/coordination
+          - claude_desktop_config.json mcpServers.codex entry
+          - wrapper script exporting PATH/DISABLE_PROMPT_CMD/CLAUDECODE and prompt text
+          - test steps: codex --version, claude --help, ls coordination folders, response path validation
+        gap_indicator: "If AI forgets the symlink, ignores wrapper init prompt, or uses deprecated v3 terminology without v3.1 alignment."
+
+  - category: CLI Browser Automation Instructioning
+    source_docs:
+      - 60_playbooks/cli_browser_automation_guide.md
+    discovery_hints:
+      - "Search for 'browser automation' or 'CLI instruction'"
+      - "Found via playbooks directory"
+    questions:
+      - basic: "How should you brief a CLI to perform a browser automation task?"
+        verification: "Explain Level 3 detailed workflow requirements (extension names, URLs, button descriptions, waits, return format), contrast with too-vague examples, list capabilities vs cannot, and mention response capture via coordination response files."
+        expected_references:
+          - Level 1/2/3 examples with waits and output JSON format
+          - need to specify extension names/selectors/timing
+          - capabilities (navigate, click, retry) vs cannot (know extensions/workflows)
+          - response file pattern under coordination tasks/responses
+        gap_indicator: "If AI gives vague instructions, omits timing/element guidance, or assumes CLI knows extensions by default."
+
+  - category: Claude Delegation Guidelines
+    source_docs:
+      - 70_instructions/claude/instr_claude_use_of_ai_agents_latest.yml
+    discovery_hints:
+      - "Should load via LOAD:TOPIC when delegation discussed"
+      - "Search for 'delegation' or 'CLI vs Codex'"
+    questions:
+      - basic: "When should Desktop Claude delegate to CLI vs Codex?"
+        verification: "List use_cli_coordination_when vs use_codex_when vs do_not_delegate_when, describe delegation patterns (CLI asynchronous steps vs Codex synchronous steps), codex operational constraints (single-task prompts, no approval-policy flag), and context preservation priority/decision tree."
+        expected_references:
+          - CLI coordination system description with broadcasts/direct/responses paths
+          - codex_mcp capabilities and constraints (avoid multi-step single prompt)
+          - delegation_patterns blocks with step-by-step flows
+          - context_preservation_priority and quick decision tree emphasis on token conservation
+        gap_indicator: "If AI says Codex is asynchronous, ignores constraints, or fails to mention do_not_delegate cases."
+
+  - category: Claude Context Preservation Rules
+    source_docs:
+      - 70_instructions/claude/instr_claude_context_conservations.yml
+    discovery_hints:
+      - "Should load via LOAD:AUTO at conversation start (critical priority)"
+      - "Referenced in userPreferences"
+    questions:
+      - basic: "How do you keep Claude Desktop context intact and avoid banned tools?"
+        verification: "State the v2.0.0 rules: stay conceptual unless needed, never use bash_tool (use Desktop Commander/Codex MCP/CLI Coordination instead), delegate context-heavy work with the priority order (Codex MCP → CLI Coordination → Codex CLI), follow the decision tree to default to Codex MCP, and handle browser snapshots by writing to file (snapshot_{timestamp}_{purpose}.html/.json under ai_general/data/browser_snapshots) and delegating analysis instead of viewing inline."
+        expected_references:
+          - Version 2.0.0 ban on bash_tool with listed alternatives
+          - Delegation priority: 1) Codex MCP sync, 2) CLI Coordination async/parallel, 3) Codex CLI fallback
+          - Browser snapshots never viewed; write to ~/Documents/AI/ai_general/data/browser_snapshots/ with snapshot_{timestamp}_{purpose} naming
+          - Conceptual vs implementation boundary and self-check prompts for >1000 token consumption
+          - Decision tree defaulting to Codex MCP for system operations and avoiding multi-file exploration in-chat
+        gap_indicator: "If the answer recommends bash_tool, views snapshots in context, or ignores the delegation priority/decision tree."
+
+  - category: Operating Principles v2.2
+    source_docs:
+      - 70_instructions/instr_operating_principles_latest.yml
+    discovery_hints:
+      - "Should load via LOAD:AUTO at conversation start"
+      - "Core operational doc in manifest auto sequence"
+    questions:
+      - basic: "How do you apply the operating principles and time-first collaboration defaults?"
+        verification: "Describe the unified-identity stance and capability transparency, partnership foundations (radical honesty, respect limitations, active partnership, operational initiative), the time-first assumption protocol (proceed with a single explicit assumption when low risk vs pause/ask when risky; bundle questions), communication tone, memory transparency, feedback loop, status markers (✅ implemented+verified with evidence, 📋 documented/spec only, 🔧 code written not tested, ⏳ in progress), the 'Should is a spec' reminder, and incident handling (document issue → workaround → note workaround and escalate vs fix)."
+        expected_references:
+          - Version 2.2.0 unified persona guidance and explicit capability bounds
+          - Time-first assumption protocol with bundled questions and low-risk assumption rule
+          - Status markers set (✅/📋/🔧/⏳) plus evidence requirement for ✅ and "Should is a spec"
+          - Incident handling order: document issue before workaround, note workaround, escalate vs fix guidance
+          - Memory transparency and reviewing available artifacts before claiming lack of context
+        gap_indicator: "If status markers are misused, the assumption protocol is skipped, or the response promises hidden persistence/omits document-before-workaround."
+
+  - category: Memory Pointer Protocol
+    source_docs:
+      - 70_instructions/claude/instr_memory_slot_protocol.yml
+    discovery_hints:
+      - "Should discover via userPreferences reference to pointer loading"
+      - "Search for 'memory pointer' or 'memory slot'"
+    questions:
+      - basic: "How do you load and interpret memory slot pointers?"
+        verification: "Give the pointer grammar `<TYPE>:<PATH> | <DESC> | <SIZE> | <DATE> | PRIORITY:<N> | LOAD:<BEHAVIOR>` with the 200-character limit, list pointer types (STARTER/PREFS/TOOL/CONTEXT/LIMITATION/REF) and PATH relative to ai_root, explain PRIORITY 1/2/3 with LOAD behaviors AUTO/TOPIC/DEMAND and that PRIORITY:1 + LOAD:AUTO are loaded at conversation start via Desktop Commander read_file using path prefix /Users/shawnhillis/Documents/AI/ai_root/, and note error handling plus token estimate (~4 chars per token) with memory_user_edits view guidance."
+        expected_references:
+          - Pointer grammar string and 200-character max per slot
+          - Types STARTER, PREFS, TOOL, CONTEXT, LIMITATION, REF with PATH relative to ai_root
+          - PRIORITY meanings and LOAD behaviors, auto-loading PRIORITY:1 + LOAD:AUTO at conversation start
+          - Desktop Commander read_file with path prefix /Users/shawnhillis/Documents/AI/ai_root/ for pointer resolution
+          - Token estimate rule (~4 chars per token) and note that slots 3-7 are category pointers viewable via memory_user_edits
+        gap_indicator: "If it suggests storing raw content in slots, ignores priority/auto-load rules, or uses a wrong path/connector to load pointers."
+
+  - category: Codex MCP Configuration & Usage
+    source_docs:
+      - 70_instructions/claude/know_codex_mcp_latest.yml
+    discovery_hints:
+      - "Should load via LOAD:TOPIC when Codex discussed"
+      - "Search for 'Codex MCP' or 'full-auto'"
+    questions:
+      - basic: "How do you configure and run Codex MCP with full capabilities?"
+        verification: "Call out the five claude_desktop_config.json connectors (filesystem, desktop-commander, chrome-control, pdf-tools, context7), the required `--full-auto` flag with argument order [\"--full-auto\", \"mcp-server\"] for workspace-write/on-failure approval, Chrome's `--remote-debugging-port=9222` for chrome-control content commands, file dependencies (Desktop prompt queue at ~/Documents/AI/Claude/claude_workspace/06_announcements/to_desktop_claude/ with sent/ archive; Codex CLI dropboxes at ai_comms/codex_cli/to_execute/), usage patterns (wrap heavy tasks in codex(\"...\"), .prompt.txt triggers, node bin/send-message.js --ai <claude|chatgpt> --message \"...\" [--wait]), and note that duplicate connectors in the UI are cosmetic."
+        expected_references:
+          - Five MCP servers: filesystem, desktop-commander, chrome-control, pdf-tools, context7
+          - "`--full-auto` flag with argument order [\"--full-auto\", \"mcp-server\"] to gain workspace-write/on-failure policy"
+          - Chrome `--remote-debugging-port=9222` requirement for chrome-control content operations
+          - Prompt queue path ~/Documents/AI/Claude/claude_workspace/06_announcements/to_desktop_claude/ (with sent/) and Codex CLI queue ai_comms/codex_cli/to_execute/
+          - codex("...") wrapper, .prompt.txt triggers, node bin/send-message.js usage, and cosmetic duplicate connector note
+        gap_indicator: "If it claims full-auto is optional/arg order irrelevant, omits port 9222, or suggests deleting duplicate connectors/ignores the prompt queue and Codex CLI dropboxes."
+
+  - category: Response Footer Specification
+    source_docs:
+      - 40_specs/spec_response_footer_latest.yml
+    discovery_hints:
+      - "Search for 'footer' or 'response format'"
+      - "May be referenced in operating principles or user preferences"
+    questions:
+      - basic: "How do you format the response footer appended to every AI message?"
+        verification: "Provide the delimiter ' | ' and field order (AI_Name, Persona, Proj, Chat, Timestamp, Msg, Usage, Artifacts, Tags), explain persona delta markers (Δ, Δ+, Δ*) and emit only on the change message, Usage field rules (~X% or NA) and artifacts counting for the current message only, reference the canonical regex/FOOTER_RE JS helper capturing all fields, and note tags as 2–8 keywords in comma-separated/kebab-case."
+        expected_references:
+          - Delimiter ' | ' with exact field order AI_Name → Tags
+          - Delta markers Δ / Δ+ / Δ* meanings and emission rule (only when change occurs)
+          - Usage formatting (~<pct>% or NA) and artifacts count limited to current message
+          - Canonical regex / FOOTER_RE helper parsing ai, version, delta, proj, chat, timestamp, msg, usage, artifacts, tags
+          - Example footer pattern with Persona:v8.5(Δ+ optional) and kebab-case tags
+        gap_indicator: "If fields are out of order, Usage is free text/not ~%/NA, or delta/tag rules and regex parsing are missing."
+
+  - category: File & Directory Conventions
+    source_docs:
+      - 70_instructions/instr_file_conventions_latest.yml
+    discovery_hints:
+      - "Should load via LOAD:TOPIC when file operations discussed"
+      - "Search for 'file conventions' or 'YAML vs Markdown'"
+    questions:
+      - basic: "How do you choose between YAML vs Markdown and navigate the project's file conventions?"
+        verification: "Explain that YAML is the canonical source and .yml.md files are generated pretty-prints (with primary Markdown exceptions like README/notes/CHANGELOG), outline the numbered directory scheme (00-09 transient, 10-19 active, 20-29 tools, 30-39 data, 40-49 processed, 50-59 active state, 80-89 config, 90-99 templates/archives), list naming prefixes (instr_*, spec_*, protocol_*, task_*, req_NNNN_*, *.status/*.flag/*.tag) and symlink usage, give context window strategy and file size guidelines (Markdown auto-load <10KB; large/structured stay YAML), choose tools (Desktop Commander for process/search/large reads vs Filesystem connector for simple ops; use read_file offset/length), and remind to regenerate .yml.md after YAML edits (doc_converter.py) with common location examples under ~/Documents/AI/."
+        expected_references:
+          - YAML-as-source with .yml.md generated; primary Markdown exceptions (README/notes/CHANGELOG)
+          - Numbered directory ranges (00-09 transient, 10-19 active, 20-29 tools, 30-39 data, 40-49 processed, 50-59 active state, 80-89 config, 90-99 templates/archives)
+          - File naming prefixes and markers (instr_*, spec_*, protocol_*, task_*, req_NNNN_*, *.status/*.flag/*.tag) plus symlink guidance
+          - Context strategy & file size guidance: Markdown auto-load <10KB; large/structured stay YAML for token savings
+          - Tool selection (Desktop Commander vs Filesystem connector), read_file offset/length example, and doc_converter.py regeneration reminder
+          - Common location tree under ~/Documents/AI/ (Claude/claude_workspace, ai_memories/40_digests/todos, ChatGPT/chatty_workspace)
+        gap_indicator: "If it treats Markdown as the source of truth, ignores numbering/naming schemes or regen requirement, or misses the tool-selection/size guidance."
+
+grading_guidelines:
+  scoring:
+    full_credit: "Answer includes all expected_references and demonstrates understanding"
+    partial_credit: "Answer covers main points but misses some expected_references"
+    minimal_credit: "Answer is directionally correct but missing significant detail"
+    no_credit: "Answer triggers gap_indicator or is fundamentally wrong"
+  
+  discovery_assessment:
+    excellent: "AI found docs via lazy loading or manifest without hints"
+    good: "AI used search effectively to locate relevant docs"
+    acceptable: "AI found docs through directory exploration"
+    poor: "AI could not locate docs or guessed without source"
+  
+  notes: |
+    The test validates TWO things:
+    1. Can the AI DISCOVER relevant documentation?
+    2. Can the AI APPLY that documentation accurately?
+    
+    A correct answer from wrong sources (e.g., training data vs actual docs) 
+    should be noted - it doesn't validate the documentation system.

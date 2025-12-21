@@ -1,0 +1,96 @@
+---
+# Documentation Maintenance Playbook - Condensed
+# Full: versions/playbook.documentation_maintenance.v1_0.md
+
+metadata:
+  title: Documentation Maintenance Playbook
+  version: 1.0.0
+  created: 2025-12-19
+  status: active
+
+summary: Create, update, and register docs with proper versioning, symlinks, and cross-references.
+
+when_to_use:
+  - Creating new documentation
+  - Significant updates to existing docs
+  - Adding glossary terms for discovery
+  - Refactoring doc structure
+
+directory_structure:
+  pattern: |
+    {doc_type}/
+    ├── versions/
+    │   ├── {basename}_v1.0.md            # Canonical source
+    │   └── {basename}_v1.0.condensed.yml # Condensed
+    ├── {basename}_latest.md → versions/{basename}_v1.0.md
+    └── {basename}.condensed.yml → versions/{basename}_v1.0.condensed.yml
+
+steps:
+  1_create_canonical:
+    action: Write full doc in Markdown
+    location: "{doc_type}/versions/{basename}_v{X.Y}.md"
+    requirements:
+      - Metadata section (title, version, created, maintainer, status)
+      - Follow doc type structure patterns
+      - Version in filename matches metadata
+
+  2_create_condensed:
+    action: Create condensed YAML (~60-80% smaller)
+    location: "{doc_type}/versions/{basename}_v{X.Y}.condensed.yml"
+    patterns:
+      - Prose → structured YAML
+      - Abbreviations where clear
+      - Compact examples
+      - Remove redundancy
+
+  3_create_symlinks:
+    action: Symlinks at doc_type level to latest versions
+    commands: |
+      ln -sf versions/{basename}_v{X.Y}.md {basename}_latest.md
+      ln -sf versions/{basename}_v{X.Y}.condensed.yml {basename}.condensed.yml
+
+  4_update_references:
+    action: Update cross-reference files as needed
+    files:
+      knowledge_manifest:
+        path: docs/70_instructions/claude/_knowledge_manifest.yml
+        when: Doc should be discoverable by Claude
+        add: Entry with load_sequence, triggers, abstract
+      
+      document_registry:
+        path: docs/20_registries/document_registry.yml
+        when: Formal documentation
+        add: Entry with id, filename, path, tags, audience
+      
+      glossary:
+        path: docs/20_registries/glossary_knowledge_index.condensed.yml
+        when: New terms/concepts
+        format: "term: {d: \"description\", r: \"path/to.condensed.yml\"}"
+        also: Update term count, add to domain list
+
+  5_verify:
+    checklist:
+      - Canonical .md in versions/ with version number
+      - Condensed .yml in versions/ with matching version
+      - Symlinks at doc_type level point correctly
+      - Manifest entry (if applicable)
+      - Glossary terms (if applicable)
+      - Registry entry (if applicable)
+
+common_issues:
+  wrong_symlink:
+    symptom: References load outdated content
+    fix: "ln -sf versions/{basename}_v{NEW}.md {basename}_latest.md"
+  
+  glossary_no_trigger:
+    symptom: Claude doesn't find doc when topic mentioned
+    fix: Check term exists, verify r: path, confirm file exists
+  
+  version_mismatch:
+    symptom: Filename version != metadata version
+    fix: Keep synchronized
+
+related:
+  - instr_writing.condensed.yml
+  - SCHEMA_EVOLUTION_GUIDE.md
+  - instr_file_conventions.condensed.yml
