@@ -1,0 +1,51 @@
+# Claude Log Sources Mapping (Condensed)
+# Source: log_sources_mapping_v1.0.md
+# Generated: 2025-12-22
+
+metadata: {version: "1.0", created: 2025-12-16}
+
+sources:
+  desktop_app_logs:
+    location: ~/Library/Logs/Claude/
+    files:
+      main.log: {content: app lifecycle, useful_for: "NOT chat switches"}
+      mcp.log: {content: "GOLD - every MCP tool call JSON", useful_for: "file reads, tool usage, timestamps"}
+      mcp-server-{name}.log: {content: per-server debug, useful_for: debugging}
+
+  cli_logs:
+    location: ~/.claude/
+    paths:
+      debug/{sessionId}.txt: full session transcripts
+      history.jsonl: user prompts only
+      daemon.log: pulse/orchestration heartbeats
+      logs/claude_*.log: command execution
+      logs/orchestrator_pulse.log: orchestration events
+
+  app_data:
+    location: ~/Library/Application Support/Claude/
+    paths:
+      Local Storage/leveldb/: chat fragments, UI state, session markers
+      Session Storage/: session namespaces, chat UUIDs
+      config.json: app config
+      claude_desktop_config.json: MCP server config
+
+detection:
+  possible:
+    - {signal: file read, source: mcp.log, method: "parse JSON for read_file"}
+    - {signal: directory listing, source: mcp.log, method: "parse for list_directory"}
+    - {signal: any tool call, source: mcp.log, method: "extract tool name + args"}
+    - {signal: app start, source: main.log, method: grep startup patterns}
+    - {signal: CLI session start, source: ~/.claude/debug/, method: new file created}
+    - {signal: chat UUID, source: Session Storage, method: strings + grep}
+
+  impossible:
+    - chat switch (URL change)
+    - response content
+    - footer presence
+    - context compaction
+    - chat broken
+
+strategy:
+  primary: mcp.log (every tool call, JSON format, timestamps)
+  secondary: Session Storage LevelDB (chat UUIDs, activity indicator)
+  tertiary: main.log (app lifecycle only)

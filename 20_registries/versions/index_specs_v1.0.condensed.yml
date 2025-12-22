@@ -1,0 +1,44 @@
+# Condensed: index_specs_v1.0.md
+# Purpose: Specs registry quick reference
+
+metadata:
+  source_file: index_specs_v1.0.md
+  condensed_date: 2025-12-22T10:58:00Z
+  version: 1.0.0
+  category: specs
+  maintainer: SpecOps
+
+overview: "Structured index of specification documents and deployment metadata"
+
+files:
+  index_specs.yml:
+    size: 2419
+    status: active
+    deploy: [codex, claude_cli]
+
+  schema_index_files_v1.yml:
+    desc: "Schema for index file structure and validation"
+    size: 7134
+    status: active
+    deploy: [codex, claude_cli]
+
+  spec_ai_message_sender_v1.1.yml:
+    desc: "AI message sender handshake and metadata contract"
+    size: 8467
+    status: active
+    deploy: [codex, claude_cli]
+
+  protocol_taskCoordination_v5.0.yml:
+    desc: "Task Coordination Protocol - directory-based with roles, claims, IM"
+    size: 21700
+    status: active
+    deploy: [claude_desktop, codex, claude_cli]
+    note: "Replaces spec_cli_coordination_protocol_v1.4"
+
+  spec_response_footer_v1.1.yml:
+    desc: "Standardized response footers"
+    status: auxiliary
+    deploy: [codex]
+
+config:
+  subdirs_deployable: false

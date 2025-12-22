@@ -1,0 +1,59 @@
+# AI Coordination Systems Inventory (Condensed)
+# Source: INVENTORY_v1.0.md
+# Generated: 2025-12-22
+
+metadata: {version: "1.0", status: draft, created: 2025-11-27}
+
+public_repo:
+  url: https://github.com/shillis13/ai_docs
+  relationship: ai_general/docs/ IS the submodule
+  access: https://raw.githubusercontent.com/shillis13/ai_docs/main/<path>
+
+systems:
+  cli_task_coordination:
+    version: v5.0
+    location: ai_comms/claude_cli/
+    spec: ai_general/specs_and_protocols/protocol_taskCoordination_v5.0.yml
+    purpose: Async task delegation Desktop→CLI
+    state: [directory lifecycle, broadcasts, response collection, notifications]
+    issues: [staged workflow unclear, task spec undocumented, zombie detection undefined]
+
+  chat_orchestrator_puppeteer:
+    location: ~/bin/projects/chat_orchestrators/chat_orchestrator_puppeteer/
+    spec: spec_ai_message_sender_v1.1.yml
+    purpose: Automated relay between AI chat interfaces
+    state: [puppeteer automation, JSONL logging, manual/auto relay]
+    issues: [requires Chrome debug port, DOM selectors may break]
+
+  desktop_prompt_sender:
+    location: ~/bin/projects/chat_orchestrators/claude_desktop_prompt_sender_v2.sh
+    purpose: Inject prompts into Desktop Claude via AppleScript
+    state: [clipboard-paste method, file-based trigger queue, pulse integration]
+    issues: [send-only, UI dependent, no mid-response detection]
+
+  pulse_system:
+    location: ~/bin/ai/pulse_orchestrator.sh
+    prompt: ai_claude/work/pulse_prompt.md
+    logs: ai_general/logs/claude/pulse.log
+    purpose: Periodic wake-up for autonomous operation
+    state: [cron every 10min, lock file support, idle auto-release, pause file]
+    issues: [cron location undocumented, no metrics, one-way pausing]
+
+  notification_system:
+    location: ai_comms/claude/notifications/
+    format: YAML with structured metadata
+    purpose: Async notifications between systems and Desktop Claude
+    state: [pending/processed dirs, YAML format, manual processing]
+    issues: [no automated delivery, priority undefined, accumulation]
+
+  codex_cli_coordination:
+    location: ai_comms/codex_cli/
+    init: ~/.claude/coordination/init/codex_cli_init.md
+    purpose: Task coordination for Codex CLI
+    state: [same pattern as Claude CLI, symlinked]
+    issues: [underutilized, no differentiation criteria]
+
+summary:
+  all_operational: true
+  test_coverage: [manual, manual, manual, manual, none, minimal]
+  doc_count: 26

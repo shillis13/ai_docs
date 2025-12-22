@@ -1,0 +1,1 @@
+versions/spec_artifact_extraction_v1.0.md

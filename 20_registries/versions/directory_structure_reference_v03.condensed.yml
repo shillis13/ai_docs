@@ -1,0 +1,54 @@
+# Directory Structure Reference (Condensed)
+# Source: directory_structure_reference_v03.md
+# Generated: 2025-12-22
+
+metadata: {version: "3.0", status: finalized, updated: 2025-10-30}
+
+external:
+  public_repo: https://github.com/shillis13/ai_docs
+  mount: ai_general/docs/ IS the submodule
+  access: https://raw.githubusercontent.com/shillis13/ai_docs/main/<path>
+
+physical_layout:
+  root: ~/Documents/AI/
+  dirs:
+    ai_chat_artifacts: Mirrors 30_chat_histories structure for artifacts
+    ai_chatgpt: ChatGPT-specific repo
+    ai_claude: Claude-specific repo
+    ai_general: Shared resources across AIs
+    ai_memories: Central memory processing pipeline
+    comms: Communication and task coordination
+
+ai_claude:
+  purpose: Claude-specific workspace, instructions, memories
+  key_paths:
+    memories: Chat memories, learnings, todo history
+    work: Trigger files for automation
+    instructions: Claude-specific guidance
+    CLAUDE.md: Desktop Claude init file
+
+ai_general:
+  purpose: Shared resources across all AI entities
+  key_paths:
+    docs: Public documentation (ai_docs submodule)
+    instructions: Cross-AI instructions
+    specs_and_protocols: Canonical specs
+    logs: System logs
+
+ai_memories:
+  purpose: Central memory processing pipeline
+  pipeline: [00_imports, 10_staging, 20_processing, 30_chat_histories, 40_summaries, 50_knowledge, 60_archive]
+
+ai_comms:
+  purpose: Communication and coordination layer
+  structure:
+    claude_cli: CLI task coordination
+    codex_cli: Codex task coordination
+    claude/notifications: Notification system
+
+docs_structure:
+  tiers: [10_architecture, 20_registries, 30_protocols, 40_specs, 50_schemas, 60_playbooks, 70_instructions, 80_templates, 90_drafts]
+  conventions:
+    versioned: "{name}_v{x.y}.md in versions/"
+    symlinks: "{name}.latest.md → versions/{name}_v{x.y}.md"
+    condensed: "{name}_v{x.y}.condensed.yml alongside .md"

@@ -1,0 +1,51 @@
+# Condensed: glossary_knowledge_index_v1.1.md
+# Purpose: Term recognition and pointer resolution without full loading
+
+metadata:
+  source_file: glossary_knowledge_index_v1.1.md
+  condensed_date: 2025-12-22T10:58:00Z
+  version: 1.1.0
+  term_count: 43
+  file_count: 18
+
+purpose: "Solve bootstrap problem: Claude needs to know what's IN files to know WHEN to load them"
+
+usage:
+  on_term_encounter:
+    1: "Use definition for immediate context"
+    2: "Load primary_ref if details needed"
+    3: "Check also_in for related context"
+
+terms:
+  architecture:
+    ai_root: {aliases: [workspace], ref: architecture_overview.condensed.yml}
+    layer_model: {aliases: [three-layer], ref: architectural_layer_model.condensed.yml}
+
+  protocol:
+    at_self_wake: {aliases: [AT alarm], ref: protocol_at_self_wake.condensed.yml}
+    claim_prefix: {format: "claimed_{YYYYMMDD_HHMMSS}_{PID}_", ref: protocol_taskCoordination.condensed.yml}
+
+  entity:
+    claude_cli: {aliases: [CLI, CLI worker], desc: "Autonomous workers via claude_cli.sh"}
+    desktop_claude: {aliases: [Desktop], desc: "Primary orchestrator in desktop app"}
+
+  concept:
+    bootstrap_problem: {ref: schema_knowledge_glossary_v1.yml}
+    reference_pointers: {syntax: "REF:path/to/file.yml", enables: lazy_loading}
+
+  workflow:
+    chat_recovery: {aliases: [broken chat recovery], ref: spec_chat_continuity_recovery.condensed.yml}
+    task_lifecycle: {states: [staged, to_execute, in_progress, completed, error, cancelled]}
+
+lookup:
+  - {term: AI Root, domain: architecture, ref: architecture_overview.condensed.yml}
+  - {term: Layer Model, domain: architecture, ref: architectural_layer_model.condensed.yml}
+  - {term: AT Self-Wake, domain: protocol, ref: protocol_at_self_wake.condensed.yml}
+  - {term: Claim Prefix, domain: protocol, ref: protocol_taskCoordination.condensed.yml}
+  - {term: Bootstrap Problem, domain: concept, ref: schema_knowledge_glossary_v1.yml}
+  - {term: Chat Recovery, domain: workflow, ref: spec_chat_continuity_recovery.condensed.yml}
+  - {term: Task Lifecycle, domain: protocol, ref: protocol_taskCoordination.condensed.yml}
+
+related:
+  full_yaml: glossary_knowledge_index_v1.1.yml
+  schema: 50_schemas/schema_knowledge_glossary_v1.yml

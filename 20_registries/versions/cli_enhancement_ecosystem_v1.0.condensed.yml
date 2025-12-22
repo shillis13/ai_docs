@@ -1,0 +1,76 @@
+# Condensed from: cli_enhancement_ecosystem_v1.0.md
+# Source: ai_general/docs/20_registries/versions/cli_enhancement_ecosystem_v1.0.md
+# Condensed: 2025-12-22
+
+cli_enhancement_ecosystem:
+  created: 2025-12-05
+  status: discovery_document
+
+  overview:
+    description: Claude CLI (Claude Code) has 5 primary enhancement vectors bundleable into Plugins
+    hierarchy: |
+      Plugin (container)
+      ├── Commands      - Explicit /slash triggers
+      ├── Agents        - Specialized subagents
+      ├── Skills        - Auto-activating context-aware guidance
+      ├── Hooks         - Event handlers at lifecycle points
+      └── MCP Servers   - External tool integrations
+
+  agents:
+    what: Specialized subagents with focused expertise and custom prompts
+    invocation: [manual selection, automatic by Claude]
+    inline_flag: --agents '<json>'
+    use_cases: [code review, security analysis, documentation, architecture]
+
+  skills:
+    what: Auto-activating instruction sets based on task context
+    key_difference: No explicit trigger needed - Claude recognizes when to apply
+    required_file: SKILL.md
+    examples: [frontend design, API debugging, database migrations]
+
+  commands:
+    what: Explicit slash commands for specific actions
+    invocation: /command-name [args]
+    use_cases: [/deploy, /test, /review, /gc]
+
+  hooks:
+    what: Custom behaviors at lifecycle points
+    types: [PreToolUse, PostToolUse, SessionStart, Stop]
+    config: hooks.json in hooks/ directory
+    use_cases: [security monitoring, code style, auto-docs, pre-commit]
+
+  mcp_servers:
+    what: External integrations packaged in plugins
+    config: .mcp.json in plugin root
+    enables: [database, API, project management, custom tools]
+
+  plugin_structure:
+    directories: [.claude-plugin/, commands/, agents/, skills/, hooks/, scripts/]
+    config_file: .claude-plugin/plugin.json
+    mcp_config: .mcp.json
+
+  marketplaces:
+    - {name: claude-plugins.dev, focus: community hub, url: "https://claude-plugins.dev/"}
+    - {name: Anthropic Official, focus: core plugins, url: "https://github.com/anthropics/claude-code/plugins"}
+    - {name: claude-code-plugins-plus, focus: "254+ plugins", url: "https://github.com/jeremylongshore/claude-code-plugins-plus"}
+    - {name: wshobson/agents, focus: "85 agents, 63 plugins", url: "https://github.com/wshobson/agents"}
+    - {name: awesome-claude-plugins, focus: curated list, url: "https://github.com/GiladShoham/awesome-claude-plugins"}
+
+  cli_flags:
+    --agents: custom agents inline JSON
+    --setting-sources: setting source control
+    --plugin-dir: load plugins from directory
+    --mcp-config: MCP configuration
+
+  component_comparison:
+    Commands: {trigger: explicit /cmd, scope: single action, use: "deploy, test, review"}
+    Skills: {trigger: auto context, scope: guidance, use: "patterns, best practices"}
+    Agents: {trigger: auto/manual, scope: subagent, use: specialized expertise}
+    Hooks: {trigger: lifecycle, scope: enforcement, use: "validation, security"}
+    MCP: {trigger: tool calls, scope: integration, use: external systems}
+
+  orchestration_opportunities:
+    - Custom coordination plugin
+    - Session management skill
+    - Task execution hooks
+    - Desktop-to-CLI agent
