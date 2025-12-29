@@ -1,30 +1,22 @@
-# JavaScript Analysis Playbook (Condensed)
-# Source: spec_js_analysis_playbook_v1.0.yml
-version: 1.0.0
-status: auxiliary
+meta: {v: 1.0.0, updated: 2025-01-31, maintainer: PianoMan, status: auxiliary}
 
-purpose: Use JS REPL for linting, pattern-matching, and summarizing files across languages
+overview: JS REPL for lint/pattern-match/summarize across languages. Small composable helpers, results chainable.
 
-core_checks:
-  python:
-    - Imports before code (no imports after def/class)
-    - Unused imports, missing docstrings, snake_case drift
-  powershell:
-    - param blocks, [CmdletBinding()], unified logging
-    - Naming conventions, synopsis headers
-  javascript_typescript:
-    - Import/export symmetry, unused variables
-    - JSDoc presence, function declaration style
-  markdown_yaml_shell:
-    - Heading hierarchy, fenced code, duplicate keys, unquoted vars
+checks_by_language:
+  python: [imports before code, unused imports, missing docstrings, snake_case drift, dependency mapping]
+  powershell: [param blocks, CmdletBinding, unified logging, naming, synopsis headers]
+  js_ts: [import/export symmetry, unused vars, JSDoc presence, declaration style]
+  md_yaml_shell: [heading hierarchy, fenced code, duplicate keys, unquoted shell vars]
 
 helpers:
-  validatePythonStructure: Detect imports after function definitions
-  analyzeFileStructure: Count pattern matches by language
+  validatePythonStructure: |
+    split lines, track seenFunction, flag imports after def/class
+  analyzeFileStructure: |
+    Object.entries(patterns[lang]).reduce → hits[name]=match count
 
 patterns:
-  - Batch process files: Object.entries(files).map(([name, content]) => ({name, metrics}))
-  - Build dependency graphs from call sites
-  - Aggregate metrics dashboards (LOC, functions, comments, complexity)
+  batch: "Object.entries(files).map → {name, metrics}"
+  dependency_graphs: extract call sites, flag unused/circular
+  dashboards: aggregate LOC, functions, comments, complexity
 
-future: Pluggable rule sets, visual outputs, CI/pre-commit integration
+future: [pluggable rule sets, visual outputs (graphs), CI/pre-commit hooks]

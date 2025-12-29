@@ -1,39 +1,43 @@
-# Condensed: tools_manifest_v1.0.md
-# Purpose: Canonical paths for AI-accessible tools
+meta: {v: 1.0.0, updated: 2025-12-14, purpose: "canonical paths for AI-accessible tools"}
 
-metadata:
-  source_file: tools_manifest_v1.0.md
-  condensed_date: 2025-12-22T10:58:00Z
-  version: 1.0.0
-
-purpose: "Single source of truth for AI tool locations"
+overview: Single source of truth for tool locations - all AIs reference before invoking
 
 cli_wrappers:
   base: ~/bin/ai/cli
   claude_cli.sh:
     path: ~/bin/ai/cli/claude_cli.sh
-    desc: "Claude CLI wrapper with tmux, agents, sessions"
-    flags: [-t tmux, -a auto, -A agent, -n named, -c continue]
+    desc: "Claude CLI with tmux, agents, session management"
+    flags: {-t: tmux, -a: auto, "-A TYPE": "agent (librarian, dev-lead, custodian, ops)", "-n NAME": named session, -c: continue}
+    examples: ['claude_cli.sh -a -A librarian -t "prompt"', 'claude_cli.sh -t -a -c "continue"']
   codex_cli.sh:
     path: ~/bin/ai/cli/codex_cli.sh
-    desc: "Codex CLI wrapper with tmux support"
-    flags: [-t tmux, -a auto, -s session, -w workdir]
+    desc: "Codex CLI with tmux"
+    flags: {-t: tmux, -a: "full auto (--dangerously-bypass-approvals-and-sandbox)", -s: session name, -w: workdir}
 
 cli_utilities:
-  lifecycle: ~/bin/ai/cli/lifecycle/
-  wrappers: ~/bin/ai/cli/wrappers/
+  lifecycle: {base: ~/bin/ai/cli/lifecycle/, scripts: [cleanup_cli_sessions.sh, list_cli_sessions.sh, launch_claude_cli_task.scpt, launch_codex_cli_task.scpt]}
+  wrappers: {base: ~/bin/ai/cli/wrappers/, scripts: [cli_script_wrapper.sh, cli_tmux_wrapper.sh, check_lock.sh, monitor_cli_sessions.py]}
 
 python_tools:
   base: ~/bin/all_languages/python/src
-  todo_mgr: ~/bin/all_languages/python/src/todo_mgr/todo_mgr.py
-  ai_utils: ~/bin/all_languages/python/src/ai_utils/
-  doc_utils: ~/bin/all_languages/python/src/doc_utils/
+  todo_mgr:
+    path: ~/bin/all_languages/python/src/todo_mgr/todo_mgr.py
+    desc: "TODO system - kanban, status, queries"
+    cmds: ["kanban", "status <dir> <status>", "query --status Ready"]
+  other: [ai_utils/ (chat, memory), doc_utils/, yaml_utils/]
 
-chat_pipeline: ~/bin/ai/chat_pipeline
-automation: ~/bin/ai/desktop_automation/
+chat_pipeline:
+  base: ~/bin/ai/chat_pipeline
+  scripts: [export_chats.py, preprocess_exports.py, convert_to_yaml.py]
+
+automation:
+  base: ~/bin/ai
+  dirs: [desktop_automation/, claude_automation/]
 
 quick_ref:
-  invoke_claude: ~/bin/ai/cli/claude_cli.sh
-  invoke_codex: ~/bin/ai/cli/codex_cli.sh
+  claude_cli: ~/bin/ai/cli/claude_cli.sh
+  codex_cli: ~/bin/ai/cli/codex_cli.sh
   todo_mgr: "python3 ~/bin/all_languages/python/src/todo_mgr/todo_mgr.py"
   list_sessions: ~/bin/ai/cli/lifecycle/list_cli_sessions.sh
+
+notes: ["~ = /Users/shawnhillis", "CLI wrappers handle PATH", "python tools need explicit python3"]

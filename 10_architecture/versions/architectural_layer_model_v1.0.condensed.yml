@@ -1,111 +1,62 @@
-# AI Workspace Architectural Layer Model (Condensed)
-# Full source: ../architectural_layer_model.yml
+meta: {v: 1.0.0, status: active, created: 2025-11-16, maintainer: PianoMan}
 
-metadata:
-  version: 1.0.0
-  created: 2025-11-16
-  status: active
+overview: Multi-layer architecture with distinct purposes - communication/coordination, implementation/runtime, shared knowledge
 
-overview: "Multi-layer architecture: communication/coordination, implementation/runtime, shared knowledge"
+layers:
+  communication:
+    dir: ai_comms/
+    purpose: coordination between actors
+    desc: official interface for task assignment, status, work delivery
+    contains: [task status, messages, work products, protocols]
+    subdirs:
+      Claude/: Desktop mailbox
+      Claude Cli/: CLI coordination
+      Codex Cli/: Codex tasks
+      Chatgpt/: ChatGPT mailbox
+    chars: [clean structured, official handoffs, protocol-driven]
+    workflow: to_execute/ → in_progress/ → completed/
 
-architectural_layers:
+  implementation:
+    dir: ai_claude/
+    purpose: config, runtime state, working dirs
+    desc: actor-specific implementation, private workspace
+    contains: [persona config, instructions, working dirs, runtime state, drafts, skills]
+    subdirs:
+      Persona Model/: two-loop config
+      Instructions/: operating instructions
+      Working Tasks/: active work (runtime)
+      Ai Specific Memories/: learned patterns (config)
+    chars: [messy iterative, private, config AND runtime]
+    distinction: ai_specific_memories=config, working_tasks/=runtime
 
-  communication_layer:
-    directory: "ai_comms/"
-    purpose: "Official interface for task assignment, status tracking, work product delivery"
-    description: "Public coordination space where actors exchange messages and coordinate work"
-    contains:
-      - "Official task status and assignments"
-      - "Messages between actors"
-      - "Delivered work products"
-      - "Structured coordination protocols"
-    subdirectories:
-      claude/: "Desktop Claude's mailbox"
-      claude_cli/: "CLI coordination hub"
-      codex_cli/: "Codex worker tasks"
-      chatgpt/: "ChatGPT mailbox"
-      tasks_*/: "Specialized task queues (AppleScript, orchestration, etc.)"
-    characteristics: [clean/structured, official handoffs only, what others see, protocol-driven]
-    example_workflow: "Task in claude/tasks/to_execute/ → in_progress/ → completed/task_xyz/response.md"
+  knowledge:
+    dir: ai_memories/
+    purpose: shared knowledge, collective learning
+    desc: repository accessible to all actors
+    contains: [chat histories, digests, decisions, TODOs, research]
+    subdirs:
+      00 Incoming Chats/: raw exports
+      10 Exported/: by platform
+      30 Chat Histories/: processed
+      40 Digests/: extracted knowledge
+    chars: [shared across actors, curated artifacts]
 
-  implementation_layer:
-    directory: "ai_claude/"
-    purpose: "Configuration, runtime state, working directories - private workspace"
-    contains:
-      - "Persona model configuration"
-      - "Instructions and behavioral specs"
-      - "Working directories for active tasks"
-      - "Runtime operational state"
-      - "Draft/interim artifacts before delivery"
-    subdirectories:
-      persona_model/: "Two-loop persona configuration"
-      instructions/: "Operating instructions"
-      specs/: "Standards and protocols"
-      skills/: "Capabilities"
-      working_tasks/: "Active work in progress (runtime)"
-      ai_specific_memories/: "Learned patterns (configuration, not state)"
-    characteristics: [messy/iterative, private workspace, configuration AND runtime state]
-    distinction: "ai_specific_memories = Configuration (learned patterns) vs working_tasks/ = Runtime state"
-    example_workflow: "Claim from ai_comms/ → Create ai_claude/working_tasks/task_xyz/ → Iterate → Deliver via ai_comms/"
+todo_vs_task:
+  todos: {loc: ai_general/todos/, purpose: backlog/ideas, chars: [not actionable, requires curation, shared]}
+  tasks: {loc: ai_comms/{actor}/tasks/, purpose: assigned work, chars: [ready to execute, clear criteria, actor-specific]}
 
-  knowledge_layer:
-    directory: "ai_memories/"
-    purpose: "Shared knowledge base and collective learning - accessible to all actors"
-    contains:
-      - "Conversation histories and exports"
-      - "Knowledge digests"
-      - "Decision records"
-      - "TODO backlog (ideas, research questions)"
-    subdirectories:
-      00_incoming_chats/: "Raw conversation exports"
-      10_exported/: "Organized by platform"
-      30_chat_histories/: "Processed conversations"
-      40_digests/: "Extracted knowledge (todos/, decisions/, knowledge/)"
-    characteristics: [shared across all actors, curated artifacts, currently all common]
-    example_workflow: "Export → 00_incoming/ → Process to 30_histories/ → Extract to 40_digests/"
+task_lifecycle:
+  1_assign: {layer: communication, loc: to_execute/, state: official assignment}
+  2_claim: {layer: communication, loc: in_progress/, state: started}
+  3_work: {layer: implementation, loc: working_tasks/, state: "drafts, experiments"}
+  4_deliver: {layer: communication, loc: completed/, state: COMPLETED}
+  5_knowledge: {layer: knowledge, loc: 40_digests/, state: shared}
+  6_cleanup: {layer: implementation, action: archive working dir}
 
-todo_vs_task_distinction:
-  todos:
-    location: "ai_general/todos/"
-    purpose: "Backlog of ideas, needs, research questions - not yet actionable"
-    lifecycle: "Idea → TODO → Curated → Task(s) generated → Execution queue"
-  tasks:
-    location: "ai_comms/{actor}/tasks/"
-    purpose: "Actionable, prioritized, assigned work - ready to execute"
-    lifecycle: "to_execute/ → in_progress/ → completed/ (or error/ or cancelled/)"
-  working_state:
-    location: "ai_claude/working_tasks/"
-    description: "Runtime working directory - links to ai_comms task but contains messy reality"
+principles:
+  - separation: each layer handles distinct concern, changes independently
+  - boundaries: status→ai_comms, work→ai_claude, knowledge→ai_memories
+  - actor_agnostic: same patterns for Desktop/CLI/ChatGPT/Codex
+  - natural: new use cases find logical homes
 
-complete_task_lifecycle:
-  step_1_assignment: "ai_comms/claude/tasks/to_execute/ - Official assignment"
-  step_2_claim: "ai_comms/claude/tasks/in_progress/ - Status: Started"
-  step_3_work: "ai_claude/working_tasks/task_xyz/ - Notes, drafts, experiments"
-  step_4_deliver: "ai_comms/claude/tasks/completed/task_xyz/response.md - COMPLETED"
-  step_5_knowledge: "ai_memories/40_digests/ - Extract reusable knowledge"
-  step_6_cleanup: "ai_claude/working_tasks/ - Archive/cleanup"
-
-key_principles:
-  separation_of_concerns:
-    - "Communication layer handles coordination interface"
-    - "Implementation layer handles actual work and runtime state"
-    - "Knowledge layer handles collective learning"
-  clear_boundaries:
-    - "Official status → ai_comms"
-    - "Working reality → ai_claude"
-    - "Shared knowledge → ai_memories"
-  actor_agnostic: "Protocol works for any actor - Desktop Claude, CLI, ChatGPT, Codex"
-  natural_accommodation: "New use cases find logical homes without forcing"
-
-validation_test:
-  use_case: "Desktop Claude autonomous TODO/task system"
-  result: |
-    TODOs → ai_memories (shared backlog)
-    Tasks → ai_comms (official coordination)
-    Working dirs → ai_claude (runtime state)
-  conclusion: "Architecture flexible enough to absorb new patterns without breaking existing ones"
-
-cross_references:
-  - "ai_root_summary.md: Directory structure overview"
-  - "coordination_system_v4_digest.md: Task coordination protocol"
-  - "instr_file_conventions_v2.0.yml: File organization standards"
+cross_refs: [ai_root_summary, coordination_system_v4_digest, instr_file_conventions]

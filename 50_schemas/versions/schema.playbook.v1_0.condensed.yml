@@ -1,59 +1,37 @@
----
-# Playbook Schema - Condensed
-# Full: versions/schema.playbook.v1_0.md
+meta: {title: Playbook Schema, v: 1.0.0, created: 2025-12-19, maintainer: PianoMan, status: active, category: schema}
 
-metadata:
-  title: Playbook Schema
-  version: 1.0.0
-  created: 2025-12-19
-  status: active
-
-purpose: Standard structure for operational playbooks in ai_root.
+purpose: Standard structure for playbooks - operational guides for specific tasks/workflows
 
 required_fields:
-  metadata: {title, version, created, maintainer, status, category:"playbook"}
-  summary: One-paragraph description of what playbook covers
-  when_to_use: Array of applicable scenarios
-  prerequisites: Tools/scripts/conditions needed
-  steps: Numbered steps with action + details
+  metadata: {type: object, fields: [title, version, created, maintainer, status, category]}
+  summary: {type: string, desc: "one-paragraph description"}
+  when_to_use: {type: array, desc: "scenarios when playbook applies"}
+  prerequisites: {type: object|array, desc: "what must be in place first"}
+  steps: {type: object, desc: "numbered steps with action, details, examples"}
 
 optional_fields:
-  monitoring_commands: Status check commands
-  common_issues: Problems with symptom/fix pattern
-  example_deployment: Real-world example with results
-  related_docs: Links to related documentation
-  version_history: Changelog entries
+  monitoring_commands: commands for checking progress
+  common_issues: known problems with symptom/fix
+  example_deployment: real-world example with results
+  related_docs: links to related documentation
+  version_history: changelog entries
 
-step_structure:
-  pattern: |
-    steps:
-      1_step_name:
-        action: Brief description
-        example: Optional command/code
-        rule: Optional constraint
-        wait: Optional timing
-        verification: Optional confirmation method
-
-common_issues_structure:
-  pattern: |
-    common_issues:
-      issue_name:
-        symptom: What you observe
-        causes: [cause1, cause2]
-        fix: How to resolve
+field_specs:
+  metadata: {title: string, version: "X.Y.Z", created: "YYYY-MM-DD", maintainer: string, status: "active|draft|deprecated", category: playbook, tags: "optional array"}
+  steps: |
+    1_step_name:
+      action: Brief description
+      example: Optional command
+      rule: Optional constraint
+      wait: Optional timing
+      verification: Optional confirmation
+  common_issues: |
+    issue_name:
+      symptom: What you observe
+      causes: [cause1, cause2]
+      fix: How to resolve
 
 condensed_format:
-  requirements:
-    - Header comment pointing to full version
-    - Preserve all step actions
-    - Collapse examples to inline
-    - Target 60-80% token reduction
+  requirements: [header comment → full version, preserve step actions, collapse examples, maintain troubleshooting, target 60-80% reduction]
 
-validation_checklist:
-  - metadata has all required fields
-  - summary explains purpose clearly
-  - when_to_use lists scenarios
-  - prerequisites complete
-  - steps numbered with action field
-  - common_issues use symptom/fix
-  - Version matches filename
+validation_checklist: [metadata complete, summary clear, when_to_use listed, prerequisites complete, steps numbered with action, common_issues use symptom/fix, version matches filename]

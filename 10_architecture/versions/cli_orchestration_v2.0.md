@@ -673,6 +673,7 @@ elif question_type == "clarification":
 - **Three-Layer Architecture:** `ai_communication_architecture_v1.md`
 - **AI Comms Structure:** `~/Documents/AI/ai_root/ai_comms/README.md`
 - **Task Coordination Protocol v7.0:** `~/Documents/AI/ai_root/ai_general/docs/30_protocols/protocol_taskCoordination_latest.yml`
+- **Task ID Counter Spec:** `~/Documents/AI/ai_root/ai_general/docs/40_specs/spec_task_id_counter.latest.md`
 - **Daemon Architecture:** `daemon_architecture_v1.md`
 
 ---

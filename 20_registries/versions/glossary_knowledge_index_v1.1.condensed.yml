@@ -1,43 +1,35 @@
-# Condensed: glossary_knowledge_index_v1.1.md
-# Purpose: Term recognition and pointer resolution without full loading
+meta: {v: 1.1.0, schema: schema_knowledge_glossary_v1, generated: 2025-12-19, terms: 43, files: 18}
 
-metadata:
-  source_file: glossary_knowledge_index_v1.1.md
-  condensed_date: 2025-12-22T10:58:00Z
-  version: 1.1.0
-  term_count: 43
-  file_count: 18
+purpose: Solves bootstrap problem - Claude needs to know what's IN files to know WHEN to load them. Provides term recognition without full doc loading.
 
-purpose: "Solve bootstrap problem: Claude needs to know what's IN files to know WHEN to load them"
-
-usage:
-  on_term_encounter:
-    1: "Use definition for immediate context"
-    2: "Load primary_ref if details needed"
-    3: "Check also_in for related context"
+usage: |
+  1. Use definition for immediate context
+  2. Load primary_ref if details needed
+  3. Check also_in for related context
 
 terms:
   architecture:
-    ai_root: {aliases: [workspace], ref: architecture_overview.condensed.yml}
-    layer_model: {aliases: [three-layer], ref: architectural_layer_model.condensed.yml}
+    ai_root: {aliases: [ai_root, workspace], def: "root dir ~/Documents/AI/ai_root/", ref: architecture_overview.condensed.yml, related: [communication_layer, implementation_layer, knowledge_layer]}
+    layer_model: {aliases: [layer model, three-layer], def: "3-tier: communication(ai_comms), implementation(ai_claude), knowledge(ai_memories)", ref: architectural_layer_model.condensed.yml}
 
   protocol:
-    at_self_wake: {aliases: [AT alarm], ref: protocol_at_self_wake.condensed.yml}
-    claim_prefix: {format: "claimed_{YYYYMMDD_HHMMSS}_{PID}_", ref: protocol_taskCoordination.condensed.yml}
+    at_self_wake: {aliases: [AT alarm, self-wake], def: "Desktop Claude schedules AT jobs to self-prompt after delegating. AT=Desktop's alarm not CLI's doorbell", ref: protocol_at_self_wake.condensed.yml}
+    claim_prefix: {aliases: [claimed prefix], def: "claimed_{YYYYMMDD_HHMMSS}_{PID}_ prefix prevents race conditions", ref: protocol_taskCoordination.condensed.yml}
 
   entity:
-    claude_cli: {aliases: [CLI, CLI worker], desc: "Autonomous workers via claude_cli.sh"}
-    desktop_claude: {aliases: [Desktop], desc: "Primary orchestrator in desktop app"}
+    claude_cli: {aliases: [CLI, claude_cli, CLI worker], def: "autonomous workers via claude_cli.sh - named sessions, agent profiles, background exec"}
+    desktop_claude: {aliases: [Desktop, Claude Desktop], def: "primary orchestrator in desktop app - coordination, memory, decisions"}
 
   concept:
-    bootstrap_problem: {ref: schema_knowledge_glossary_v1.yml}
-    reference_pointers: {syntax: "REF:path/to/file.yml", enables: lazy_loading}
+    bootstrap_problem: {aliases: [context bootstrap], def: "challenge: need to know file contents to know when to load. Solved by glossary", ref: schema_knowledge_glossary_v1.yml}
+    reference_pointers: {aliases: ["REF:", file pointers], def: "REF:path/to/file.yml syntax for lazy loading, reduced context"}
 
   workflow:
-    chat_recovery: {aliases: [broken chat recovery], ref: spec_chat_continuity_recovery.condensed.yml}
-    task_lifecycle: {states: [staged, to_execute, in_progress, completed, error, cancelled]}
+    chat_continuity_recovery: {aliases: [broken chat recovery], def: "auto-recovery from context exhaustion - detects 'prompt too long', exports, condenses, continues", ref: spec_chat_continuity_recovery.condensed.yml}
+    task_lifecycle: {aliases: [task states], def: "staged → to_execute → in_progress → completed/error/cancelled", ref: protocol_taskCoordination.condensed.yml}
+    task_id_counter: {aliases: [NextId, next_id.sh], def: "atomic hierarchical ID via mkdir spinlock. Session conflict: fork/exit/queue", ref: spec_task_id_counter.latest.md, script: ~/bin/ai/next_id.sh}
 
-lookup:
+quick_lookup:
   - {term: AI Root, domain: architecture, ref: architecture_overview.condensed.yml}
   - {term: Layer Model, domain: architecture, ref: architectural_layer_model.condensed.yml}
   - {term: AT Self-Wake, domain: protocol, ref: protocol_at_self_wake.condensed.yml}
@@ -45,7 +37,6 @@ lookup:
   - {term: Bootstrap Problem, domain: concept, ref: schema_knowledge_glossary_v1.yml}
   - {term: Chat Recovery, domain: workflow, ref: spec_chat_continuity_recovery.condensed.yml}
   - {term: Task Lifecycle, domain: protocol, ref: protocol_taskCoordination.condensed.yml}
+  - {term: Task ID Counter, domain: spec, ref: spec_task_id_counter.latest.md}
 
-related:
-  full_yaml: glossary_knowledge_index_v1.1.yml
-  schema: 50_schemas/schema_knowledge_glossary_v1.yml
+see_also: [glossary_knowledge_index_v1.1.yml, 50_schemas/schema_knowledge_glossary_v1.yml]

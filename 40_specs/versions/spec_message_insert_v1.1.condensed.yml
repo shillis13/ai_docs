@@ -1,94 +1,41 @@
-# Message Insert Protocol (Condensed v1.1)
-**Source:** spec_message_insert_v1.1.md
+meta: {v: 1.1, status: draft}
 
-## Purpose
-Machine-readable markers in chats/PRs/files for:
-- Experiment lifecycle correlation (v1.0)
-- Memory capture & cross-session persistence (v1.1)
-- Navigation bookmarks in memory-holder chats (v1.1)
+purpose: Structured comment blocks in chats/PRs/files as machine-readable markers for experiment correlation, memory capture, navigation bookmarks, decisions, questions
 
-## Syntax
-```
-<<<INSERT type=<TYPE> v=<INT>>>
-{ JSON PAYLOAD }
-<<<END INSERT>>>
-```
-Regex: `^<<<INSERT\s+type=(\w+)\s+v=(\d+)>>>[\r\n]+([\s\S]*?)^<<<END INSERT>>>$`
+syntax: |
+  <<<INSERT type=<TYPE> v=<INT>>>
+  { JSON PAYLOAD }
+  <<<END INSERT>>>
 
-## Types
+detection_regex: "^<<<INSERT\\s+type=(\\w+)\\s+v=(\\d+)>>>[\\r\\n]+([\\s\\S]*?)^<<<END INSERT>>>$"
 
-### Experiment Types (v1.0)
-| Type | Purpose |
-|------|---------|
-| CTI_EXPERIMENT | Define hypothesis, knobs, metrics |
-| RUN_METADATA | Model, exec time, artifacts |
-| PR_REVIEW | Variants reviewed, scores, winner |
-| EXPERIMENT_RESULT | Decision, findings, next actions |
+types:
+  experiment_v1.0:
+    CTI_EXPERIMENT: {desc: "intent and setup", fields: [biases, hypothesis, knobs, metrics, links]}
+    RUN_METADATA: {desc: "runtime info", fields: [task_version, model_hint, exec_time_sec, artifacts]}
+    PR_REVIEW: {desc: "evaluation", fields: [variants_reviewed, scores, winner, recommendations, links]}
+    EXPERIMENT_RESULT: {desc: "final decision", fields: [decision, key_findings, next_actions]}
 
-### Memory Types (v1.1)
-| Type | Purpose |
-|------|---------|
-| BOOKMARK | Navigation/resume point after context loads |
-| MEMORY | Captured insight, preference, or fact |
-| DECISION | Conclusion reached with rationale |
-| QUESTION | Open question for future consideration |
+  memory_v1.1:
+    BOOKMARK: {desc: "navigation point", fields: [label, context, resume_hint, message_count]}
+    MEMORY: {desc: "captured insight", fields: [topic, content, source, importance, related]}
+    DECISION: {desc: "conclusion reached", fields: [topic, decision, rationale, alternatives_considered, related]}
+    QUESTION: {desc: "open question", fields: [question, context, blocked_by, priority, related]}
 
-## Base Fields
+base_fields:
+  experiment: [experiment_id, project, task_title, mode, guidance, ts, author, notes]
+  memory: [ts, author, tags]
 
-### Experiment Types
-```json
-{
-  "experiment_id": "exp-YYYY-MM-DD-<slug>-NNN",
-  "project": "string", "task_title": "string",
-  "mode": "Exploratory|Production", "guidance": "L0-L3",
-  "ts": "ISO-8601", "author": "string", "notes": "optional"
-}
-```
+memory_holder_chats:
+  concept: domain expert repositories with accumulated deep context
+  workflow: [create chat with purpose, load context, insert BOOKMARK, engage, capture MEMORY/DECISION, resume via bookmarks]
 
-### Memory Types (simpler)
-```json
-{
-  "ts": "ISO-8601",
-  "author": "string",
-  "tags": ["optional", "searchable", "array"]
-}
-```
+platform_guidance:
+  Desktop: harvest inserts → write to memory stores
+  Web/iOS: write inserts inline, Desktop harvests later
 
-## Extended Fields (v1.1 Memory Types)
+processing:
+  experiment: scan → parse → group by experiment_id → output CSV/dossier
+  memory: scan → categorize → route (MEMORY→store, DECISION→log, QUESTION→tracker, BOOKMARK→index)
 
-**BOOKMARK:** `label`, `context`, `resume_hint`, `message_count`
-
-**MEMORY:** `topic`, `content`, `source`, `importance` (low/medium/high/critical), `related[]`
-
-**DECISION:** `topic`, `decision`, `rationale[]`, `alternatives_considered[]`, `related[]`
-
-**QUESTION:** `question`, `context`, `blocked_by`, `priority` (low/medium/high), `related[]`
-
-## Memory-Holder Chat Architecture
-1. Designated chats = domain expert repositories (not passive storage)
-2. BOOKMARK after significant context loads
-3. MEMORY for key insights
-4. Instances can be queried for analysis, not just retrieval
-
-## Cross-Platform Workflow
-- iOS/Web: Write inserts inline (can't access filesystem)
-- Desktop: Harvest inserts → route to memory stores or memory-holder chats
-- Searchable via insert type and tags
-
-## Quick Examples
-
-**BOOKMARK:**
-```
-<<<INSERT type=BOOKMARK v=1>>>
-{"label": "post-upload", "context": "Loaded persona transcripts", "resume_hint": "Query persona evolution here", "ts": "2025-12-20T21:00:00Z", "author": "Claude"}
-<<<END INSERT>>>
-```
-
-**MEMORY:**
-```
-<<<INSERT type=MEMORY v=1>>>
-{"topic": "AI consent", "content": "Uncertainty defaults to respect", "importance": "high", "ts": "2025-12-20T20:30:00Z", "author": "Claude", "tags": ["ethics"]}
-<<<END INSERT>>>
-```
-
-**Status:** v1.1 draft — extends v1.0 with memory/navigation types
+future_v1.2: [YAML payloads, PR linkage, insert chaining, confidence fields, expiration dates]

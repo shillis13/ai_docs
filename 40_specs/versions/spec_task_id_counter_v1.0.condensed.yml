@@ -1,0 +1,46 @@
+# spec_task_id_counter.condensed.yml
+metadata:
+  title: Task ID Counter Specification
+  version: 1.0.0
+  source: spec_task_id_counter_v1.0.md
+
+purpose: Atomic hierarchical task ID generation for multi-level orchestration
+
+counter_location: ai_comms/counters/{prefix}.NextId
+
+id_format:
+  orchestration: "{seq}"           # 0001, 0002
+  task: "{parent}_t{seq}"          # 0001_t1, 0001_t2  
+  subtask: "{parent}.{seq}"        # 0001_t1.1, 0001_t1.2
+
+sequence_scheme: |
+  0001-9999, then A000-Z999, then AA00-ZZ99, etc.
+
+atomic_claim:
+  mechanism: mkdir spinlock (POSIX-compliant)
+  script: ~/bin/ai/next_id.sh [prefix]
+  
+execution_priority: |
+  Sort: (has_children ASC, depth DESC, sequence DESC)
+  Leaves execute first, deepest first, highest sequence first
+
+pid_markers:
+  format: "{task_id}.$$.md"
+  stale_detection: "ps -p $pid" (not kill -0, due to macOS permissions)
+  stale_location: ai_comms/{agent}/tasks/stale/
+
+session_conflict:
+  flag: "--on-conflict={fork|exit|queue}"
+  default: fork
+  fork: Creates "{base}_fork_{pid}_{timestamp}" session
+  exit: Fails if session busy
+  queue: Writes to to_execute/, returns task_id
+
+lock_files:
+  location: ~/.claude/locks/{agent_type}_session.lock
+  contents: "PID\ntimestamp\ntmux_session"
+
+related:
+  - protocol_taskCoordination.md
+  - spec_orchestration_protocol.md
+  - cli_session_persistence.md

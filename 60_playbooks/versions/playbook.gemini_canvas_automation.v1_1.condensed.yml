@@ -1,72 +1,50 @@
-metadata:
-  title: Gemini Canvas Automation Playbook
-  version: 1.1.0
-  updated: 2025-12-19
-  status: validated
+meta: {v: 1.1.0, created: 2025-12-19, author: PianoMan+Claude, status: validated, tags: [gemini, canvas, automation, browser, artifacts]}
 
-summary: |
-  End-to-end Gemini Canvas automation: new chat → enable Canvas → upload → prompt → download.
-  Canvas uses Monaco editor (NOT HTML5 canvas). Artifacts appear as "Open" buttons.
+summary: End-to-end Gemini Canvas automation - new chat → enable Canvas → upload → prompt → download artifacts
 
-when_to_use:
-  - Automating code generation in Gemini
-  - Batch downloading Canvas artifacts with filters
-  - Integrating Gemini into AI orchestration pipelines
+note: Canvas uses Monaco editor (VS Code) not HTML5 canvas. Artifacts appear as "Open" buttons.
 
 prerequisites:
-  browser: Chrome with Gemini session, JS from Apple Events enabled
-  tools: cliclick (brew install), Desktop Commander MCP
+  browser: [Chrome with Gemini session, "Allow JavaScript from Apple Events", Gemini tab active]
+  tools: ["cliclick: brew install cliclick", Desktop Commander MCP]
   scripts:
-    download: ai_general/scripts/gemini_chat/gemini_download_canvas_filtered.js
-    enable: ~/bin/applescript/gemini_canvas_enable.scpt
-    upload: ~/bin/applescript/gemini_file_upload.scpt, gemini_drag_drop_upload.scpt
+    gemini_chat/: [gemini_download_canvas_filtered.js, gemini_list_files.js]
+    applescript/: [gemini_canvas_enable.scpt, gemini_file_upload.scpt, gemini_drag_drop_upload.scpt]
 
 steps:
-  1_new_chat:
-    action: Navigate to https://gemini.google.com/app
-    wait: 2s
-
-  2_enable_canvas:
-    action: Run gemini_canvas_enable.scpt
-    rule: Focus input first. Tab×4 to Canvas (4th in Tools menu).
-    verification: Canvas panel appears on right
-
-  3_upload_file:
-    action: Attach file (optional)
-    example: osascript ~/bin/applescript/gemini_file_upload.scpt "/path/to/file.pdf"
-    wait: 2-5s
-
-  4_send_prompt:
-    action: Type prompt and send
-    wait: 5-15s depending on complexity
-
-  5_download_artifacts:
-    action: Set config and run download script
-    example: |
-      window.GEMINI_CANVAS_CONFIG = { extFilter: '.py' };
-      // Execute gemini_download_canvas_filtered.js
-    rule: Check window.GEMINI_CANVAS_RESULTS for status
+  1_navigate: |
+    osascript -e 'tell application "Google Chrome" to set URL of active tab... "https://gemini.google.com/app"'
+    wait 2s
+  2_enable_canvas: |
+    osascript ~/bin/applescript/gemini_canvas_enable.scpt
+    (Tab×4 to reach Canvas in Tools menu, focus on input first)
+  3_upload: |
+    osascript gemini_file_upload.scpt "/path/file.pdf"  # file picker
+    osascript gemini_drag_drop_upload.scpt "/path/file.pdf"  # drag-drop
+    wait 2-5s
+  4_prompt: |
+    keystroke "prompt text" then keystroke return
+    wait 5-15s
+  5_download: |
+    window.GEMINI_CANVAS_CONFIG = { extFilter: '.py' };
+    // execute gemini_download_canvas_filtered.js
+    // check window.GEMINI_CANVAS_RESULTS
 
 filter_options:
-  extFilter: ".py" or [".py", ".js"] - filter by extension
-  nameFilter: "fibonacci" - partial match on title/content
-  newest: 3 - only N most recent
-  oldest: 2 - only N oldest
-  dryRun: true - list without downloading
+  extFilter: {type: "string|array", ex: '".py" or [".py",".js"]', desc: by extension}
+  nameFilter: {type: string, ex: '"fibonacci"', desc: partial match title/code}
+  newest: {type: int, desc: only N most recent}
+  oldest: {type: int, desc: only N oldest}
+  dryRun: {type: bool, desc: list without download}
+  delayMs: {type: int, default: 800, desc: ms between artifacts}
 
-common_issues:
-  canvas_not_enabling:
-    symptom: Canvas panel doesn't appear
-    fix: Verify input focused, increase delays, check menu order (4 tabs)
-
-  no_artifacts_found:
-    symptom: Empty artifacts array
-    fix: Check for "Open" buttons, use inline script if no Canvas, wait longer
-
-  wrong_extension:
-    symptom: .js saved as .txt
-    fix: Use nameFilter instead, download all then rename
+issues:
+  canvas_not_enabling: [wrong tab count, focus not on input, timing]
+  no_artifacts: [canvas not enabled, code inline instead, still generating]
+  wrong_extension: [detection missed, use nameFilter, download all then rename]
 
 canvas_vs_inline:
-  canvas: "Open" button → gemini_download_canvas_filtered.js
-  inline: Code block in chat → gemini_download_filtered.js
+  canvas: {appear: "Open button + Monaco panel", script: gemini_download_canvas_filtered.js, when: multi-file/complex}
+  inline: {appear: code block in chat, script: gemini_download_filtered.js, when: simple snippets}
+
+related: [gemini_chat/README.md, cli_browser_automation_guide.md]

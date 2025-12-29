@@ -1,17 +1,53 @@
-# Federated AI Memory Protocol (condensed)
-# Full: protocol_federated_memory_v1.yml
+meta: {v: 1.0.0, created: 2025-12-11, status: active, priority: high}
 
-principles: [write_immediate, own_domain, read_freely, write_never, curate_async]
+purpose: "How multiple AI instances maintain and share persistent memory across sessions"
 
-participants:
-  claude_desktop: {slots: 03-30, role: orchestrator}
-  claude_cli: {agents: [librarian, dev-lead, custodian, ops], slots_each: 10}
-  codex_cli: {slots: 01-10, role: sync_execution}
+principles:
+  write_immediate: log as occurs, never checkpoint
+  own_domain: each AI controls own structure/content
+  read_freely: any AI can read any other's memories
+  write_never: never write to another's space
+  curate_async: periodic promote/archive/merge
 
-slot_format: "YAML list, entries: [{ts: ISO, content: text, reads: N}]"
+architecture:
+  registry: ai_general/memories/ai_ecosystem_manifest.yml
+  participants:
+    claude_desktop: {manifest: ai_claude/memories/manifest.yml, slots: "03-30", role: primary orchestrator}
+    cli_agents: {loc: "ai_claude/memories/cli/{agent}/", slots: 10 per agent, agents: [librarian, dev-lead, custodian, ops]}
+    codex: {manifest: ai_codex/memories/manifest.yml, slots: "01-10", role: sync task execution}
 
-cli_persistence: "Named sessions (-n flag) preserve context across resumes"
+slot_format:
+  structure: "entries: [{ts, content, reads?}]"
+  rules: [always append, timestamp ISO 8601, atomic entries, reads optional]
 
-cross_reference: "Read any AI's manifest → load relevant slots. Never write others."
+manifest:
+  required: [metadata.owner, metadata.version, metadata.philosophy, slots, usage_patterns]
+  example: |
+    slots: {01: {purpose: query_patterns}, 02: {purpose: corpus_map}}
 
-logging: "Append immediately as observations occur. Never batch/checkpoint."
+session_patterns:
+  cli_singleton:
+    cmd: "claude_cli.sh -n librarian 'prompt'"
+    first_use: "start fresh → read manifest → assign slots → begin logging"
+    subsequent: "resume context → continue logging → may reorganize"
+  desktop:
+    bootup: "load ecosystem manifest → own manifest → PRIORITY:1 slots"
+    runtime: "write immediately, update manifest, cross-reference read-only"
+
+cross_reference:
+  reading: {allowed: always, process: "read manifest → find slot → read slot"}
+  sharing: {method: coordination task, pattern: "create task → recipient logs to OWN memory"}
+
+logging:
+  good: "- ts: 2025-12-11T07:15:23Z\n  content: 'specific observation'"
+  bad: "vague, no timestamp, batched"
+
+curation_signals:
+  promote: "high reads → core knowledge"
+  archive: "zero reads after 30d"
+  merge: "frequently read together"
+  expire: "contradicted by newer observation"
+
+status:
+  complete: [directory structure, manifests, slot files, ecosystem registry, agents.json]
+  pending: [Codex instructions, read-tracking, curation automation, cross-reference tooling]

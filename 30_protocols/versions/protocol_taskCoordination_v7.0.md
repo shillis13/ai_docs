@@ -233,6 +233,16 @@ artifacts:
 
 ---
 
+## Related Specifications
+
+| Document | Purpose |
+|----------|---------|
+| `spec_task_id_counter.latest.md` | Atomic task ID generation, hierarchical counters, session conflict handling |
+| `cli_session_persistence.latest.md` | CLI session registry and agent session tracking |
+| `cli_orchestration.latest.md` | CLI wrapper architecture and tmux integration |
+
+---
+
 ## Version History
 
 | Version | Date | Changes |

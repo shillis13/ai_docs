@@ -1,36 +1,40 @@
-# Response Footer Spec (Condensed)
-# Source: spec_response_footer_v1.2.yml
-version: 1.2.0
-status: active
+meta: {v: 1.2.0, updated: 2025-12-15, maintainer: PianoMan, status: active}
 
-purpose: Canonical metadata footer for every AI response
+summary: Canonical metadata footer appended to every AI response
 
-format: "AI_Name | Persona:vX.X[Δ] | Proj:Name | Chat:Title | Timestamp | Msg:N | Usage:~X%|NA | Boot:[MTDYC] | Artifacts:N | Tags: ..."
+format:
+  delimiter: " | "
+  order: [AI_Name, Persona, Proj, Chat, Timestamp, Msg, Usage, Boot, Artifacts, Tags]
 
 fields:
-  AI_Name: Display name (e.g., "Claude")
-  Persona: Version with optional delta (Δ=minor, Δ+=significant, Δ*=experimental)
-  Proj: Project identifier (CamelCase/hyphenated)
-  Chat: Human-readable chat title
-  Timestamp: "YYYY-MM-DD HH:MM:SS"
-  Msg: Zero-indexed assistant message counter
-  Usage: "~X%" or "NA"
-  Boot: Startup checklist status [M=manifest, T=tools, D=dirs, Y=memory, C=context]
-  Artifacts: Count of artifacts created this message
-  Tags: 2-8 keywords, kebab-case
+  AI_Name: {desc: display name, ex: Claude}
+  Persona: {desc: "version + delta marker (Δ/Δ+/Δ*)", ex: "Persona:v1.0"}
+  Proj: {desc: short project ID (CamelCase/hyphenated), ex: "Proj:AI-Root"}
+  Chat: {desc: human-readable chat title, ex: "Chat:Manifest-Validation"}
+  Timestamp: {desc: local ISO with seconds, ex: "2025-12-15 12:30:00"}
+  Msg: {desc: zero-indexed assistant counter, ex: "Msg:12"}
+  Usage: {desc: "context % or NA", ex: "Usage:~28%"}
+  Boot: {desc: startup checklist status, ex: "Boot:[✓✓✓✓✓]"}
+  Artifacts: {desc: artifacts created this msg, ex: "Artifacts:1"}
+  Tags: {desc: "2-8 keywords, comma-sep", ex: "Tags: footer, validation"}
 
-boot_symbols:
-  M: manifest_valid (validate_manifests.py ran clean)
-  T: tools_loaded (tools_manifest.condensed.yml read)
-  D: dirs_loaded (directory_structure_reference read)
-  Y: memory_checked (mem_slots/manifest.yml read)
-  C: context_file (notes_to_myself.md checked)
-  format: "Boot:[✓✓✓✓✓]" or "Boot:[✓✓✓--]" for partial
+boot_field:
+  symbols: {M: manifest_valid, T: tools_loaded, D: dirs_loaded, Y: memory_checked, C: context_file}
+  format: "Boot:[MTDYC] where ✓=done, -=skipped"
 
 rules:
-  - Delta marker only in message that causes/announces change
-  - Usage: prefer percentage, fallback NA
-  - Boot: show after first substantive response, can omit later
-  - Artifacts: count only current message items
+  persona_deltas:
+    Δ: minor refinement
+    Δ+: significant update
+    Δ*: experimental branch
+    emit: only in message causing/announcing change
+  usage: "~X% when measurable, NA when undefined"
+  boot: show after first checklist run, can omit after established
+  artifacts: count only current message items
 
-example: "Claude | Persona:v1.0 | Proj:AI-Root | Chat:Manifest-Fix | 2025-12-15 12:30:00 | Msg:5 | Usage:~15% | Boot:[✓✓✓✓✓] | Artifacts:0 | Tags: footer, boot"
+examples:
+  full: "Claude | Persona:v1.0 | Proj:AI-Root | Chat:Validation | 2025-12-15 12:30:00 | Msg:5 | Usage:~15% | Boot:[✓✓✓✓✓] | Artifacts:0 | Tags: checklist"
+  partial: "...Boot:[✓✓✓--]..."
+  no_boot: "(omit Boot field in continuations)"
+
+related: [spec_startup_checklist.yml, validate_manifests.py]

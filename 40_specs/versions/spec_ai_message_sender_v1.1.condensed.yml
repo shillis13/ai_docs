@@ -1,34 +1,24 @@
-# AI Message Sender (Condensed)
-# Source: spec_ai_message_sender_v1.1.yml
-version: "1.0"
-status: production
+meta: {v: 1.1.0, created: 2025-11-01, author: PianoMan, status: production}
 location: ~/bin/projects/chat_orchestrators/send_ai_message.sh
 
-purpose: Send messages to AI apps (Claude, ChatGPT) via AppleScript automation
+summary: Universal mechanism to send messages to AI desktop apps (Claude, ChatGPT) via AppleScript. Enables notifications, scheduled prompts, CLI alerts, cross-AI comms.
 
 interface:
-  command: send_ai_message.sh <app> <message>
-  apps: [claude, chatgpt]
-  returns: 0=success, 1=error
+  command: "send_ai_message.sh <app> <message>"
+  params:
+    app: {type: string, required: yes, values: [claude, chatgpt]}
+    message: {type: string, required: yes, note: "can be multi-line"}
+  returns: {0: success, 1: error}
 
 behavior:
-  - Activates app (1s delay), types message, sends Enter (0.5s delay)
-  - Targets ACTIVE conversation (no URL param - open desired chat first)
-  - One-way (no response reading), not thread-safe
+  activation: activates app, brings to foreground, 1s delay
+  input: keystroke simulation via AppleScript to active conversation
+  timing: {activation: 1.0s, typing: 0.5s, total_min: ~1.5s}
+  targeting: sends to currently active/open conversation
+  concurrency: not thread-safe, serialize with lock/queue
 
-use_cases:
-  - CLI completion notifications: "Task #1234 done. Results in responses/cli_73193/"
-  - System alerts: disk warnings, errors, thresholds
-  - Scheduled prompts: cron jobs for standups, checks
-  - Cross-AI communication: analysis results between AIs
+use_cases: [system notifications, CLI completion alerts, scheduled prompts, cross-AI comms, async collaboration]
 
-integration:
-  cli_coordination: CLI completes → writes response → calls sender → Desktop sees notification
-  file_monitoring: inotifywait + send_ai_message.sh for new files
+limitations: [no response reading, no URL targeting, no retry, single-threaded, requires app focus]
 
-limitations:
-  - No response reading, no conversation targeting by URL
-  - No retry/rate limiting/queueing, requires app focus
-  - Concurrent calls may conflict
-
-dependencies: [macOS AppleScript, System Events permissions]
+related: [CLI Coordination Protocol v3.1, Chat Orchestrator (Puppeteer), Desktop Claude Prompt Sender v2.0]

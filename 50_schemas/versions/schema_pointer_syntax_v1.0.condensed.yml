@@ -1,67 +1,41 @@
----
-# CONDENSED: schema_pointer_syntax_v1.0
-# Full version: 50_schemas/versions/schema_pointer_syntax_v1.0.yml
-metadata:
-  title: Reference Pointer Syntax Schema (Condensed)
-  version: 1.0.0-condensed
-  source: versions/schema_pointer_syntax_v1.0.yml
+meta: {v: 1.0.0, created: 2025-12-05, maintainer: PianoMan, status: active}
+related: [protocol_reference_pointers, instr_pointer_loading]
 
-grammar:
-  format: "<TYPE>:<TARGET> [| <KEY>:<VALUE>]*"
-  max_length: 200 chars  # Must fit in native memory slot
+grammar: "<TYPE>:<TARGET> [| <KEY>:<VALUE>]*"
+max_length: 200 chars (must fit native memory slot)
 
 types:
-  STARTER: Core identity/preferences - load first
-  PROJECT: Current work context
-  PREFS: Communication/behavior preferences
-  CONTEXT: Situational context (time-sensitive)
-  TOOL: Tool configurations and patterns
-  REF: Reference material - on-demand only
-  QUERY: Dynamic search against long-term memory
-  RECENT: Retrieve N most recent items
+  STARTER: {desc: "core identity/prefs - load first", target: "relative/path.yml", ex: "STARTER:ai_memories/60_knowledge/about_user/identity.yml"}
+  PROJECT: {desc: "current work context", target: "relative/path.yml", ex: "PROJECT:ai_claude/work/current_focus.yml"}
+  PREFS: {desc: "communication/behavior prefs", target: "relative/path.yml"}
+  CONTEXT: {desc: "situational, time-sensitive", target: "relative/path.yml"}
+  TOOL: {desc: "tool configs and patterns", target: "relative/path.yml"}
+  REF: {desc: "reference material - on-demand only", target: "relative/path.yml"}
+  QUERY: {desc: "dynamic search", target: "search terms", ex: "QUERY:CLI timeout | LIMIT:5 | SINCE:30d"}
+  RECENT: {desc: "N most recent items", target: "category name", ex: "RECENT:session_summaries | COUNT:3"}
 
 modifiers:
-  PRIORITY: {values: [1, 2, 3], default: 2}
-    # 1=conversation start, 2=topic arises, 3=explicit reference
-  LOAD: {values: [AUTO, TOPIC, DEMAND], default: TOPIC}
-    # AUTO=no decision, TOPIC=related topic detected, DEMAND=explicit request
-  SCOPE: {values: [GLOBAL, PROJECT, SESSION], default: GLOBAL}
-  TTL: {format: "YYYY-MM-DD or Nd", desc: "Review/refresh after date"}
+  PRIORITY: {1: "conversation start", 2: "topic arises (default)", 3: "explicitly referenced"}
+  LOAD: {AUTO: "without AI decision", TOPIC: "related topic detected (default)", DEMAND: "explicitly requested"}
+  SCOPE: {GLOBAL: "all contexts (default)", PROJECT: "specific project", SESSION: "current session only"}
+  TTL: {format: "YYYY-MM-DD or Nd", meaning: "review/refresh after", ex: "TTL:7d"}
 
 query_modifiers:
   LIMIT: {type: int, default: 5}
-  SINCE: {format: "Nd/Nw/Nm"}
+  SINCE: {type: "Nd/Nw/Nm", desc: "results updated within window"}
   SOURCE: {values: [histories, summaries, knowledge, all], default: all}
   SORT: {values: [relevance, recent, oldest], default: relevance}
 
-destination_file_schema:
-  required_header:
-    title: string
-    type: {enum: [identity, preferences, context, project, tool_config, reference]}
-    updated: date
-    summary: {max: 500 chars, purpose: "Quick orientation if not fully loaded"}
-  optional: [version, tags]
-  pointers_section:
-    - path: string
-    - rel: string    # relationship type
-    - load: string   # AUTO|TOPIC|DEMAND
-    - note: string   # Why this link exists
-
 validation:
-  pointer_string:
-    - "<= 200 characters"
-    - TYPE must be recognized
-    - TARGET not empty
-    - Modifiers use valid keys
-  path_targets:
-    - Relative to ai_root/
-    - End in .yml or .yaml
-    - Should resolve (warning if not)
-  query_targets:
-    - Substantive keywords
-    - Avoid generic terms
+  pointer: ["<= 200 chars", "TYPE recognized", "TARGET not empty", "valid modifier keys"]
+  path: ["relative to ai_root/", "ends .yml/.yaml", "should resolve (warning if not)"]
+  query: ["substantive keywords", "avoid generic terms"]
 
 examples:
-  minimal: "STARTER:ai_memories/60_knowledge/about_user/identity.yml"
-  with_modifiers: "PROJECT:ai_claude/work/current_focus.yml | PRIORITY:2 | LOAD:TOPIC"
-  query: "QUERY:chat orchestrator design decisions | LIMIT:3 | SINCE:30d"
+  minimal: "STARTER:ai_memories/60_knowledge/about_user/identity.yml (56 chars)"
+  with_mods: "PROJECT:ai_claude/work/current_focus.yml | PRIORITY:2 | LOAD:TOPIC | SCOPE:PROJECT (88 chars)"
+  query: "QUERY:chat orchestrator design decisions | LIMIT:3 | SINCE:30d (66 chars)"
+
+regex:
+  full_pointer: '^(?P<type>[A-Z]+):(?P<target>[^\|]+?)(?:\s*\|\s*(?P<mods>.+))?$'
+  modifier_pair: '(?P<key>[A-Z]+):(?P<value>[^\|]+)'

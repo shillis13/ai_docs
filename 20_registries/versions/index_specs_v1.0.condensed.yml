@@ -1,44 +1,11 @@
-# Condensed: index_specs_v1.0.md
-# Purpose: Specs registry quick reference
-
-metadata:
-  source_file: index_specs_v1.0.md
-  condensed_date: 2025-12-22T10:58:00Z
-  version: 1.0.0
-  category: specs
-  maintainer: SpecOps
-
-overview: "Structured index of specification documents and deployment metadata"
+meta: {v: 1.0.0, category: specs, updated: 2025-11-23, maintainer: SpecOps}
+overview: Structured index of specification documents and deployment metadata
+config: {subdirs_deployable: false}
 
 files:
-  index_specs.yml:
-    size: 2419
-    status: active
-    deploy: [codex, claude_cli]
-
-  schema_index_files_v1.yml:
-    desc: "Schema for index file structure and validation"
-    size: 7134
-    status: active
-    deploy: [codex, claude_cli]
-
-  spec_ai_message_sender_v1.1.yml:
-    desc: "AI message sender handshake and metadata contract"
-    size: 8467
-    status: active
-    deploy: [codex, claude_cli]
-
-  protocol_taskCoordination_v5.0.yml:
-    desc: "Task Coordination Protocol - directory-based with roles, claims, IM"
-    size: 21700
-    status: active
-    deploy: [claude_desktop, codex, claude_cli]
-    note: "Replaces spec_cli_coordination_protocol_v1.4"
-
-  spec_response_footer_v1.1.yml:
-    desc: "Standardized response footers"
-    status: auxiliary
-    deploy: [codex]
-
-config:
-  subdirs_deployable: false
+  index_specs.yml: {bytes: 2419, tokens: 692, status: active, audience: codex, deploy: [codex, claude_cli]}
+  schema_index_files_v1.yml: {bytes: 7134, tokens: 2039, status: active, audience: codex, deploy: [codex, claude_cli], desc: index file structure and validation}
+  spec_ai_message_sender_v1.1.yml: {bytes: 8467, tokens: 2420, status: active, audience: codex, deploy: [codex, claude_cli], desc: message sender handshake/metadata contract}
+  protocol_taskCoordination_v5.0.yml: {bytes: 21700, tokens: 6200, status: active, audience: all, deploy: [claude_desktop, codex, claude_cli], desc: directory-based coordination with roles/claims/IM, replaces: spec_cli_coordination_protocol_v1.4}
+  spec_task_id_counter_v1.0.md: {bytes: ~4000, tokens: ~1100, status: active, audience: all, deploy: [claude_desktop, codex, claude_cli], desc: atomic task ID generation/hierarchical counters, related: [protocol_taskCoordination, cli_session_persistence]}
+  spec_response_footer_v1.1.yml: {bytes: 3871, tokens: 1106, status: auxiliary, audience: internal, deploy: [codex], desc: standardized response footer guidelines}

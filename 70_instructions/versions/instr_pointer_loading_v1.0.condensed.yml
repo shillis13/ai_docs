@@ -1,0 +1,61 @@
+# instr_pointer_loading_v1.0.condensed.yml
+metadata:
+  source: instr_pointer_loading_v1.0.md
+  version: "1.0"
+  condensed_by: librarian
+
+recognition:
+  pattern: "<TYPE>:<PATH_OR_QUERY> [| <KEY>:<VALUE>]*"
+  path_types: [STARTER, PROJECT, PREFS, CONTEXT, TOOL, REF]
+  search_types: [QUERY]
+  category_types: [RECENT]
+
+load_sequence:
+  auto:
+    condition: PRIORITY:1 AND LOAD:AUTO
+    action: load immediately, silent
+    max_files: 5
+  topic:
+    condition: PRIORITY:2 AND LOAD:TOPIC AND topic_matches
+    action: load when conversation enters domain
+    matching: use tags field in destination
+  demand:
+    condition: PRIORITY:3 OR LOAD:DEMAND
+    action: load only when explicitly needed
+    announce: yes
+
+execution:
+  path_pointers:
+    tool: Desktop Commander read_file
+    base: ~/Documents/AI/ai_root/
+  query_pointers:
+    tool: memory_search or start_search
+    fallback: ripgrep of ai_memories/
+  recent_pointers:
+    tool: list_directory + read_file
+    categories:
+      session_summaries: ai_claude/work/session_summaries/
+      task_completions: ai_comms/claude_cli/completed/
+      decisions: ai_memories/60_decisions/
+
+chaining:
+  when: destination has 'pointers' section
+  depth_limit: 3
+  circular_prevention: track loaded paths, skip duplicates, warn
+
+context_conservation:
+  max_auto_load: 5 files
+  prefer_summaries: use header.summary when full not needed
+  token_awareness: prefer small files, large files use PRIORITY:3
+
+error_handling:
+  file_not_found: note, continue, don't announce
+  parse_error: log, skip, suggest review
+  no_results: note, continue, announce only if user asked
+
+do_not:
+  - load all pointers at once
+  - announce every load
+  - chain deeper than 3 levels
+  - re-load same file in session
+  - guess at contents on failure

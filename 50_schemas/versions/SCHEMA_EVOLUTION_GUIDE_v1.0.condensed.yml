@@ -1,72 +1,51 @@
----
-# CONDENSED: SCHEMA_EVOLUTION_GUIDE
-# Full version: 50_schemas/SCHEMA_EVOLUTION_GUIDE.md
-metadata:
-  title: Schema Evolution Guide (Condensed)
-  version: 1.0.0-condensed
-  source: SCHEMA_EVOLUTION_GUIDE.md
+meta: {v: 1.0, purpose: "authoritative reference for evolving JSON Schemas"}
 
-purpose: Safely evolve JSON Schemas without breaking existing documents or tools.
-
-compatibility_types:
-  backward: Old documents validate under new schema (priority)
-  forward: New documents validate under older schema
-  breaking: Previously valid documents fail validation or tools can't interpret
+overview:
+  backward_compatible: old docs validate under new schema
+  forward_compatible: new docs validate under old schema
+  breaking: previously valid docs fail or processors can't interpret
 
 composition_patterns:
-  "$ref": "Reuse definitions (e.g., schema_base.json#/definitions/metadata)"
-  "$defs": "Local fragment library, reference via $ref"
-  allOf: "Inheritance/mixins - intersect multiple schemas"
-  oneOf: "Exactly one branch matches (polymorphic)"
-  anyOf: "At least one branch matches"
+  "$ref": "reuse definition from same/other file"
+  "$defs": "local fragment library, reference via $ref"
+  allOf: "intersect schemas (inheritance/mixins)"
+  "oneOf/anyOf": "polymorphic content (oneOf=exactly one, anyOf=at least one)"
+  external: "file URLs or absolute $id values"
+  best_practices: [prefer $defs+$ref over copying, add title/desc with allOf+$ref, use discriminators for oneOf]
 
 backward_compatible_changes:
-  add_optional_field: Add to properties without adding to required
-  add_section_type: Extend oneOf/patternProperties branches
-  relax_constraint: Increase maxLength, widen enums, loosen regex
+  adding_optional_fields: add to properties without adding to required
+  new_sections: extend patternProperties with new $ref/oneOf branches
+  relaxing_constraints: increase maxLength, widen enums, loosen regex (document it)
 
 breaking_changes:
-  add_required_field:
-    migrate: Stage as optional → populate → mark required
-  remove_field:
-    migrate: Deprecate → update producers → remove
-  change_type:
-    migrate: Introduce new property (foo_v2) or oneOf bridge
-  tighten_constraint:
-    migrate: Audit data → add linting → tighten
+  adding_required: {why: "existing docs lack property", strategy: "stage optional → populate → mark required"}
+  removing_fields: {why: "producers still emit", strategy: "deprecate → update producers → remove"}
+  changing_types: {why: "invalidates docs and code", strategy: "new property foo_v2 or oneOf bridge"}
+  tightening: {why: "lower max, narrower enum", strategy: "audit data → lint → tighten"}
+
+migration_plan: [audit existing docs, communicate intent, provide transform scripts, tag versions for pinning]
 
 additionalProperties:
-  true: Max extensibility, future-friendly
-  false: Strictest, deterministic renderers
-  per_object: Mix via patternProperties (e.g., "^ext_" allowed)
+  "true": allows unknown keys, max extensibility
+  "false": blocks unknown, strongest guarantees
+  per_object: mix via patternProperties or unevaluatedProperties
+  note: "true→false is breaking, false→true hides typos"
 
 versioning:
-  document_level: metadata.version (e.g., 1.1.0)
-  schema_level: schema_*_v1.json, schema_*_v2.json
-  git_tags: schema-v1.4.0 tags
-  hybrid: Both document versions + git tags (recommended)
+  document_level: embed metadata.version
+  schema_level: schema_*_v1.json, v2.json with alias to latest
+  git_based: tag commits, pin via tags/submodules
+  hybrid: both doc-level + git tags (recommended)
 
-evolution_workflow:
-  add_optional:
-    - Update schema (add property)
-    - Add docs/examples
-    - Update producers
-    - Run validators
-    - Communicate in PR
-  breaking:
-    - Design + document rationale
-    - Feature branch
-    - Implement + transformation scripts
-    - Validate against historic docs
-    - Migrate stored documents
-    - Communicate timelines
+workflows:
+  adding_optional: [update schema, add docs/examples, update producers, run validators, communicate]
+  breaking: [design + rationale, branch, implement + scripts, validate against historic, migrate, communicate]
+  testing: [ajv/jsonschema validation, positive/negative fixtures, CI checks]
 
-digest_schema_notes:
-  structure: "{metadata, table_of_contents, sections, footer}"
-  extensibility:
-    metadata: Supports optional context, maintainer, version, related_*
-    sections: patternProperties with heading+content, additionalProperties:false
-  common_extensions:
-    - Add metadata fields (source_repo, tags)
-    - Add section types via oneOf
-    - Expand footer analytics
+knowledge_digest_guidance:
+  structure: {metadata: "...", table_of_contents: "...", sections: "...", footer: "..."}
+  extensibility: metadata supports optional fields, sections via patternProperties
+  blocked: new top-level objects, additional section properties
+  common_evolutions: [add metadata fields, new section payloads, richer per-section metadata, expand footer]
+  recommended: [use oneOf for richer sections, add optional top-level properties, maintain key patterns]

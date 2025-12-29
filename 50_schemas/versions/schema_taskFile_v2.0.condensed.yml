@@ -1,75 +1,54 @@
----
-# CONDENSED: schema_taskFile_v1.0
-# Full version: 50_schemas/versions/schema_taskFile_v1.0.yml
-metadata:
-  title: Task File Schema (Condensed)
-  version: 1.0.0-condensed
-  source: versions/schema_taskFile_v1.0.yml
-  used_by: protocol_taskCoordination_latest.yml
+meta: {name: Task File Schema, v: 2.0.0, date: 2025-12-11, status: active, desc: "req_XXXX_slug.md task files", used_by: protocol_taskCoordination}
+v2_changes: [added session field, added bundle support]
 
 naming:
-  file: req_XXXX_slug.md  # e.g., req_1001_system_info.md
-  folder: req_XXXX_slug/
-  claimed: claimed_{YYYYMMDD_HHMMSS}_{pid}_req_XXXX_slug/
-  id_source: _NNNN_next_req_id (plain text, increment after creation)
+  file: "req_XXXX_slug.md"
+  folder: "req_XXXX_slug/"
+  claimed: "claimed_{YYYYMMDD_HHMMSS}_{pid}_req_XXXX_slug/"
+  id_source: "_NNNN_next_req_id (plain text, increment after creation)"
 
-required_fields:
-  title:
-    format: "# Request #XXXX: Title"
-    validation: XXXX must match filename
-  type:
-    format: "**Type:** {value}"
-    values: [Standard, Research, Installation, Testing, Emergency, Maintenance]
-    default: Standard
-  priority:
-    format: "**Priority:** {value}"
-    values: [LOW, NORMAL, HIGH, URGENT, CRITICAL]
-    default: NORMAL
-  posted:
-    format: "**Posted:** {ISO 8601}"
-  description:
-    format: "## Task Description\n{content}"
-    min: 1 sentence
-  expected_response:
-    format: "## Expected Response\n{content}"
-    purpose: Sets completion criteria
+required:
+  title: {format: "# Request #XXXX: Title", validate: must match filename}
+  type: {format: "**Type:** {value}", default: Standard, values: [Standard, Research, Installation, Testing, Emergency, Maintenance]}
+  priority: {format: "**Priority:** {value}", default: NORMAL, values: [LOW, NORMAL, HIGH, URGENT, CRITICAL]}
+  posted: {format: "**Posted:** {ISO 8601}", example: "2025-11-23T15:30:00-06:00"}
+  description: {format: "## Task Description\n{markdown}", min: 1 sentence}
+  expected_response: {format: "## Expected Response\n{desc}", purpose: completion criteria}
 
-optional_fields:
-  commands: "## Task Commands\n```bash\n{cmds}\n```"
-  discrete: "**Discrete:** true|false"  # if true, no subdivision
-  target_worker: "**Target Worker:** {type} or {type}:{pid}"
-  entry_criteria: "## Entry Criteria\n{list}"
-  exit_criteria: "## Exit Criteria\n{list}"
-  depends_on: "**Depends On:** req_XXXX, req_YYYY"  # Task Sets
-  sequence_id: "**Sequence:** {NNN}"  # Task Sets
-  notes: "## Notes\n{context}"
+optional:
+  commands: {format: "## Task Commands\n```bash\n{cmds}\n```", omit: "worker decides"}
+  discrete: {format: "**Discrete:** true|false", default: false, desc: "if true, no subdivision"}
+  target_worker: {format: "**Target Worker:** {type}|{type}:{pid}", omit: "any worker may claim"}
+  session: {format: "**Session:** {name|id}", NEW_v2: true, purpose: "persistent agent expertise", registry: ~/.claude/session_registry.yml, launch: "claude --project {p} --session-id {s} 'prompt'"}
+  entry_criteria: {format: "## Entry Criteria\n{list}", omit: "start immediately"}
+  exit_criteria: {format: "## Exit Criteria\n{list}", omit: "worker judgment"}
+  depends_on: {format: "**Depends On:** req_XXXX, req_YYYY", status: "WALK STAGE - Task Sets"}
+  sequence: {format: "**Sequence:** {NNN}", status: "WALK STAGE - Task Sets"}
+  notes: {format: "## Notes\n{context}"}
+
+session_use_cases:
+  persistent: [role-based agents, long-running projects, builds on prior work]
+  ephemeral: [one-off tasks, parallel workers, experiments, fresh perspective]
 
 validation:
-  - filename_matches_title: XXXX in filename == #XXXX in title (error)
-  - required_sections_present: All required fields exist (error)
-  - valid_type: Type in allowed values (error)
-  - valid_priority: Priority in allowed values (error)
-  - valid_timestamp: Posted is ISO 8601 (error)
-  - description_not_empty: Content exists (error)
-  - expected_response_not_empty: Content exists (warning)
+  errors: [filename_matches_title, required_sections_present, valid_type, valid_priority, valid_timestamp, description_not_empty]
+  warnings: [expected_response_not_empty]
 
 template: |
   # Request #XXXX: {Title}
-
   **Type:** Standard
   **Priority:** NORMAL
-  **Posted:** {ISO 8601 timestamp}
-
+  **Posted:** {ISO 8601}
+  **Session:** {name}  # optional
   ## Task Description
-  {What needs to be done, context, requirements}
-
+  {content}
   ## Task Commands
   ```bash
-  {commands - optional}
+  {commands}
   ```
-
   ## Expected Response
-  {What Worker should return - format, content, files}
-
+  {format/content description}
   ## Notes
-  {Optional: Additional context}
+  {optional context}
+
+refs: [protocol_taskCoordination, response_schema, error_schema]

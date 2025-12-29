@@ -1,97 +1,60 @@
----
-# Condensed from: instr_file_conventions_v3.0.yml
-# Full version: versions/instr_file_conventions_v3.0.yml
-# Token reduction: ~48%
-metadata: {title:"File Conventions v3.0",version:"3.0.0",date:"2025-12-11",status:"active",replaces:"v2.0",maintainer:"PianoMan"}
+# instr_file_conventions_v3.0.condensed.yml
+metadata:
+  source: instr_file_conventions_v3.0.md
+  version: "3.0"
+  condensed_by: librarian
 
-purpose: "Markdown canonical; pipeline md→yml→condensed; directory patterns for navigation."
+pipeline:
+  canonical: md (human writes/reviews)
+  generated: yml (machine-parseable) → condensed (token-efficient)
+  tool: doc_converter.py
 
-document_format_pipeline:
-  canonical_format_hierarchy: |
-    md (canonical)     # Human writes and reviews
-      ↓ script
-    yml (structured)   # Machine-parseable, schema-validated
-      ↓ AI
-    condensed          # Token-efficient for AI consumption
-  file_relationships: [{file:"`doc_v3.0.md`",role:"Canonical source",created_by:"Human"},{file:"`doc_v3.0.yml`",role:"Structured, schema-validated",created_by:"doc_converter.py"},{file:"`doc_v3.0.condensed.yml`",role:"Token-optimized",created_by:"AI task"},{file:"`doc_latest.yml`",role:"Symlink→condensed else yml",created_by:"Symlink"},{file:"`doc.condensed.yml`",role:"Symlink→latest condensed",created_by:"Symlink"}]
-  latest_symlink_resolution: |
-    _latest → condensed (if exists)
-           → yml (if no condensed)
-           → md (if no yml)
-  version_directory_structure: |
-    docs/30_protocols/
-    ├── protocol_taskCoordination_latest.yml    # Symlink → versions/...condensed.yml
-    ├── protocol_taskCoordination.condensed.yml # Symlink → versions/...condensed.yml
-    └── versions/
-        ├── protocol_taskCoordination_v5.0.yml
-        ├── protocol_taskCoordination_v5.0.condensed.yml
-        ├── protocol_taskCoordination_v6.0.md        # Canonical
-        ├── protocol_taskCoordination_v6.0.yml       # Generated
-        └── protocol_taskCoordination_v6.0.condensed.yml  # Generated
-  when_to_use_each_format: [{format:"md",read_when:"Human review/edit",write_when:"Author/update"},{format:"yml",read_when:"Programmatic access",write_when:"Generated only"},{format:"condensed",read_when:"AI/context efficiency",write_when:"Generated only"}]
-markdown_structure_convention:
-  guidance: "Use predictable md so md→yml stays stable."
-  sample_structure: |
-    ```markdown
-    # Document Title vX.Y
+files:
+  doc_vX.Y.md: canonical source (human)
+  doc_vX.Y.yml: structured (script)
+  doc_vX.Y.condensed.yml: token-optimized (AI)
+  doc_latest.yml: symlink → condensed > yml > md
 
-    ## Metadata
-    - **version:** X.Y.Z
-    - **date:** YYYY-MM-DD
-    - **status:** active|draft|deprecated
-    - **field:** value
+symlink_resolution: condensed → yml → md (fallback chain)
 
-    ## Section Name
+markdown_structure:
+  "# Title": root title
+  "## Section": top-level key
+  "### Subsection": nested key
+  "- **key:** value": metadata kv
+  bullets: array
+  tables: array of objects
+  code_blocks: literal block scalar
+  paragraphs: string value
 
-    Content as paragraphs or lists.
+directory_prefixes:
+  00-09: temp (inbox, scratch)
+  10-19: architecture, foundational
+  20-29: registries, indexes
+  30-39: protocols, patterns
+  40-49: specifications
+  50-59: schemas
+  60-69: playbooks, guides
+  70-79: instructions (rules)
+  80-89: templates (by example)
+  90-99: drafts, archives
 
-    ### Subsection
+file_prefixes:
+  instr_: instructions
+  spec_: specifications
+  protocol_: protocol definitions
+  schema_: data schemas
+  req_NNNN_: CLI coordination
 
-    More content.
+version_suffixes:
+  _vX.Y.md: version
+  _latest.yml: symlink to current
+  .condensed.yml: token-optimized
+  _draft.md: WIP
 
-    ## Another Section
+size_guidelines:
+  "<5KB": md ok for auto-load
+  "5-15KB": use condensed
+  ">15KB": condensed required, consider split
 
-    | Column1 | Column2 |
-    |---------|---------|
-    | data    | data    |
-    ```
-  mapping_rules: [{markdown:"`# Title`",yaml:"title: root"},{markdown:"`## Section`",yaml:"Top-level key"},{markdown:"`### Subsection`",yaml:"Nested key"},{markdown:"`- **key:** value`",yaml:"Metadata key-value"},{markdown:"Bullet list",yaml:"Array"},{markdown:"Table",yaml:"Array of objects/nested"},{markdown:"Code block",yaml:"Literal block scalar"},{markdown:"Paragraph",yaml:"String"}]
-
-directory_structure_conventions:
-  numeric_prefixes: [{range:"00-09",purpose:"Temporary/inbox"},{range:"10-19",purpose:"Architecture"},{range:"20-29",purpose:"Registries/indexes"},{range:"30-39",purpose:"Protocols/patterns"},{range:"40-49",purpose:"Specifications"},{range:"50-59",purpose:"Schemas"},{range:"60-69",purpose:"Playbooks/guides"},{range:"70-79",purpose:"Instructions/rules"},{range:"80-89",purpose:"Templates by example"},{range:"90-99",purpose:"Drafts/archives"}]
-  file_prefixes: [{prefix:"`instr_`",purpose:"Instruction files"},{prefix:"`spec_`",purpose:"Specifications"},{prefix:"`protocol_`",purpose:"Protocols"},{prefix:"`schema_`",purpose:"Data schemas"},{prefix:"`req_NNNN_`",purpose:"CLI coordination requests"}]
-  version_suffixes: [{suffix:"_vX.Y.md",description:"Versioned canonical"},{suffix:"_latest.yml",description:"Symlink current"},{suffix:".condensed.yml",description:"Token-optimized"},{suffix:"_draft.md",description:"Work in progress"}]
-context_optimization:
-  size_guidelines: [{size:"<5KB",recommendation:"md ok auto-load"},{size:"5-15KB",recommendation:"Prefer condensed for AI"},{size:">15KB",recommendation:"Condensed required; consider split"}]
-  loading_priority: ["Load .condensed.yml first","Fallback .yml if no condensed",".md for human review/last resort"]
-
-tool_selection:
-  doc_converter_py: {location:"~/bin/all_languages/python/src/ai_utils/chat_processing/doc_converter.py",functions:["md→yml conversion","Schema validation","Structure/metadata preservation"]}
-  desktop_commander: {capabilities:["File ops","Content/filename search","Process management"]}
-
-migration_from_v2_0:
-  summary: "v3.0 makes md canonical; v2.0 treated yml as canonical."
-  differences: [{aspect:"Canonical",v2_0:"yml",v3_0:"md"},{aspect:"Generated",v2_0:"md (pretty-print)",v3_0:"yml, condensed"},{aspect:"Human edits",v2_0:"yml",v3_0:"md"},{aspect:"_latest points to",v2_0:"yml",v3_0:"condensed→yml→md"}]
-  migration_steps: ["New docs: write md, run doc_converter.py for yml","Existing docs: keep yml or regenerate md as canonical","Update symlinks to condensed"]
-
-quick_reference:
-  decision_tree: |
-    Creating/editing documentation?
-    ├─ YES → Write/edit .md file
-    │        Run doc_converter.py to generate .yml
-    │        Request AI condensed version if needed
-    │        Update _latest symlink
-    └─ NO → Reading documentation?
-            ├─ As AI → Load .condensed.yml
-            ├─ As human → Read .md
-            └─ Programmatically → Parse .yml
-  common_locations: |
-    ~/Documents/AI/ai_root/
-    ├── ai_general/docs/           # Shared documentation
-    │   ├── 10_architecture/
-    │   ├── 30_protocols/
-    │   ├── 50_schemas/
-    │   └── 70_instructions/
-    ├── ai_comms/                  # Coordination
-    │   └── claude_cli/tasks/
-    └── ai_memories/               # Memory processing
+loading_priority: condensed → yml → md

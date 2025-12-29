@@ -1,59 +1,61 @@
-# AI Coordination Systems Inventory (Condensed)
-# Source: INVENTORY_v1.0.md
-# Generated: 2025-12-22
-
-metadata: {version: "1.0", status: draft, created: 2025-11-27}
+meta: {v: 1.0, status: draft, created: 2025-11-27}
 
 public_repo:
   url: https://github.com/shillis13/ai_docs
-  relationship: ai_general/docs/ IS the submodule
-  access: https://raw.githubusercontent.com/shillis13/ai_docs/main/<path>
+  purpose: cross-platform doc access (iOS, Web, other AIs)
+  relationship: ai_general/docs/ IS submodule (not copy)
+  raw_url: "https://raw.githubusercontent.com/shillis13/ai_docs/main/<path>"
 
 systems:
   cli_task_coordination:
     version: v5.0
-    location: ai_comms/claude_cli/
-    spec: ai_general/specs_and_protocols/protocol_taskCoordination_v5.0.yml
-    purpose: Async task delegation Desktop→CLI
-    state: [directory lifecycle, broadcasts, response collection, notifications]
-    issues: [staged workflow unclear, task spec undocumented, zombie detection undefined]
+    location: ai_comms/claude_cli/ (→ ~/.claude/coordination/)
+    spec: protocol_taskCoordination_v5.0.yml
+    purpose: async task delegation Desktop → CLI
+    state: operational, to_execute/ → in_progress/ → completed/
+    issues: [staged/ unclear, task spec undoc'd, zombie criteria undefined]
 
-  chat_orchestrator_puppeteer:
+  chat_orchestrator:
     location: ~/bin/projects/chat_orchestrators/chat_orchestrator_puppeteer/
     spec: spec_ai_message_sender_v1.1.yml
-    purpose: Automated relay between AI chat interfaces
-    state: [puppeteer automation, JSONL logging, manual/auto relay]
-    issues: [requires Chrome debug port, DOM selectors may break]
+    purpose: automated relay between AI chat interfaces
+    state: Puppeteer-based, JSONL logging, manual/auto modes
+    issues: [requires Chrome debug port, DOM selectors fragile]
 
   desktop_prompt_sender:
     location: ~/bin/projects/chat_orchestrators/claude_desktop_prompt_sender_v2.sh
-    purpose: Inject prompts into Desktop Claude via AppleScript
-    state: [clipboard-paste method, file-based trigger queue, pulse integration]
-    issues: [send-only, UI dependent, no mid-response detection]
+    purpose: inject prompts into Desktop Claude via AppleScript
+    state: clipboard-paste method, file-based trigger queue
+    issues: [send-only (can't read), UI element dependent]
 
   pulse_system:
     location: ~/bin/ai/pulse_orchestrator.sh
-    prompt: ai_claude/work/pulse_prompt.md
-    logs: ai_general/logs/claude/pulse.log
-    purpose: Periodic wake-up for autonomous operation
-    state: [cron every 10min, lock file support, idle auto-release, pause file]
-    issues: [cron location undocumented, no metrics, one-way pausing]
+    purpose: periodic wake-up for autonomous Desktop operation
+    state: cron 10min, lock file, idle auto-release 30min, pause file
+    issues: [cron location undoc'd, no metrics, pausing one-way]
 
   notification_system:
     location: ai_comms/claude/notifications/
-    format: YAML with structured metadata
-    purpose: Async notifications between systems and Desktop Claude
-    state: [pending/processed dirs, YAML format, manual processing]
-    issues: [no automated delivery, priority undefined, accumulation]
+    purpose: async notifications between systems and Desktop
+    state: pending/processed dirs, YAML format
+    issues: [no auto delivery, priority undefined, accumulation]
 
-  codex_cli_coordination:
+  codex_cli:
     location: ai_comms/codex_cli/
-    init: ~/.claude/coordination/init/codex_cli_init.md
-    purpose: Task coordination for Codex CLI
-    state: [same pattern as Claude CLI, symlinked]
-    issues: [underutilized, no differentiation criteria]
+    purpose: task coordination for Codex CLI
+    state: same pattern as Claude CLI, symlinked
+    issues: [underutilized, no clear differentiation]
 
 summary:
-  all_operational: true
-  test_coverage: [manual, manual, manual, manual, none, minimal]
-  doc_count: 26
+  all_systems: operational
+  test_coverage: manual only
+  priority_issues_per_system: 2-3
+
+doc_index:
+  architecture: [ai_comms/README.md, DESKTOP_CLI_CONTROL_ARCHITECTURE.md, cli_orchestration_v1.md, architectural_layer_model.yml]
+  protocols: [protocol_taskCoordination_v5.0.yml, schema_taskFile_v1.0.yml, spec_ai_message_sender_v1.1.yml]
+  quick_refs: [ai_comms/QUICK_REFERENCE.md, COORDINATION_DASHBOARD.md]
+
+next_steps:
+  pending: [doc staged/ workflow, task spec template, zombie detection (24h), automated tests]
+  done: [maintenance playbook, doc consolidation]

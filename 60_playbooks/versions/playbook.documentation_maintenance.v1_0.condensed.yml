@@ -1,96 +1,48 @@
----
-# Documentation Maintenance Playbook - Condensed
-# Full: versions/playbook.documentation_maintenance.v1_0.md
+meta: {v: 1.0.0, created: 2025-12-19, maintainer: PianoMan, status: active}
 
-metadata:
-  title: Documentation Maintenance Playbook
-  version: 1.0.0
-  created: 2025-12-19
-  status: active
+summary: How to create/update/register docs in ai_root. Ensures consistent structure, versioning, symlinks, cross-refs.
 
-summary: Create, update, and register docs with proper versioning, symlinks, and cross-references.
+when_to_use: [new docs, significant updates, new glossary terms, restructuring]
 
-when_to_use:
-  - Creating new documentation
-  - Significant updates to existing docs
-  - Adding glossary terms for discovery
-  - Refactoring doc structure
+prerequisites: [ai_root write access, understand 10_-70_ dirs, YAML condensation]
 
-directory_structure:
-  pattern: |
-    {doc_type}/
-    ├── versions/
-    │   ├── {basename}_v1.0.md            # Canonical source
-    │   └── {basename}_v1.0.condensed.yml # Condensed
-    ├── {basename}_latest.md → versions/{basename}_v1.0.md
-    └── {basename}.condensed.yml → versions/{basename}_v1.0.condensed.yml
+structure: |
+  {doc_type}/
+  ├── versions/
+  │   ├── {basename}_v1.0.md
+  │   └── {basename}_v1.0.condensed.yml
+  ├── {basename}_latest.md → versions/...
+  └── {basename}_latest.condensed.yml → versions/...
 
 steps:
-  1_create_canonical:
-    action: Write full doc in Markdown
-    location: "{doc_type}/versions/{basename}_v{X.Y}.md"
-    requirements:
-      - Metadata section (title, version, created, maintainer, status)
-      - Follow doc type structure patterns
-      - Version in filename matches metadata
+  1_canonical:
+    action: write full MD in versions/
+    loc: "versions/{basename}_v{X.Y}.md"
+    req: [metadata section, follow type structure, ASCII tables, version matches filename]
 
-  2_create_condensed:
-    action: Create condensed YAML (~60-80% smaller)
-    location: "{doc_type}/versions/{basename}_v{X.Y}.condensed.yml"
-    patterns:
-      - Prose → structured YAML
-      - Abbreviations where clear
-      - Compact examples
-      - Remove redundancy
+  2_condensed:
+    action: create condensed YAML (60-80% smaller)
+    loc: "versions/{basename}_v{X.Y}.condensed.yml"
+    patterns: [prose→YAML, abbreviations, compact examples, remove redundancy]
 
-  3_create_symlinks:
-    action: Symlinks at doc_type level to latest versions
-    commands: |
+  3_symlinks:
+    cmds: |
       ln -sf versions/{basename}_v{X.Y}.md {basename}_latest.md
-      ln -sf versions/{basename}_v{X.Y}.condensed.yml {basename}.condensed.yml
+      ln -sf versions/{basename}_v{X.Y}.condensed.yml {basename}_latest.condensed.yml
+    why: refs use _latest, only symlink changes on version bump
 
-  4_update_references:
-    action: Update cross-reference files as needed
+  4_references:
     files:
-      knowledge_manifest:
-        path: docs/70_instructions/claude/_knowledge_manifest.yml
-        when: Doc should be discoverable by Claude
-        add: Entry with load_sequence, triggers, abstract
-      
-      document_registry:
-        path: docs/20_registries/document_registry.yml
-        when: Formal documentation
-        add: Entry with id, filename, path, tags, audience
-      
-      glossary:
-        path: docs/20_registries/glossary_knowledge_index.condensed.yml
-        when: New terms/concepts
-        format: "term: {d: \"description\", r: \"path/to.condensed.yml\"}"
-        also: Update term count, add to domain list
+      _knowledge_manifest.yml: add if discoverable (set load_sequence, triggers, abstract)
+      document_registry.yml: add entry (id, filename, title, version, status, path, tags)
+      glossary_knowledge_index.yml: "add terms → {d: desc, r: path}"
+    criteria: {new_concept: glossary, discoverable: manifest, formal_doc: registry}
 
-  5_verify:
-    checklist:
-      - Canonical .md in versions/ with version number
-      - Condensed .yml in versions/ with matching version
-      - Symlinks at doc_type level point correctly
-      - Manifest entry (if applicable)
-      - Glossary terms (if applicable)
-      - Registry entry (if applicable)
+  5_verify: [canonical exists versioned, condensed exists matching, symlinks point correctly, refs updated]
 
-common_issues:
-  wrong_symlink:
-    symptom: References load outdated content
-    fix: "ln -sf versions/{basename}_v{NEW}.md {basename}_latest.md"
-  
-  glossary_no_trigger:
-    symptom: Claude doesn't find doc when topic mentioned
-    fix: Check term exists, verify r: path, confirm file exists
-  
-  version_mismatch:
-    symptom: Filename version != metadata version
-    fix: Keep synchronized
+issues:
+  wrong_symlink: update target with ln -sf
+  term_no_trigger: check glossary path, verify condensed exists
+  version_mismatch: keep filename and metadata synced
 
-related:
-  - instr_writing.condensed.yml
-  - SCHEMA_EVOLUTION_GUIDE.md
-  - instr_file_conventions.condensed.yml
+related: [instr_writing.condensed.yml, SCHEMA_EVOLUTION_GUIDE.md, instr_file_conventions.condensed.yml]

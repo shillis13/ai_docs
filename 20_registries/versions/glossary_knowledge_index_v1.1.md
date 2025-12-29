@@ -73,6 +73,11 @@ Automated recovery from broken chats caused by context exhaustion. Detects "prom
 Directory-based lifecycle: staged → to_execute → in_progress → completed/error/cancelled.
 - Primary: `ai_general/docs/30_protocols/protocol_taskCoordination.condensed.yml`
 
+**Task ID Counter** (aliases: NextId, next_id.sh, atomic counter)
+Atomic hierarchical ID generation for orchestration tasks. Uses mkdir spinlock for POSIX-compliant atomicity. Supports session conflict handling (fork/exit/queue).
+- Primary: `ai_general/docs/40_specs/spec_task_id_counter.latest.md`
+- Script: `~/bin/ai/next_id.sh`
+
 ---
 
 ## Quick Lookup
@@ -86,6 +91,7 @@ Directory-based lifecycle: staged → to_execute → in_progress → completed/e
 | Bootstrap Problem | concept | schema_knowledge_glossary_v1.yml |
 | Chat Recovery | workflow | spec_chat_continuity_recovery.condensed.yml |
 | Task Lifecycle | protocol | protocol_taskCoordination.condensed.yml |
+| Task ID Counter | spec | spec_task_id_counter.latest.md |
 
 ---
 

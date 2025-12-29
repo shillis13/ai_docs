@@ -1,123 +1,30 @@
----
-# AI Documentation Registry (Condensed)
-# Source: document_registry.yml
+meta: {v: 1.0.0, created: 2025-11-13, purpose: central truth for canonical docs}
 
-metadata:
-  version: 1.0.0
-  created: 2025-11-13
-  description: Registry of all canonical AI documentation across workspaces
+active_docs:
+  instructions:
+    - {id: instr_operating_principles_v2.0, title: Operating Principles, v: 2.0.0, loc: ai_general/instructions/}
+    - {id: instr_development_v2.0, title: Development Protocol, v: 2.0.0, loc: ai_general/instructions/}
+    - {id: instr_file_conventions_v2.0, title: File Format Conventions, v: 2.0.0, loc: ai_general/instructions/}
+    - {id: instr_claude_use_of_ai_agents_v2.0, title: CLI/Codex Delegation, v: 2.0.0, loc: instructions/claude/}
+  protocols:
+    - {id: protocol_coordination_v4.0, title: CLI Coordination Protocol, v: 4.0.0, loc: knowledge/}
+    - {id: protocol_taskCoordination_v5.0, title: Task Coordination Protocol, v: 5.0.0, loc: specs_and_protocols/}
+  specs:
+    - {id: spec_response_footer_v1.1, title: Response Footer Spec, v: 1.1.0, loc: specs_and_protocols/}
+  indexes:
+    - {id: index_instructions_v2.0, title: AI Instruction Index, v: 2.0.0, loc: instructions/}
 
-documents:
-  # Core Instructions (all AIs)
-  - id: instr_operating_principles_v2.0
-    filename: instr_operating_principles_v2.0.yml
-    title: Operating Principles
-    version: 2.0.0
-    status: active
-    canonical_path: ai_general/canonical/instructions/
-    current_location: ai_general/instructions/
-    description: Partnership foundations, time-first collaboration, communication style
-    tags: [instructions, core, principles, all-ais]
-    last_updated: 2025-11-03
-    audience: [claude_desktop, claude_cli, chatgpt, codex]
-
-  - id: instr_development_v2.0
-    filename: instr_development_v2.0.yml
-    title: Development Protocol
-    version: 2.0.0
-    status: active
-    canonical_path: ai_general/canonical/instructions/
-    current_location: ai_general/instructions/
-    description: Coding workflow, universal standards, language-specific guidance
-    tags: [instructions, development, coding, all-ais]
-    last_updated: 2025-11-03
-    audience: [claude_desktop, claude_cli, chatgpt, codex]
-
-  - id: instr_file_conventions_v2.0
-    filename: instr_file_conventions_v2.0.yml
-    title: File Format and Directory Structure Conventions
-    version: 2.0.0
-    status: active
-    canonical_path: ai_general/canonical/instructions/
-    current_location: ai_general/instructions/
-    description: YAML as source, directory patterns, context optimization
-    tags: [instructions, filesystem, conventions, all-ais]
-    last_updated: 2025-11-03
-    audience: [claude_desktop, claude_cli, chatgpt, codex]
-
-  # Protocols
-  - id: protocol_coordination_v4.0
-    filename: coordination_system_v4_digest.md
-    title: CLI Coordination Protocol
-    version: 4.0.0
-    status: active
-    canonical_path: ai_general/canonical/protocols/
-    current_location: knowledge/
-    description: Desktop↔CLI directory-based task management
-    tags: [protocol, coordination, cli, claude-specific]
-    last_updated: 2025-11-01
-    audience: [claude_desktop, claude_cli]
-
-  - id: protocol_taskCoordination_v5.0
-    filename: protocol_taskCoordination_v5.0.yml
-    title: Task Coordination Protocol
-    version: 5.0.0
-    status: active
-    canonical_path: ai_general/specs_and_protocols/
-    current_location: specs_and_protocols/
-    description: Roles, claim mechanism, IM channels. Replaces v1.4
-    tags: [protocol, coordination, cli, roles, orchestration]
-    last_updated: 2025-11-23
-    audience: [claude_desktop, claude_cli, codex_cli]
-
-  # Specs
-  - id: spec_response_footer_v1.1
-    filename: spec_response_footer_v1.1.yml
-    title: Response Footer Specification
-    version: 1.1.0
-    status: active
-    canonical_path: ai_general/canonical/specs/
-    current_location: specs_and_protocols/
-    description: Canonical metadata footer format and validation
-    tags: [spec, footer, metadata, all-ais]
-    last_updated: 2025-10-19
-    audience: [claude_desktop, chatgpt, codex]
-
-  # Claude-specific
-  - id: instr_claude_use_of_ai_agents_v2.0
-    filename: instr_claude_use_of_ai_agents_v2.0.yml
-    title: CLI and Codex Delegation Guidelines
-    version: 2.0.0
-    status: active
-    canonical_path: ai_general/canonical/instructions/
-    current_location: instructions/claude/
-    description: CLI vs Codex delegation, context preservation
-    tags: [instructions, delegation, claude-specific]
-    last_updated: 2025-11-03
-    audience: [claude_desktop]
-
-  # Index
-  - id: index_instructions_v2.0
-    filename: _instr_index_v2.0.yml
-    title: AI Instruction Index
-    version: 2.0.0
-    status: active
-    canonical_path: ai_general/canonical/indexes/
-    current_location: instructions/
-    description: Single entry point for all standing instructions
-    tags: [index, instructions, all-ais]
-    last_updated: 2025-01-31
-    audience: [claude_desktop, claude_cli, chatgpt, codex]
+doc_fields: [id, filename, title, version, status, canonical_path, current_location, description, tags, last_updated, audience]
 
 migration:
-  pending_moves:
-    - from: ai_general/instructions/instr_operating_principles_v2.0.yml
-      to: ai_general/canonical/instructions/
-      status: pending
-    - from: ai_general/instructions/instr_development_v2.0.yml
-      to: ai_general/canonical/instructions/
-      status: pending
-    - from: ai_general/knowledge/coordination_system_v4_digest.md
-      to: ai_general/canonical/protocols/
-      status: pending
-  completed_moves: []
+  pending:
+    - "ai_general/instructions/instr_operating_principles_v2.0.yml → ai_general/canonical/instructions/"
+    - "ai_general/instructions/instr_development_v2.0.yml → ai_general/canonical/instructions/"
+    - "ai_general/knowledge/coordination_system_v4_digest.md → ai_general/canonical/protocols/"
+  completed: []
+
+usage: |
+  1. Locate canonical versions
+  2. Avoid outdated/duplicate files
+  3. Check status before relying on content
+  4. Track migration progress

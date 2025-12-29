@@ -1,76 +1,55 @@
-# Condensed from: cli_session_persistence.md
-# Source: ai_general/docs/30_protocols/cli_session_persistence.md
+meta: {discovered: 2025-12-05, status: documented}
 
-cli_session_persistence:
-  overview: |
-    Session content stored SERVER-SIDE (Anthropic), not local.
-    sessionId is key to retrieve via `claude -r <sessionId>`.
-    Sessions scoped by project directory.
+storage:
+  local:
+    history.jsonl: "session index (sessionId, timestamp, project, prompt)"
+    "session-env/<uuid>/": placeholder for env vars
+    "file-history/<uuid>/": file changes during session
+    "debug/<uuid>.txt": debug logs
+    projects/: per-project settings (path-encoded)
+  server: "conversation content retrieved via sessionId"
+  key_insight: "content NOT local - sessionId retrieves server-stored context via 'claude -r <sessionId>'"
 
-  local_storage:
-    history_jsonl: ~/.claude/history.jsonl  # Session index
-    session_env: ~/.claude/session-env/<uuid>/  # Placeholder for env vars
-    file_history: ~/.claude/file-history/<uuid>/  # File changes
-    debug: ~/.claude/debug/<uuid>.txt  # Debug logs
-    projects: ~/.claude/projects/  # Per-project settings
+history_format: {display: "user prompt", pastedContents: {}, timestamp: epoch_ms, project: "/path/to/dir", sessionId: "uuid"}
+scoping: "sessions scoped by project directory"
 
-  history_jsonl_format:
-    fields: [display, pastedContents, timestamp, project, sessionId]
-    note: Project path determines which sessions shown with -r
+cli_commands:
+  "claude -c 'prompt'": continue most recent in current dir
+  "claude -r <id> 'prompt'": resume specific session
+  "claude -r": interactive session picker
 
-  cli_commands:
-    continue_recent: claude -c "prompt"  # Continue most recent in current dir
-    resume_specific: claude -r <sessionId> "prompt"
-    interactive_picker: claude -r
+wrapper:
+  loc: ~/bin/ai/claude_cli_session.sh
+  query:
+    list: "./claude_cli_session.sh list ~/path/to/project"
+    latest: "./claude_cli_session.sh latest ~/path/to/project"
+    info: "./claude_cli_session.sh info <session_id>"
+  execution:
+    new: "./claude_cli_session.sh new ~/project 'prompt'"
+    continue: "./claude_cli_session.sh continue ~/project 'prompt'"
+    resume: "./claude_cli_session.sh resume <id> 'prompt'"
+    auto: "./claude_cli_session.sh auto ~/project 'prompt'"
+    task: "./claude_cli_session.sh task /path/to/task.md"
 
-  session_wrapper:
-    location: ~/bin/ai/claude_cli_session.sh
-    query_commands:
-      list: ./claude_cli_session.sh list ~/path/to/project
-      latest: ./claude_cli_session.sh latest ~/path/to/project
-      info: ./claude_cli_session.sh info <session_id>
-    execution_commands:
-      new: ./claude_cli_session.sh new ~/project "prompt"
-      continue: ./claude_cli_session.sh continue ~/project "prompt"
-      resume: ./claude_cli_session.sh resume <session_id> "prompt"
-      auto: ./claude_cli_session.sh auto ~/project "prompt"  # continue if exists, else new
-      task: ./claude_cli_session.sh task /path/to/task.md
+task_file_format:
+  frontmatter: {session_mode: "auto|new|continue|resume:<ID>", project_dir: "path"}
+  template: ~/.claude/coordination/docs/task_template_session_aware.md
 
-  task_file_format:
-    frontmatter:
-      session_mode: [auto, new, continue, "resume:<ID>"]
-      project_dir: path
-      claude_args: optional
-    body: Prompt content
-    template: ~/.claude/coordination/docs/task_template_session_aware.md
+patterns:
+  persistent_worker: "session_mode: continue - accumulates context across tasks"
+  fresh_session: "session_mode: new - isolated one-off work"
+  named_streams: "multiple logical work streams per project via specific session IDs"
 
-  coordination_patterns:
-    persistent_worker: |
-      session_mode: continue + project_dir enables context accumulation across tasks
-    fresh_session: |
-      session_mode: new for isolated disposable work
-    named_streams: |
-      Multiple logical streams per project via named session IDs
+implications:
+  - "CLI workers build expertise through accumulated understanding"
+  - "session continuity is free via native -c/-r"
+  - "project-scoped context = natural isolation"
+  - "server-side storage = no local cleanup needed"
 
-  multi_ai_implications:
-    - CLI workers build expertise via session continuity
-    - No custom implementation needed - use native -c/-r
-    - Project-scoped isolation
-    - Server-side storage (no local cleanup)
+open_questions: [retention duration, size limits, cross-device resume]
 
-  open_questions:
-    - Session retention duration?
-    - Session size limits?
-    - Cross-device resume?
-
-  local_storage_notes:
-    projects: path-encoded directories under ~/.claude/projects/
-
-  created_files:
-    - ~/bin/ai/cli/claude_cli_session.sh
-    - ~/.claude/session_registry.yml
-    - ai_general/templates/cli_task_session_aware.md
-
-  symlinks_in_ai_comms_claude_cli:
-    session_persistence.md: "-> protocol doc"
-    task_template.md: "-> task template"
+files_created:
+  - ~/bin/ai/cli/claude_cli_session.sh (643 lines)
+  - ~/.claude/session_registry.yml
+  - ai_general/docs/30_protocols/cli_session_persistence.md
+  - ai_general/templates/cli_task_session_aware.md

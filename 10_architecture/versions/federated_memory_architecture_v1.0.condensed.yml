@@ -1,101 +1,71 @@
-# Federated AI Memory Architecture (Condensed)
-# Full source: federated_memory_architecture.md
+meta: {v: 1.0, status: active}
 
-metadata:
-  scope: "distributed AI memory federation"
-  principle: "write immediately; curate later; never checkpoint"
-  control: "user sets structure/pointers; AIs own content/files"
+overview: Distributed memory - each AI (Desktop, CLI agents, Codex) controls own persistent memory while federating for cross-reference
 
-model:
-  nature: "autonomous per-AI persistent memory; shared federation for cross-reference"
-  write_path: "slots point to files; AI writes via Desktop Commander without per-write approval"
-  rule: "never write to another AI's space"
+core_principle: Write observations immediately. Never checkpoint. Curate later.
+
+permission_inversion:
+  traditional: AI requests permission per memory change
+  this_approach: User sets structure (pointers), AI controls content (files)
+  mechanism: Memory slots point to files; AI writes via Desktop Commander (no permission per write)
+  result: Autonomous persistent memory
 
 federation:
-  registry: "ai_general/memories/ai_ecosystem_manifest.yml"
-  participants:
-    desktop_claude:
-      manifest: "ai_claude/memories/manifest.yml"
-      slots: "03-30 (01-02 reserved for ecosystem/self manifests)"
-      cli_agents:
-        librarian: {manifest: "ai_claude/memories/cli/librarian/manifest.yml", slots: "01-10"}
-        dev_lead: {manifest: "ai_claude/memories/cli/dev-lead/manifest.yml", slots: "01-10"}
-        custodian: {manifest: "ai_claude/memories/cli/custodian/manifest.yml", slots: "01-10"}
-        ops: {manifest: "ai_claude/memories/cli/ops/manifest.yml", slots: "01-10"}
-    codex_mcp: {manifest: "ai_codex/memories/manifest.yml", slots: "01-10"}
-    chatgpt: {status: "future/planned"}
+  structure:
+    ai_general/memories/: ai_ecosystem_manifest.yml (federation registry)
+    ai_claude/memories/: {manifest: Desktop structure, mem_slots/03-30: Desktop content}
+    ai_claude/memories/cli/{agent}/: {manifest: agent structure, mem_slots/01-10: agent content}
+    ai_codex/memories/: {manifest: Codex structure, mem_slots/01-10: content}
 
 ownership:
-  ecosystem_manifest_location: user
-  individual_manifests: ai_structure
-  slot_contents: ai_content
-  cross_reference: ai_read_only
+  user_controls: [ecosystem manifest location]
+  ai_controls: [individual manifests (structure), slot contents, read-only cross-reference]
+  rule: Read others freely. Never write to another AI's space.
 
-slots:
-  desktop_claude: {range: "03-30", reserve: "01-02 for manifests"}
-  cli_agents: {range: "01-10 each"}
-  codex: {range: "01-10"}
+allocation:
+  desktop_claude: slots 03-30 (28 slots, 01-02 reserved for manifests)
+  cli_agents: slots 01-10 each (10 slots)
+  codex: slots 01-10 (10 slots)
 
-logging:
-  pattern:
-    wrong: "batch insights then save later"
-    right: {append: "immediate to slot", fields: ["ts", "content"]}
-  scope:
-    desktop_claude: "user prefs, tool patterns, project context"
-    librarian: "query patterns, corpus locations, search shortcuts"
-    dev_lead: "task patterns, code insights, architecture decisions"
-    custodian: "structure patterns, naming exceptions, archive decisions"
-    ops: "execution patterns, timing insights, error recovery"
-    codex: "implementation patterns, code generation learnings"
+write_as_you_learn:
+  wrong: "batch insights, checkpoint later (may lose context)"
+  right: "append with ts immediately when realized"
+  format: "- ts: ISO, content: observation"
 
-manifest_format:
-  metadata_fields: [owner, type, version, created, philosophy]
-  slots: "mapping slot-> {purpose, file}; AI assigns as needs emerge"
-  usage:
-    logging: "append timestamped observations as they occur"
-    format: "YAML list entries with ts/content"
-    curation: "periodic review to promote, archive, or merge"
+what_to_log:
+  desktop_claude: user prefs, tool patterns, project context
+  librarian: query patterns, corpus locations, search shortcuts
+  dev_lead: task patterns, code insights, arch decisions
+  custodian: structure patterns, naming exceptions, archive decisions
+  ops: execution patterns, timing, error recovery
+  codex: implementation patterns, code gen learnings
 
-slot_files:
-  structure: "entries: list of {ts, content}"
-  note: "append-friendly per slot"
+manifest_format: |
+  metadata: {owner, type, version, created, philosophy}
+  mem_slots: {01: {purpose, file}, ...}
+  usage: {logging, format, curation}
 
-read_tracking_future:
-  field: "reads: increment per access (optional)"
-  curation_rules:
-    - "high reads -> promote to condensed summary"
-    - "zero reads after 30 days -> archive candidate"
-    - "often read together -> cluster/merge"
+slot_format: |
+  entries:
+    - ts: ISO, content: observation
+    - ts: ISO, content: observation, reads: N (optional)
+
+read_tracking:
+  field: reads (incremented each access)
+  curation: high reads→promote, zero@30d→archive, freq_together→merge
 
 cli_persistence:
-  method: "named sessions preserve continuity"
-  resume_cmd: "claude_cli.sh -n <agent> \"...\""
-  registry: "~/.claude/session_registry.yml"
+  command: "claude_cli.sh -n librarian 'prompt...'"
+  registry: ~/.claude/session_registry.yml
+  effect: same session = same context = accumulated knowledge
 
 cross_reference:
-  read: "manifests/slots from others always readable"
-  write_block: "never write to other AI spaces"
-  wrong_example: "write_file(ai_codex/memories/mem_slots/01.yml, ...)"
-  right_path: "ai_general/coordination/messages/to_codex.yml"
+  read: always allowed (any AI can read any manifest/slot)
+  write: never allowed to other AI's space
 
-integration:
-  desktop_claude_boot:
-    - "load ecosystem manifest (slot 1 pointer)"
-    - "load own manifest (slot 2 pointer)"
-    - "load active slots per manifest"
-    - "inspect other manifests for cross-reference"
-  cli_agent_boot:
-    - "agents.json supplies memory instructions"
-    - "resume named session for continuity"
-    - "read own manifest for slot purposes"
-    - "begin logging immediately"
-  codex_tasks:
-    - "receive task with memory hints"
-    - "read relevant slots if needed"
-    - "log implementation learnings to own slots"
-    - "return results without memory overhead in response"
+bootup:
+  desktop: load manifest, check slots, read others for cross-ref
+  cli_agent: agents.json provides prompt, resume session, read manifest, begin logging
+  codex: receive task with hints, read slots if needed, log learnings, return results
 
-related_docs:
-  - "instr_memory_slot_protocol_v2.yml"
-  - "ai_ecosystem_manifest.yml"
-  - "~/.claude/agents.json"
+related: [instr_memory_slot_protocol_v2, ai_ecosystem_manifest, ~/.claude/agents.json]

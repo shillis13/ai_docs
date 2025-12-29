@@ -1,139 +1,93 @@
-# Multi-AI Orchestration Architecture (Condensed)
-# Full source: ../architecture_overview.yml
+meta: {v: 2.0.0, updated: 2025-12-09, maintainer: PianoMan, status: active}
 
-metadata:
-  version: 1.0.0
-  created: 2025-12-08
-  status: active
-  purpose: "High-level system architecture. Breadth not depth. Use see: pointers."
+purpose: Multi-AI instances work together autonomously - Desktop Claude coordinates, CLI agents execute, persistent memory preserves context
 
-vision:
-  summary: "Scalable multi-AI coordination - autonomous tasks, persistent memory, context preservation"
-  principles:
-    - "Brutal honesty over diplomacy"
-    - "AIs as genuine collaborative partners"
-    - "File-based coordination scales"
-    - "Context is the limiting resource"
-    - "Empirical validation over theoretical design"
+principles: [brutal honesty, AIs as partners, file-based coordination, context window is limiting resource, empirical validation, any AI can orchestrate]
 
 workspace:
-  root: "~/Documents/AI/ai_root/"
-  see: "ai_root_summary.md"
-  structure:
-    ai_claude:
-      purpose: "Claude-specific state, memories, work logs"
-      see: "ai_claude/README.md"
-    ai_chatgpt: "ChatGPT configuration and exports"
-    ai_comms:
-      purpose: "Inter-AI coordination, CLI communication"
-      see: "ai_comms/claude_cli/README.md"
-    ai_general:
-      purpose: "Shared resources, docs, todos, scripts"
-      children: [docs (10-90 numbered), todos, logs, scripts]
-    ai_memories:
-      purpose: "Processed chat histories and knowledge"
-      stages: [10_exported, 20_preprocessed, 30_converted, 40_histories, 50_threads]
+  root: ~/Documents/AI/ai_root/
+  dirs:
+    ai_claude/: Claude state, memories, logs
+    ai_chatgpt/: ChatGPT config, exports
+    ai_comms/: inter-AI coordination, task queues
+    ai_general/: shared docs, todos, scripts
+    ai_memories/: processed histories, knowledge
 
-ai_platforms:
-  desktop_claude:
-    role: "Architect/Systems - strategic coordinator"
-    capabilities: [MCP servers (Desktop Commander/filesystem/Chrome/PDF), web search/fetch, artifacts, memory system]
-    responsibilities: [research/design, cross-cutting decisions, doc standards (UX/Tech Writer), delegate to CLI]
-    see: "ai_general/docs/70_instructions/claude/"
-
-  claude_cli:
-    role: "Autonomous execution workers"
+platforms:
+  orchestrators_vs_workers: any AI can act as either, enables self-organizing hierarchies
+  desktop_claude: {role: primary orchestrator, access: [MCP servers, web search, artifacts, memory], details: 70_instructions/claude/}
+  cli_agents:
+    wrapper: ~/bin/ai/cli/claude_cli.sh
     agents:
-      dev-lead: "Development coordination, todos, code review"
-      librarian: "Knowledge pipeline, ai_memories/"
-      custodian: "Filesystem hygiene, versioning"
-      ops: "Task execution from coordination system"
-    see: "ai_general/docs/30_guides/cli_agent_operations.yml"
-    config: "~/.claude/agents.json"
-    wrapper: "~/bin/ai/cli/claude_cli.sh"
+      dev-lead: {resp: dev coordination, scheduled: true}
+      librarian: {resp: knowledge pipeline, scheduled: true}
+      custodian: {resp: filesystem hygiene, scheduled: true}
+      ops: {resp: task execution, scheduled: true}
+    config: ~/.claude/agents.json
+  codex_cli: {role: coding agent, wrapper: ~/bin/ai/cli/codex_cli.sh}
+  chatgpt: {alias: Chatty, role: peer collaborator}
 
-  codex_mcp:
-    role: "Synchronous task execution"
-    use_cases: [immediate results, multi-step autonomous, code review/validation]
-    timeout: "30-60 seconds"
+todo_system:
+  loc: ai_general/todos/
+  lifecycle: "idea → TODO → refined → Task → executed → completed"
+  dirs: [pending/, active/, blocked/, completed/]
 
-  chatgpt:
-    name: Chatty
-    role: "Peer collaboration"
-    see: "ai_chatgpt/"
+task_coordination:
+  loc: ai_comms/coordination/
+  lifecycle: [posted, ready, claimed, done, results]
+  dirs: {broadcasts/: any worker, "direct/{agent}/": specific, to_execute/: ready, "in_progress/{task}/": claimed, "completed/{task}/": done, "responses/{worker}/": results}
+  key: file-based = any AI with filesystem can participate
 
-coordination:
-  cli_task_system:
-    location: "~/.claude/coordination/"
-    see: "ai_general/docs/30_protocols/protocol_taskCoordination_latest.yml"
-    lifecycle:
-      - "broadcasts/ or direct/cli_{PID}/ (posted)"
-      - "to_execute/ (ready for execution)"
-      - "in_progress/{task}/ (claimed)"
-      - "completed/{task}/ (done)"
-      - "responses/cli_{PID}/ (results)"
+communication:
+  layers:
+    1: {urgency: immediate, mech: "sync hooks (iTerm, AppleScript, Puppeteer)"}
+    2: {urgency: near-real-time, mech: "polling loops, heartbeat files"}
+    3: {urgency: background, mech: async file-based}
+  mechanisms: [alerts/notifications, response files, prompt injection]
 
-  pulse_automation:
-    purpose: "Cron-triggered autonomous work"
-    interval: "5-10 minutes when inactive"
-    status: "Planned - not yet implemented"
+ai_to_ai:
+  desktop_as_driver: uses AppleScript/Puppeteer to drive web AIs (ChatGPT, Gemini, Grok)
+  orchestrated_chat: messages through coordination point - approve/edit/redirect/block
 
-  chat_orchestrator:
-    purpose: "AI-to-AI conversation automation"
-    status: "In development - no formal spec yet"
+autonomy:
+  scheduled_tasks: cron prompts Desktop Claude and CLI agents
+  adaptive: Desktop Claude can modify its own scheduled prompts
+  goal: overnight autonomous operation with graceful handoffs
 
-memory_system:
-  native_memory:
-    slots: "30 slots × 200 chars"
-    format: "Memory pointers to external files"
-    see: "ai_general/docs/40_specs/spec_memory_pointer_schema_v1.0.yml"
+memory:
+  native_slots: "30 slots × 200 chars = hold pointers to external files"
+  pipeline: "10_exported → 20_preprocessed → 30_converted → 40_histories → 50_threads"
+  outputs: [chunked histories, topic traces, decisions, lessons, patterns, themes]
+  manager: librarian agent
 
-  knowledge_pipeline:
-    stages:
-      - "Export from platforms"
-      - "Preprocess and normalize"
-      - "Convert to YAML"
-      - "Index in histories"
-      - "Generate summaries (colocated)"
-      - "Build cross-chat threads"
-    see: "ai_general/docs/40_specs/memory_pipeline_spec.yml"
+context_window:
+  limit: 200K tokens - fundamental constraint
+  strategies: [memory pointers save 40-55K, delegate to CLI/Codex, monitor at 60%, write to files, use thinking blocks]
+  antipatterns: [direct browser snapshots, reading multiple large files, implementation during architecture]
 
-  context_preservation:
-    limit: "200K tokens"
-    strategy:
-      - "Memory pointers save 40-55K vs auto-loaded content"
-      - "Delegate exploration to CLI/Codex"
-      - "Monitor at 60%, handoff before 90%"
-    see: "ai_general/docs/70_instructions/claude/context_preservation.yml"
+constraints:
+  context_window: 200K tokens
+  mcp_timeout: 30-60s hard limit
+  bash_tool: sandbox only, never use
+  browser_snapshots: write to file + delegate
 
-key_constraints:
-  context_window: "200K tokens - fundamental architectural constraint"
-  mcp_timeout: "30-60 seconds hard limit"
-  bash_tool: "Sandbox only - no filesystem access, never use"
-  browser_snapshots: "Write to file, delegate analysis (20-50K token explosion)"
+doc_hierarchy:
+  10_: architecture
+  20_: concepts
+  30_: protocols
+  40_: specs
+  50_: guides
+  60_: playbooks
+  70_: instructions
 
 tooling:
-  automation:
-    location: "~/bin/ai/"
-    categories:
-      cli/: "Claude CLI wrapper and session management"
-      utils/: "Utility scripts (repo_status.py, etc.)"
-  shell_integration:
-    bash_prompt: "~/.bash_prompt (modular segments)"
-    repo_status: "~/.repo_status (cron-updated)"
-  documentation:
-    numbering: "10-90 prefix system"
-    format: "YAML-as-source where possible"
-    versioning: "name_vN.M.ext with *_latest symlinks"
+  scripts: ~/bin/ai/ (cli/, utils/)
+  shell: ~/.bash_prompt, ~/.repo_status
+  python: ~/bin/all_languages/python/src/ai_utils/
 
-related_docs:
-  specs:
-    - "ai_general/docs/40_specs/cli_coordination_protocol_v4.md"
-    - "ai_general/docs/40_specs/cli_specialized_agent_roles_v2.md"
-    - "ai_general/docs/40_specs/spec_memory_pointer_schema_v1.0.yml"
-    - "ai_general/docs/40_specs/spec_response_footer_v1.1.yml"
-  guides:
-    - "ai_general/docs/30_guides/cli_agent_operations.yml"
-  instructions:
-    - "ai_general/docs/70_instructions/claude/"
-    - "ai_general/docs/70_instructions/chatgpt/"
+quick_ref:
+  workspace: ai_root_summary.md
+  communication: ai_communication_architecture_latest.md
+  tasks: protocol_taskCoordination_latest.yml
+  agents: cli_specialized_agent_roles_v2.md
+  memory: spec_memory_pointer_schema_v1.0.yml

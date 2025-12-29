@@ -1,54 +1,84 @@
-# Directory Structure Reference (Condensed)
-# Source: directory_structure_reference_v03.md
-# Generated: 2025-12-22
-
-metadata: {version: "3.0", status: finalized, updated: 2025-10-30}
+meta: {v: 2.0, updated: 2025-10-30, arch: "multi-repo AI-centric", status: finalized}
 
 external:
-  public_repo: https://github.com/shillis13/ai_docs
-  mount: ai_general/docs/ IS the submodule
+  repo: https://github.com/shillis13/ai_docs
+  mount: ai_general/docs/ IS submodule
   access: https://raw.githubusercontent.com/shillis13/ai_docs/main/<path>
+  purpose: cross-platform doc access (iOS, Web, other AIs)
 
 physical_layout:
   root: ~/Documents/AI/
   dirs:
-    ai_chat_artifacts: Mirrors 30_chat_histories structure for artifacts
-    ai_chatgpt: ChatGPT-specific repo
-    ai_claude: Claude-specific repo
-    ai_general: Shared resources across AIs
-    ai_memories: Central memory processing pipeline
-    comms: Communication and task coordination
+    ai_chat_artifacts/: mirrors 30_chat_histories structure
+    ai_chatgpt/: ChatGPT-specific repo
+    ai_claude/: Claude-specific repo
+    ai_general/: shared resources across AIs
+    ai_memories/: central memory pipeline
+    comms/: communication and task coordination
 
-ai_claude:
-  purpose: Claude-specific workspace, instructions, memories
-  key_paths:
-    memories: Chat memories, learnings, todo history
-    work: Trigger files for automation
-    instructions: Claude-specific guidance
-    CLAUDE.md: Desktop Claude init file
+top_level:
+  ai_chat_artifacts:
+    purpose: artifacts from chats (images, docs, data)
+    structure: "{ai}/YYYY/MM/DD/"
 
-ai_general:
-  purpose: Shared resources across all AI entities
-  key_paths:
-    docs: Public documentation (ai_docs submodule)
-    instructions: Cross-AI instructions
-    specs_and_protocols: Canonical specs
-    logs: System logs
+  ai_chatgpt:
+    purpose: ChatGPT config, instructions, memories
+    subdirs: [ai_specific_memories/, ai_scripts/, connectors/, custom_gpts/, instructions/, specs/]
 
-ai_memories:
-  purpose: Central memory processing pipeline
-  pipeline: [00_imports, 10_staging, 20_processing, 30_chat_histories, 40_summaries, 50_knowledge, 60_archive]
+  ai_claude:
+    purpose: Claude config, instructions, memories
+    subdirs: [ai_specific_memories/, ai_scripts/, connectors/, instructions/, skills/, specs/]
 
-ai_comms:
-  purpose: Communication and coordination layer
-  structure:
-    claude_cli: CLI task coordination
-    codex_cli: Codex task coordination
-    claude/notifications: Notification system
+  ai_general:
+    purpose: shared resources, docs, tools
+    subdirs:
+      data/: schemas, shared data structures
+      docs/: architecture, concept docs
+      instructions/: universal instructions (versioned)
+      projects/: project-specific docs
+      prompts/: reusable prompt library
+      research_and_reports/: research outputs
+      scripts/: shared automation
+      specs/: technical specifications
 
-docs_structure:
-  tiers: [10_architecture, 20_registries, 30_protocols, 40_specs, 50_schemas, 60_playbooks, 70_instructions, 80_templates, 90_drafts]
-  conventions:
-    versioned: "{name}_v{x.y}.md in versions/"
-    symlinks: "{name}.latest.md → versions/{name}_v{x.y}.md"
-    condensed: "{name}_v{x.y}.condensed.yml alongside .md"
+  ai_memories:
+    purpose: central memory pipeline - exports → indexed memories
+    subdirs:
+      10_exported/: raw exports by platform
+      20_staged_converted_histories/: YAML conversion staging
+      30_chat_histories/: chunked YAML archives (terminal), indexes/
+      40_digests/: {chat_mems/, decisions/, indexes/, knowledge/, todos/, user_context/}
+
+  comms:
+    purpose: AI-to-AI communication, task coordination
+    subdirs:
+      announcements/: broadcasts to all AIs
+      "{ai}/": mailbox (drafts/, inbox/, outbox/, saved/)
+      claude_cli/: CLI coordination (→ ~/.claude/coordination)
+      "tasks_{type}/": task queues (cancelled/, completed/, error/, in_progress/, to_execute/)
+
+pipeline:
+  flow: |
+    1. Export → 10_exported/{ai}/
+    2. Convert → 20_staged/pending/ → converted/
+    3. Chunk → 30_chat_histories/{ai}/YYYY/MM/DD/ (terminal)
+    4. Process → 40_digests/{type}/
+    5. Index → 30_/indexes/, 40_/indexes/
+
+symlinks:
+  pattern: AI repos symlink to ai_general for shared resources
+  cli_coordination: ~/.claude/coordination → ~/Documents/AI/comms/claude_cli/
+  maintenance: versioned in ai_general, symlinks without versions = always latest
+
+naming:
+  histories: "{chat_id}_{YYYY-MM-DD}_{title_slug}.yml"
+  digests: "{type}_digest_{topic}_v{XX}.md"
+  orchestrated: "conv_{XXX}_{ai}.yml, conv_{XXX}_meta.yml"
+
+principles:
+  - repo_isolation: each AI self-contained with symlinks to general
+  - shared_resources: common in ai_general/ (instructions, specs, schemas)
+  - central_pipeline: ai_memories/ processes from ANY AI
+  - communication: comms/ enables mailboxes, tasks, broadcasts
+
+related: [memory_digest_workspace_architecture, workspace_implementation_guide, chat_processing_flow, CLI_coordination]

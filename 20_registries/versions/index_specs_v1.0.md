@@ -48,6 +48,15 @@ Structured index of specification documents and deployment metadata.
 - **Deploy:** claude_desktop, codex, claude_cli
 - **Note:** Replaces spec_cli_coordination_protocol_v1.4
 
+### spec_task_id_counter_v1.0.md
+- **Description:** Atomic task ID generation, hierarchical counters, session conflict handling
+- **Size:** ~4000 bytes
+- **Estimated Tokens:** ~1100
+- **Status:** active
+- **Audience:** all
+- **Deploy:** claude_desktop, codex, claude_cli
+- **Related:** protocol_taskCoordination, cli_session_persistence
+
 ### spec_response_footer_v1.1.yml
 - **Description:** Guidelines for standardized response footers used across assistant channels
 - **Size:** 3871 bytes
