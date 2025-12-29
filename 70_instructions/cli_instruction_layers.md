@@ -22,9 +22,9 @@ All CLI agents (Claude, Gemini, Codex) use a consistent 4-layer instruction mode
 
 | Layer | Location | Loaded Via |
 |-------|----------|------------|
-| 1. Global | `ai_general/instructions/global/all_cli_agents.md` | Auto (always) |
-| 2. Agent | `ai_general/prompts/agents/{agent}_instructions.md` | `-A <agent>` flag |
-| 3. Task | `ai_comms/{cli}/tasks/{task_file}.md` | `-t <task>` flag |
+| 1. Global | `ai_general/prompts/global/cli_agents.md` | Auto (always) |
+| 2. Agent | `ai_general/prompts/agents/{agent}.md` | `-A <agent>` flag |
+| 3. Task | `ai_comms/{platform}_cli/tasks/{task}.md` | `-T <task>` flag |
 | 4. Prompt | Command line argument | Positional arg |
 
 ## Layer Contents
@@ -71,8 +71,8 @@ Immediate instruction:
 
 ```bash
 -A <agent>    # Load Layer 2 (agent role)
--t <task>     # Load Layer 3 (task file)
--y            # Auto-approve (YOLO mode)
+-T <task>     # Load Layer 3 (task file) - Claude uses -T, Gemini uses -t
+-y / -a       # Auto-approve (-y for Gemini, -a for Claude)
 -p            # Print/headless mode
 -r            # Resume previous session
 ```
@@ -81,13 +81,14 @@ Immediate instruction:
 
 ```bash
 # All 4 layers
+claude_cli.sh -a -A librarian -T req_2205 "Process Claude exports first"
 gemini_cli.sh -y -A librarian -t req_2205 "Process Claude exports first"
 
 # Layers 1, 2, 4 only (no task file)
-claude_cli.sh -A dev_lead "Review the PR"
+claude_cli.sh -A dev-lead "Review the PR"
 
 # Layers 1, 4 only (ad-hoc)
-codex_cli.sh -p "Count files in ai_memories"
+gemini_cli.sh -y -p "Count files in ai_memories"
 ```
 
 ## Instruction Assembly
@@ -95,21 +96,25 @@ codex_cli.sh -p "Count files in ai_memories"
 Scripts assemble instructions in order:
 
 ```bash
+GLOBAL="$PROJECT_DIR/ai_general/prompts/global/cli_agents.md"
+AGENTS_DIR="$PROJECT_DIR/ai_general/prompts/agents"
+TASKS_DIR="$PROJECT_DIR/ai_comms/${platform}_cli/tasks"
+
 INSTRUCTIONS=""
 
 # Layer 1: Global (always)
-if [[ -f "$GLOBAL_INSTRUCTIONS" ]]; then
-    INSTRUCTIONS+="$(cat "$GLOBAL_INSTRUCTIONS")\n\n---\n\n"
+if [[ -f "$GLOBAL" ]]; then
+    INSTRUCTIONS+="$(cat "$GLOBAL")\n\n---\n\n"
 fi
 
 # Layer 2: Agent (if -A specified)
-if [[ -n "$AGENT" && -f "$AGENT_FILE" ]]; then
-    INSTRUCTIONS+="## Agent: $AGENT\n\n$(cat "$AGENT_FILE")\n\n---\n\n"
+if [[ -n "$AGENT" && -f "$AGENTS_DIR/${AGENT}.md" ]]; then
+    INSTRUCTIONS+="## Agent: $AGENT\n\n$(cat "$AGENTS_DIR/${AGENT}.md")\n\n---\n\n"
 fi
 
-# Layer 3: Task (if -t specified)
-if [[ -n "$TASK" && -f "$TASK_FILE" ]]; then
-    INSTRUCTIONS+="## Task\n\n$(cat "$TASK_FILE")\n\n---\n\n"
+# Layer 3: Task (if -T specified)
+if [[ -n "$TASK" && -f "$TASKS_DIR/${TASK}.md" ]]; then
+    INSTRUCTIONS+="## Task\n\n$(cat "$TASKS_DIR/${TASK}.md")\n\n---\n\n"
 fi
 
 # Layer 4: Prompt (positional arg)
@@ -120,21 +125,40 @@ INSTRUCTIONS+="## Immediate Instruction\n\n$PROMPT"
 
 ### Claude CLI
 - Uses `CLAUDE.md` for per-directory context (separate from layers)
-- `--dangerously-skip-permissions` for YOLO mode
+- `-a` or `--auto-approve` for auto-approve (maps to `--dangerously-skip-permissions`)
+- `-T` or `--task-file` for task layer
+- Session persistence via `--resume`, `--continue`, `--named`
 
 ### Gemini CLI
 - Uses `GEMINI.md` for per-directory context
-- `--yolo` or `-y` for auto-approve
+- `-y` or `--yolo` for auto-approve
+- `-t` for task layer
+- Session persistence via `--resume` and `/chat save`/`/chat resume`
 
 ### Codex CLI
 - Inherits from calling environment
 - Typically short-lived, task-focused
+- May use simplified layer loading
 
-## Migration
+## Implementation Status
 
-Existing agent-specific scripts (e.g., `gemini_librarian.sh`) become convenience wrappers:
+| Wrapper | Layered Loading | Auto-Approve Flag | Task Flag |
+|---------|-----------------|-------------------|-----------|
+| `claude_cli.sh` | ✅ | `-a` | `-T` |
+| `gemini_cli.sh` | ✅ | `-y` | `-t` |
+| `codex_cli.sh` | ✅ | `-a` | `-T` |
+
+Agent-specific convenience scripts delegate to the "best" platform for that role:
+
+| Wrapper | Agent | Platform | Reason |
+|---------|-------|----------|--------|
+| `librarian_gemini.sh` | librarian | Gemini | 1M context for corpus |
+| `dev_lead_claude.sh` | dev-lead | Claude | Session persistence |
+| `custodian_claude.sh` | custodian | Claude | Structure validation |
+| `ops_codex.sh` | ops | Codex | Quick synchronous tasks |
 
 ```bash
-# gemini_librarian.sh becomes:
-gemini_cli.sh -A librarian "$@"
+# These are equivalent:
+librarian_gemini.sh -y "Process exports"
+gemini_cli.sh -y -A librarian "Process exports"
 ```
