@@ -88,6 +88,18 @@ load_sequence:
       - ai_general/docs/50_schemas/schema_pointer_syntax.condensed.yml
     - pointer: REF:ai_general/docs/70_instructions/instr_writing.condensed.yml
       tokens: ~1150
+    - pointer: REF:ai_general/docs/70_instructions/instr_chat_condensation.condensed.yml
+      tokens: ~350
+      triggers: [condensation, condense, chat history, librarian wave, semantic summary]
+      abstract: |
+        Guidelines for condensing chat history chunks to semantic summaries.
+        Defines what to preserve (decisions, procedures, discoveries, outcomes)
+        and what to remove (filler, failed attempts, role markers).
+        Target: 70-90% reduction. Output: .condensed.yml alongside source.
+      answers:
+        - "How do I condense chat history?"
+        - "What should condensed files preserve?"
+        - "What's the condensation output format?"
   demand:
     description: Load only when explicitly needed - specs, schemas, playbooks
     files:

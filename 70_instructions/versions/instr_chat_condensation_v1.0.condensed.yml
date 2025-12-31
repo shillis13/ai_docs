@@ -1,0 +1,73 @@
+# Condensed from: instr_chat_condensation_v1.0.md
+# Full version: versions/instr_chat_condensation_v1.0.md
+# Token reduction: ~65%
+
+goal: |
+  Reduce TOKEN count while preserving meaning.
+  Files load into Claude (200K), ChatGPT, other limited-context systems.
+  Token efficiency = more content per context window.
+  
+  NEVER use base64/gzip/zlib - reduces bytes but EXPLODES token count.
+  Output MUST be human-readable YAML, no encoded blobs.
+
+preserve:
+  always:
+    - decisions and rationale
+    - procedures/workflows established
+    - technical discoveries and solutions
+    - problems and what fixed them
+    - configuration changes
+    - outcomes and final state
+    - key facts (names, dates, versions, paths, IDs)
+    - working code and successful commands
+  with_context:
+    - error messages (with cause/resolution)
+    - rejected decisions (if rationale instructive)
+    - constraints discovered
+
+remove:
+  always:
+    - conversational filler ("Let me...", "I'll now...")
+    - politeness exchanges
+    - dead-end thinking
+    - failed attempts (keep final working only)
+    - redundant iterations
+    - verbose explanations (terse summary suffices)
+    - role markers (context makes speaker clear)
+  when_redundant:
+    - duplicate examples
+    - repeated confirmations
+    - step narration when outcome suffices
+
+quality:
+  token_reduction:
+    target: 70-90%
+    minimum: 60%
+    exception: dense technical may only achieve 40-50%
+    note: measure TOKENS not bytes
+  integrity: no semantic loss, all key facts recoverable
+  format: human-readable YAML only, no encoding
+
+output_format:
+  extension: ".condensed.yml"
+  location: alongside source file
+  sections:
+    required: [condensed metadata, summary]
+    common: [decisions, procedures, discoveries, outcomes]
+    optional: [code_artifacts, errors_resolved, configuration]
+  note: adapt to content, omit empty, add domain-specific as needed
+
+anti_patterns:
+  DO_NOT_over_condense: stripping until meaning lost - output must stand alone
+  DO_NOT_under_condense: keeping conversational structure - extract the meaning
+  DO_NOT_encode: NEVER base64/gzip/zlib - explodes tokens, reject any "z:" blob fields
+  DO_NOT_drop_identifiers: keep IDs/timestamps/paths for tracing
+
+validation:
+  - human-readable YAML (no base64/encoded blobs)
+  - YAML parses
+  - all decisions represented
+  - working code preserved
+  - key identifiers retained
+  - no unanswerable questions from condensed
+  - token reduction ≥60%

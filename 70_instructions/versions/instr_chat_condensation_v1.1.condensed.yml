@@ -1,0 +1,166 @@
+# Chat History Condensation Instructions v1.1
+# Full version: versions/instr_chat_condensation_v1.1.md
+
+# CRITICAL FRAMING: This is SEMANTIC EXTRACTION, not compression.
+# You are creating a NEW summary document, not encoding the original.
+
+task_type: semantic_extraction
+task_description: |
+  Extract meaningful content from chat conversations into structured YAML summaries.
+  This is a CONTENT TRANSFORMATION - you write a new document containing only
+  the valuable information, discarding conversational overhead.
+  
+  Think: "What would someone need to know about this conversation?"
+  NOT: "How do I make this file smaller?"
+
+purpose: |
+  Condensed files load into LLM context windows (Claude 200K, etc.).
+  Token efficiency = more historical context available per session.
+
+# === WHAT TO EXTRACT ===
+extract:
+  decisions:
+    - choices made and WHY (rationale is critical)
+    - options considered and rejected (if instructive)
+  procedures:
+    - workflows established
+    - step sequences that worked
+    - processes defined
+  discoveries:
+    - technical insights
+    - patterns identified
+    - solutions found
+    - unexpected behaviors
+  outcomes:
+    - what was accomplished
+    - final state achieved
+    - problems resolved
+  artifacts:
+    - working code (final versions only)
+    - successful commands
+    - configuration values chosen
+    - ASCII art and diagrams (final versions only)
+    - generated creative content (songs, poems, stories)
+  facts:
+    - names, dates, versions
+    - paths, IDs, identifiers
+    - error messages with their fixes
+
+# === WHAT TO DISCARD ===
+discard:
+  conversational:
+    - greetings, thanks, acknowledgments
+    - "Let me...", "I'll now...", "Sure, I can..."
+    - back-and-forth clarifications (keep final understanding)
+  redundant:
+    - failed attempts (keep only what worked)
+    - repeated iterations (keep final version)
+    - verbose explanations (write terse summary)
+    - examples that duplicate stated concepts
+  structural:
+    - user/assistant role markers
+    - timestamps on individual messages
+    - conversation flow markers
+
+# === OUTPUT FORMAT ===
+output:
+  format: human-readable YAML
+  extension: ".condensed.yml"
+  location: same directory as source
+
+  structure: |
+    condensed_metadata:
+      source: "{filename}"
+      original_tokens: N
+      condensed_tokens: N  
+      reduction: "N%"
+    
+    summary: |
+      One paragraph overview of conversation
+    
+    decisions:
+      - decision: "What was decided"
+        rationale: "Why"
+    
+    procedures:
+      - name: "Procedure name"
+        steps: [...]
+    
+    discoveries:
+      - "Technical insight"
+    
+    outcomes:
+      - "What was accomplished"
+    
+    artifacts:
+      - type: "code|ascii_art|diagram|creative"
+        description: "What it is"
+        content: |
+          Exact content here, properly indented
+          Every line must be indented to match
+
+  artifact_handling: |
+    ASCII art, diagrams, and code are ARTIFACTS - extract them to the artifacts section.
+    
+    YAML literal block rules (critical for ASCII art):
+    1. Use `|` (literal block scalar) to preserve formatting
+    2. EVERY line of content must be indented consistently (2 spaces from key)
+    3. The first line sets the indentation - all following lines must match
+    
+    Example (correct):
+      artifacts:
+        - type: ascii_art
+          content: |
+            +-------+
+            | Box   |
+            +-------+
+    
+    Example (WRONG - will break YAML parser):
+      artifacts:
+        - type: ascii_art
+          content: |
+            +-------+
+          | Box   |    <- ERROR: less indented than first line
+            +-------+
+    
+    If ASCII art has varying indentation, add 2 leading spaces to ALL lines.
+
+# === QUALITY TARGETS ===
+quality:
+  token_reduction:
+    target: 70-90%
+    minimum: 60%
+    note: dense technical content may only achieve 40-50%
+  completeness: all decisions and outcomes must be recoverable
+  readability: someone unfamiliar should understand what happened
+
+# === FORBIDDEN ACTIONS ===
+forbidden:
+  encoding:
+    rule: "NEVER use base64, gzip, zlib, or ANY binary encoding"
+    reason: "Encoding reduces BYTES but EXPLODES token count - opposite of goal"
+    detect: "If you see z:, data:, or encoded blobs, you've failed"
+  
+  lossy_summarization:
+    rule: "Do not drop decisions, outcomes, or working code"
+    reason: "The point is to preserve meaning, not minimize size at any cost"
+  
+  format_conversion:
+    rule: "Output must be YAML, not JSON or other formats"
+    reason: "Consistency across the corpus"
+
+# === VALIDATION CHECKLIST ===
+validate_before_done:
+  - "Is output human-readable YAML? (no encoded blobs)"
+  - "Does YAML parse without errors?"
+  - "Are all decisions from original represented?"
+  - "Is all working code preserved?"
+  - "Are key identifiers (IDs, paths, versions) retained?"
+  - "Could someone understand what happened from just this file?"
+  - "Is token reduction ≥60%?"
+
+# === SELF-CHECK ===
+if_unsure: |
+  Ask: "Am I extracting meaning or am I encoding data?"
+  - Extracting meaning = writing new human-readable summary = CORRECT
+  - Encoding data = base64/compression/binary = WRONG
