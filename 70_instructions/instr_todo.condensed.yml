@@ -1,0 +1,57 @@
+metadata:
+  title: Instruction - TODO System
+  version: 1.1.0
+  last_updated: 2026-01-03
+  status: active
+  load_priority: topic
+  canonical: instr_todo.md
+  tokens: ~300
+
+purpose: How to create TODOs for discovered work outside current task scope
+
+location: ai_general/todos/
+
+when_to_create:
+  do:
+    - Required work blocking/enabling other goals
+    - Technical debt to address later
+    - Missing infrastructure for future capabilities
+    - Follow-up work from completed tasks
+  dont:
+    - Observations without action (use feedback log)
+    - Work within current scope (just do it)
+    - Questions for user (ask directly)
+
+structure: |
+  ai_general/todos/
+  ├── todo_NNNN_description/    # Active
+  │   ├── notes.md              # Content
+  │   └── scripts/              # Supporting
+  ├── completed/                # Done
+  └── trash/                    # Abandoned
+
+creation:
+  steps:
+    - Find next number from existing todos (ls ai_general/todos/todo_*)
+    - mkdir ai_general/todos/todo_NNNN_description
+    - Copy ai_general/todos/template_todo_item/notes.md to new directory
+    - Fill in template fields (replace __TODO_NAME__, __DATE__, etc.)
+
+template_location: ai_general/todos/template_todo_item/notes.md
+
+template_fields:
+  - Description: What this accomplishes
+  - Requirements: Concrete needs
+  - Dependencies: Parent, depends_on, related
+  - Outputs: Expected deliverables
+  - Done When: Checkable completion criteria
+  - Notes: Context, discovery source
+
+lifecycle: "Triaging → Research/Derivation/Ready → In Progress → Completed/Abandoned"
+
+agent_workflow:
+  1: Assess urgency (blocks current? → report to orchestrator)
+  2: Check existing TODOs for duplicates
+  3: Create using steps above (copy template, fill in)
+  4: Log in session output
+  5: Continue current work

@@ -1,8 +1,8 @@
-# Directory Structure Reference v2.0
+# Directory Structure Reference v3.0
 
 **Architecture:** Multi-repo, AI-centric workspace with shared resources  
-**Last Updated:** 2025-10-30  
-**Status:** Finalized
+**Last Updated:** 2026-01-01  
+**Status:** Active - Updated to reflect current pipeline structure
 
 ---
 
@@ -19,13 +19,13 @@
 ## Physical Layout
 
 ```
-~/Documents/AI/
-├── ai_chat_artifacts/          # Mirrors 30_chat_histories structure
+~/Documents/AI/ai_root/
+├── ai_chat_artifacts/          # Mirrors 40_histories structure
 ├── ai_chatgpt/                 # ChatGPT-specific repo
 ├── ai_claude/                  # Claude-specific repo
+├── ai_comms/                   # Communication and task coordination
 ├── ai_general/                 # Shared resources across AIs
-├── ai_memories/                # Central memory processing pipeline
-└── comms/                      # Communication and task coordination
+└── ai_memories/                # Central memory processing pipeline
 ```
 
 ---
@@ -172,115 +172,137 @@ ai_general/
 ```
 ai_memories/
 ├── 10_exported/              # Raw chat exports from AI platforms
-│   ├── claude_desktop/
-│   ├── claude_web/
+│   ├── chatgpt/
+│   ├── claude/
 │   ├── claude_cli/
-│   └── chatgpt/
+│   ├── codex_cli/
+│   ├── gemini/
+│   └── grok/
 │
-├── 20_staged_converted_histories/  # YAML conversion staging
-│   ├── pending/              # Awaiting validation
-│   └── converted/            # Validated, ready for chunking
+├── 20_preprocessed/          # Preprocessing stage
+│   └── README.md
 │
-├── 30_chat_histories/        # Chunked YAML archives (terminal storage)
-│   ├── indexes/              # Content indexes
-│   │   ├── by_date.json
-│   │   ├── by_topic.json
-│   │   ├── by_ai.json
-│   │   ├── by_participants.json
-│   │   └── full_text_index/
-│   ├── claude/YYYY/MM/DD/
-│   ├── chatgpt/YYYY/MM/DD/
-│   └── orchestrated/YYYY/MM/DD/
-│       ├── conv_001_claude.yml
-│       ├── conv_001_chatgpt.yml
-│       └── conv_001_meta.yml
+├── 30_converted/             # YAML conversion output
+│   └── README.md
 │
-└── 40_digests/               # Processed memory artifacts
-    ├── chat_mems/            # Per-chat memory digests
-    │   └── memory_digest_{topic}_v{XX}.md
-    │
-    ├── decisions/            # Architecture decisions (immutable)
-    │   └── decision_{date}_{topic}_v{XX}.md
-    │
-    ├── indexes/              # Digest/artifact indexes
-    │   ├── decision_catalog.json
-    │   ├── knowledge_graph.json
-    │   ├── todo_tracking.json
-    │   └── digest_references.json
-    │
-    ├── knowledge/            # Reusable facts and information
-    │   └── knowledge_{topic}_v{XX}.md
-    │
-    ├── todos/                # Action items and tracking
-    │   ├── action_items.md           # Top-level index
-    │   ├── discussion_topics.md      # Top-level index
-    │   ├── research_questions.md     # Top-level index
-    │   ├── action_items/             # Detailed item directories
-    │   │   └── item_001_{slug}/
-    │   │       ├── description.md
-    │   │       ├── notes.md
-    │   │       └── files/
-    │   ├── discussion_topics/
-    │   │   └── topic_001_{slug}/
-    │   └── research_questions/
-    │       └── question_001_{slug}/
-    │
-    └── user_context/         # Information about PianoMan
-        └── user_{aspect}_v{XX}.md
+├── 40_histories/             # Chunked YAML archives (terminal storage)
+│   ├── _chat_index.csv       # Master index of all chats
+│   ├── _condensation_targets.txt
+│   ├── _validation/
+│   ├── chatgpt/YYYY/MM/      # ChatGPT histories by date
+│   └── claude/YYYY/MM/       # Claude histories by date
+│       └── claude.YYYYMMDD.{short_id}.{title_slug}/
+│           ├── chunk_001.yml
+│           └── chat.condensed.yml  # Created on-demand, not pre-stored
+│
+├── 50_threads/               # Thread-based organization (reserved)
+│
+├── 60_decisions/             # Architecture decisions (immutable)
+│   ├── decision_log.yml
+│   └── digests/
+│
+├── 60_knowledge/             # Reusable facts and information
+│   ├── index_knowledge.yml
+│   ├── about_user/
+│   ├── coordination_system_v4_digest.md
+│   └── know_*.md             # Knowledge articles
+│
+├── 70_milestones/            # Capability milestones
+│   ├── capability_milestones.md
+│   └── capability_milestones.yml
+│
+├── _incoming/                # Intake staging area
+│   ├── chats/                # Raw exports awaiting processing
+│   │   ├── chatgpt/
+│   │   ├── claude/
+│   │   ├── grok/
+│   │   └── orchestrated_chat_tool_logs/
+│   ├── digests/
+│   └── pipeline_history_chats/
+│
+├── _templates/               # Template files
+│   ├── decision_template.md
+│   └── memory_digest_template.yml
+│
+├── mem0_extraction/          # Mem0 integration artifacts
+│
+├── quarantine/               # Files pending review/cleanup
+│
+└── reports/                  # Processing reports
+    └── librarian_*.md
 ```
 
-### comms/
+### ai_comms/
 **Purpose:** AI-to-AI communication and task coordination system  
 **Contains:**
 ```
-comms/
+ai_comms/
 ├── announcements/            # Broadcast messages to all AIs
 │
-├── chatgpt/                  # Chatty's mailbox
+├── chatgpt/                  # ChatGPT mailbox and tasks
 │   ├── drafts/
-│   ├── inbox/
-│   ├── outbox/
-│   └── saved/
+│   ├── instant_messaging/
+│   ├── note_passing/
+│   ├── notifications/
+│   ├── prompting/
+│   ├── saved/
+│   └── tasks/
 │
-├── claude/                   # Claude Desktop's mailbox
+├── claude/                   # Claude Desktop mailbox and tasks
 │   ├── drafts/
-│   ├── inbox/
-│   ├── outbox/
-│   └── saved/
+│   ├── instant_messaging/
+│   ├── note_passing/
+│   ├── notifications/
+│   ├── prompting/
+│   ├── saved/
+│   ├── tasks/
+│   └── WAKE_UP_CHECKLIST.md
 │
 ├── claude_cli/               # CLI coordination (symlinked from ~/.claude/coordination)
 │   ├── broadcasts/
-│   ├── direct/
-│   │   └── cli_{PID}/
-│   ├── responses/
-│   │   └── cli_{PID}/
-│   └── cli_registry.md
+│   ├── init/                 # Initialization scripts
+│   ├── instant_messaging/
+│   ├── logs/
+│   ├── note_passing/
+│   ├── notifications/
+│   ├── prompting/
+│   ├── scheduling/
+│   ├── synthesis/
+│   └── tasks/
 │
 ├── codex_cli/                # Codex CLI coordination
-│
-├── tasks_applescript/        # AppleScript task execution
 │   ├── cancelled/
-│   ├── completed/
-│   ├── error/
-│   ├── in_progress/
+│   ├── docs/
+│   ├── instant_messaging/
 │   ├── logs/
-│   └── to_execute/
+│   ├── note_passing/
+│   ├── notifications/
+│   ├── prompting/
+│   └── tasks/
 │
-├── tasks_chat_orchestration/ # Chat orchestrator tasks
-│   ├── cancelled/
-│   ├── completed/
-│   ├── error/
-│   ├── in_progress/
+├── counters/                 # Atomic ID counters
+│   └── *.NextId
+│
+├── desktop_claude/           # Desktop-specific prompts
+│   └── prompts/
+│
+├── gemini/                   # Gemini mailbox and tasks
+│   └── [same structure as chatgpt/]
+│
+├── gemini_cli/               # Gemini CLI coordination
 │   ├── logs/
-│   └── to_execute/
+│   ├── tasks/
+│   └── waves/
 │
-└── tasks_script/             # Script execution tasks
-    ├── cancelled/
-    ├── completed/
-    ├── error/
-    ├── in_progress/
-    ├── logs/
-    └── to_execute/
+├── grok/                     # Grok mailbox and tasks
+│   └── [same structure as chatgpt/]
+│
+├── orchestration/            # Wave orchestration
+│   └── wave_{timestamp}/
+│
+├── staged/                   # Staged tasks awaiting assignment
+│
+└── _backlog/                 # Backlogged work items
 ```
 
 ---
@@ -290,28 +312,31 @@ comms/
 ```
 1. Export from AI platform
    ↓
-   10_exported/{ai}/
+   ai_memories/10_exported/{ai}/
+   (or ai_memories/_incoming/chats/{ai}/)
 
-2. Convert to YAML format
+2. Preprocess (normalize format)
    ↓
-   20_staged_converted_histories/pending/
-   ↓ (after validation)
-   20_staged_converted_histories/converted/
+   ai_memories/20_preprocessed/
 
-3. Chunk by date/session/size
+3. Convert to YAML format
    ↓
-   30_chat_histories/{ai}/YYYY/MM/DD/
+   ai_memories/30_converted/
+
+4. Chunk by date/session/size
+   ↓
+   ai_memories/40_histories/{ai}/YYYY/MM/
    (terminal storage - never moves)
 
-4. Process chunks → generate artifacts
+5. Create condensed summaries ON DEMAND
    ↓
-   40_digests/{type}/
-   (can be regenerated multiple times)
+   chat.condensed.yml alongside chunks
+   (NOT pre-generated artifacts)
 
-5. Index for search
+6. Extract knowledge/decisions
    ↓
-   30_chat_histories/indexes/ (content)
-   40_digests/indexes/ (artifacts)
+   ai_memories/60_decisions/
+   ai_memories/60_knowledge/
 ```
 
 ---
@@ -321,51 +346,59 @@ comms/
 **AI-specific repos symlink to ai_general for shared resources:**
 
 ```bash
-# Example: Claude's instructions
+# Example: Claude's instructions use .latest symlinks
 ai_claude/instructions/
-├── instr_claude_specific.md                    # Claude-only
-└── instr_general_guidelines.md → ../../ai_general/instructions/instr_general_guidelines_v03.md
-
-# Example: Shared schemas
-ai_claude/ai_scripts/
-└── schema_chat_history.yaml → ../../ai_general/data/schema_chat_history_v01.yaml
+├── instr_claude_specific.yml           # Claude-only
+└── instr_operating_principles.latest.yml → ../../ai_general/docs/70_instructions/instr_operating_principles.latest.yml
 ```
 
 **CLI coordination symlink:**
 ```bash
-~/.claude/coordination → ~/Documents/AI/comms/claude_cli/
+~/.claude/coordination → ~/Documents/AI/ai_root/ai_comms/claude_cli/
+```
+
+**Document versioning with .latest symlinks:**
+```bash
+ai_general/docs/70_instructions/
+├── versions/
+│   ├── instr_operating_principles_v1.0.yml
+│   └── instr_operating_principles_v1.1.yml
+└── instr_operating_principles.latest.yml → versions/instr_operating_principles_v1.1.yml
 ```
 
 **Maintenance:**
-- Versioned files live in `ai_general/` 
-- Symlinks in AI repos point without version numbers (always get latest)
-- Breaking changes = new filename in general, update symlinks when ready
+- Canonical files in versions/ subdirectories
+- .latest symlinks point to current version
+- Breaking changes = new version file, update symlink
 
 ---
 
 ## File Naming Conventions
 
 ### Chat History Files
-**Location:** `30_chat_histories/{ai}/YYYY/MM/DD/`  
-**Format:** `{chat_id}_{YYYY-MM-DD}_{title_slug}.yml`  
-**Example:** `chat_001_2025-10-30_workspace_organization.yml`
+**Location:** `ai_memories/40_histories/{ai}/YYYY/MM/`  
+**Directory Format:** `{ai}.{YYYYMMDD}.{short_id}.{title_slug}/`  
+**Example:** `claude.20251230.abc123.bootstrap_testing/`
+**Contents:**
+- `chunk_001.yml`, `chunk_002.yml`, etc.
+- `chat.condensed.yml` (created on-demand when needed)
 
-### Digest Files
-**Location:** `40_digests/{type}/`  
-**Format:** `{type}_digest_{topic}_v{XX}.md` or `{type}_{date}_{topic}_v{XX}.md`  
+### Knowledge Files
+**Location:** `ai_memories/60_knowledge/`  
+**Format:** `know_{topic}.md` or topic subdirectories  
 **Examples:**
-- `memory_digest_workspace_organization_v01.md`
-- `decision_20251030_caching_strategy_v02.md`
-- `knowledge_promptblaze_schema_v01.md`
+- `know_codex_mcp.md`
+- `about_user/preferences.md`
 
-### Orchestrated Chats
-**Location:** `30_chat_histories/orchestrated/YYYY/MM/DD/`  
-**Format:**
-```
-conv_{XXX}_claude.yml       # Claude's messages
-conv_{XXX}_chatgpt.yml      # ChatGPT's messages
-conv_{XXX}_meta.yml         # Orchestration metadata
-```
+### Decision Files
+**Location:** `ai_memories/60_decisions/`  
+**Format:** `decision_{date}_{topic}.md`  
+**Example:** `decision_20251030_caching_strategy.md`
+
+### Documentation Files
+**Location:** `ai_general/docs/{tier}/`  
+**Format:** `{name}.latest.{ext}` symlinked to `versions/{name}_v{X.Y}.{ext}`
+**Condensed:** `{name}.latest.condensed.yml` for reduced token usage
 
 ---
 
@@ -388,75 +421,33 @@ Common resources live in `ai_general/`:
 
 ### Central Memory Pipeline
 `ai_memories/` processes conversations from ANY AI:
-- Normalized YAML format
-- Unified indexing
-- Consistent digest generation
-- Cross-AI conversation support
+- Numbered pipeline stages (10→20→30→40)
+- Condensed summaries created on-demand, not pre-stored
+- Knowledge and decisions extracted to 60_ directories
+- Cross-AI conversation support via orchestration
 
 ### Communication System
-`comms/` enables coordination:
+`ai_comms/` enables coordination:
 - Per-AI mailboxes for async messages
-- Task execution systems with full workflow
+- Task execution via tasks/ subdirectories
 - CLI coordination with symlink integration
-- Broadcast announcements to all AIs
-
----
-
-## Quick Reference Commands
-
-### Create Full Structure
-```bash
-cd ~/Documents/AI
-
-# Create top-level directories
-mkdir -p ai_chat_artifacts ai_chatgpt ai_claude ai_general ai_memories comms
-
-# Create ai_chatgpt structure
-mkdir -p ai_chatgpt/{ai_specific_memories,ai_scripts,connectors,custom_gpts,instructions/to_ai_autogen,specs/to_ai_autogen}
-
-# Create ai_claude structure
-mkdir -p ai_claude/{ai_specific_memories,ai_scripts,connectors,instructions/to_ai_autogen,skills,specs/to_ai_autogen}
-
-# Create ai_general structure
-mkdir -p ai_general/{data,docs,instructions,projects/{chat_history_processing,chat_orchestration,desktop_cli_workflow,persona_modeling},prompts/{exported,imported,group_{architecture_and_design,code_development,code_review,debugging_and_performance,learning_and_education,lifestyle_health,prompt_creation}},research_and_reports,scripts,specs}
-
-# Create ai_memories structure
-mkdir -p ai_memories/{10_exported/{claude_desktop,claude_web,claude_cli,chatgpt},20_staged_converted_histories/{pending,converted},30_chat_histories/{indexes,claude,chatgpt,orchestrated},40_digests/{chat_mems,decisions,indexes,knowledge,todos/{action_items,discussion_topics,research_questions},user_context}}
-
-# Create comms structure
-mkdir -p comms/{announcements,chatgpt/{drafts,inbox,outbox,saved},claude/{drafts,inbox,outbox,saved},claude_cli,codex_cli,tasks_{applescript,chat_orchestration,script}/{cancelled,completed,error,in_progress,logs,to_execute}}
-
-# Create CLI coordination symlink
-ln -s ~/Documents/AI/comms/claude_cli ~/.claude/coordination
-```
-
-### Navigate to Key Locations
-```bash
-# Memory processing
-cd ~/Documents/AI/ai_memories
-
-# Claude config
-cd ~/Documents/AI/ai_claude
-
-# Shared resources
-cd ~/Documents/AI/ai_general
-
-# Communication system
-cd ~/Documents/AI/comms
-```
+- Wave orchestration for parallel work
+- Atomic counters for unique IDs
 
 ---
 
 ## Related Documentation
 
-- **Memory Digest:** `memory_digest_workspace_architecture_v02.md`
-- **Implementation Guide:** `workspace_implementation_guide_v02.md`
-- **Chat Processing Flow:** `ai_general/projects/chat_history_processing/README.md`
-- **CLI Coordination:** `ai_general/projects/desktop_cli_workflow/protocol_v3.1.md`
+- **Architecture Overview:** `ai_general/docs/10_architecture/architecture_overview.latest.md`
+- **Layer Model:** `ai_general/docs/10_architecture/architectural_layer_model.latest.md`
+- **CLI Orchestration:** `ai_general/docs/10_architecture/cli_orchestration.latest.md`
+- **Task Coordination:** `ai_general/docs/30_protocols/protocol_taskCoordination.latest.yml`
+- **Knowledge Manifest:** `ai_general/docs/_knowledge_manifest.latest.yml`
 
 ---
 
-**Document Version:** 2.0  
+**Document Version:** 3.0  
 **Created:** 2025-10-30  
+**Updated:** 2026-01-01  
 **Architecture:** Multi-repo, AI-centric with shared resources  
-**Status:** Finalized and ready for implementation
+**Status:** Active

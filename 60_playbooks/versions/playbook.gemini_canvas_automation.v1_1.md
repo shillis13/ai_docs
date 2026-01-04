@@ -223,14 +223,30 @@ osascript -e 'tell application "Google Chrome" to execute active tab of front wi
 # Load and execute download script...
 ```
 
+## Automation Backend Preference
+
+When automating Gemini (or other AI platforms), prefer backends in this order:
+
+1. **AppleScript** - Most reliable for macOS, direct keystroke injection, works with System Events
+2. **Playwright** - Modern, cross-platform, better than Puppeteer for most use cases
+3. **Puppeteer** - Still works but Playwright preferred for new development
+
+AppleScript is preferred because it:
+- Works at the OS level (not sandboxed in browser)
+- Can interact with any application (Chrome, Finder, etc.)
+- Integrates with Claude via Desktop Commander's `osascript` execution
+- Handles keyboard sequences that browser-based tools struggle with
+
 ## Related Docs
 
 - ai_general/scripts/gemini_chat/README.md
 - ai_general/docs/60_playbooks/cli_browser_automation_guide.md
+- ai_general/docs/60_playbooks/playbook.chatgpt_browser_automation.md (ChatGPT equivalent)
 
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.2.0 | 2026-01-03 | Added automation backend preference section, linked ChatGPT playbook |
 | 1.1.0 | 2025-12-19 | Added file upload step with file picker and drag-drop methods |
 | 1.0.0 | 2025-12-19 | Initial playbook from validated end-to-end test |

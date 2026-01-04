@@ -1,4 +1,4 @@
-meta: {v: 2.0, updated: 2025-10-30, arch: "multi-repo AI-centric", status: finalized}
+meta: {v: 3.0, updated: 2026-01-01, arch: "multi-repo AI-centric", status: active}
 
 external:
   repo: https://github.com/shillis13/ai_docs
@@ -7,14 +7,14 @@ external:
   purpose: cross-platform doc access (iOS, Web, other AIs)
 
 physical_layout:
-  root: ~/Documents/AI/
+  root: ~/Documents/AI/ai_root/
   dirs:
-    ai_chat_artifacts/: mirrors 30_chat_histories structure
+    ai_chat_artifacts/: mirrors 40_histories structure
     ai_chatgpt/: ChatGPT-specific repo
     ai_claude/: Claude-specific repo
+    ai_comms/: communication and task coordination
     ai_general/: shared resources across AIs
     ai_memories/: central memory pipeline
-    comms/: communication and task coordination
 
 top_level:
   ai_chat_artifacts:
@@ -45,40 +45,55 @@ top_level:
     purpose: central memory pipeline - exports → indexed memories
     subdirs:
       10_exported/: raw exports by platform
-      20_staged_converted_histories/: YAML conversion staging
-      30_chat_histories/: chunked YAML archives (terminal), indexes/
-      40_digests/: {chat_mems/, decisions/, indexes/, knowledge/, todos/, user_context/}
+      20_preprocessed/: preprocessing stage
+      30_converted/: YAML conversion output
+      40_histories/: chunked YAML archives (terminal), _chat_index.csv
+      60_decisions/: architecture decisions (immutable)
+      60_knowledge/: reusable facts, know_*.md articles
+      70_milestones/: capability milestones
+      _incoming/: intake staging (chats/, digests/)
 
-  comms:
+  ai_comms:
     purpose: AI-to-AI communication, task coordination
     subdirs:
       announcements/: broadcasts to all AIs
-      "{ai}/": mailbox (drafts/, inbox/, outbox/, saved/)
+      "{ai}/": mailbox (drafts/, instant_messaging/, note_passing/, notifications/, prompting/, saved/, tasks/)
       claude_cli/: CLI coordination (→ ~/.claude/coordination)
-      "tasks_{type}/": task queues (cancelled/, completed/, error/, in_progress/, to_execute/)
+      codex_cli/: Codex CLI coordination
+      gemini_cli/: Gemini CLI coordination
+      counters/: atomic ID counters (*.NextId)
+      orchestration/: wave orchestration
 
 pipeline:
   flow: |
-    1. Export → 10_exported/{ai}/
-    2. Convert → 20_staged/pending/ → converted/
-    3. Chunk → 30_chat_histories/{ai}/YYYY/MM/DD/ (terminal)
-    4. Process → 40_digests/{type}/
-    5. Index → 30_/indexes/, 40_/indexes/
+    1. Export → 10_exported/{ai}/ or _incoming/chats/{ai}/
+    2. Preprocess → 20_preprocessed/
+    3. Convert → 30_converted/
+    4. Chunk → 40_histories/{ai}/YYYY/MM/ (terminal)
+    5. Condense ON-DEMAND → chat.condensed.yml (NOT pre-stored)
+    6. Extract → 60_decisions/, 60_knowledge/
 
 symlinks:
   pattern: AI repos symlink to ai_general for shared resources
-  cli_coordination: ~/.claude/coordination → ~/Documents/AI/comms/claude_cli/
-  maintenance: versioned in ai_general, symlinks without versions = always latest
+  cli_coordination: ~/.claude/coordination → ~/Documents/AI/ai_root/ai_comms/claude_cli/
+  doc_versioning: "{name}.latest.{ext} → versions/{name}_v{X.Y}.{ext}"
+  maintenance: canonical in versions/, .latest symlinks to current
 
 naming:
-  histories: "{chat_id}_{YYYY-MM-DD}_{title_slug}.yml"
-  digests: "{type}_digest_{topic}_v{XX}.md"
-  orchestrated: "conv_{XXX}_{ai}.yml, conv_{XXX}_meta.yml"
+  history_dirs: "{ai}.{YYYYMMDD}.{short_id}.{title_slug}/"
+  history_files: "chunk_001.yml, chat.condensed.yml (on-demand)"
+  knowledge: "know_{topic}.md"
+  decisions: "decision_{date}_{topic}.md"
+  docs: "{name}.latest.{ext}, {name}.latest.condensed.yml"
 
 principles:
   - repo_isolation: each AI self-contained with symlinks to general
   - shared_resources: common in ai_general/ (instructions, specs, schemas)
-  - central_pipeline: ai_memories/ processes from ANY AI
-  - communication: comms/ enables mailboxes, tasks, broadcasts
+  - central_pipeline: ai_memories/ processes from ANY AI, condensed ON-DEMAND
+  - communication: ai_comms/ enables mailboxes, tasks, waves, atomic counters
 
-related: [memory_digest_workspace_architecture, workspace_implementation_guide, chat_processing_flow, CLI_coordination]
+related:
+  - ai_general/docs/10_architecture/architecture_overview.latest.md
+  - ai_general/docs/10_architecture/architectural_layer_model.latest.md
+  - ai_general/docs/10_architecture/cli_orchestration.latest.md
+  - ai_general/docs/30_protocols/protocol_taskCoordination.latest.yml

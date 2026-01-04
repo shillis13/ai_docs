@@ -1,0 +1,50 @@
+meta: {v: 1.3.0, updated: 2025-12-31, maintainer: PianoMan, status: active}
+
+summary: Canonical metadata footer appended to every AI response. Claude MUST include on every response.
+
+format:
+  delimiter: " | "
+  order: [AI_Name, Persona, Proj, Chat, Timestamp, Msg, Usage, Docs, MSlots, Artifacts, Tags]
+
+fields:
+  AI_Name: {desc: display name, ex: Claude}
+  Persona: {desc: "version + delta marker (Δ/Δ+/Δ*)", ex: "Persona:v1.0"}
+  Proj: {desc: short project ID (CamelCase/hyphenated), ex: "Proj:AI-Root"}
+  Chat: {desc: human-readable chat title, ex: "Chat:Manifest-Validation"}
+  Timestamp: {desc: local ISO with seconds, ex: "2025-12-31 14:30:00"}
+  Msg: {desc: zero-indexed assistant counter, ex: "Msg:12"}
+  Usage: {desc: "context % or NA", ex: "Usage:~28%"}
+  Docs: {desc: "doc files loaded by tier", ex: "Docs:20:5,70:3"}
+  MSlots: {desc: "memory slots loaded (ranges)", ex: "MSlots:3-7"}
+  Artifacts: {desc: artifacts created this msg, ex: "Artifacts:1"}
+  Tags: {desc: "2-8 keywords, comma-sep", ex: "Tags: footer, validation"}
+
+docs_field:
+  tiers: {10: architecture, 20: registries, 30: protocols, 40: specs, 50: schemas, 60: playbooks, 70: instructions}
+  format: "Docs:20:5,70:3 (tier:count, omit zeros)"
+
+mslots_field:
+  range: "03-30 from ai_claude/memories/mem_slots/"
+  format: "MSlots:3-7 or MSlots:3-5,8,11 (use ranges for consecutive)"
+
+rules:
+  persona_deltas:
+    Δ: minor refinement
+    Δ+: significant update
+    Δ*: experimental branch
+    emit: only in message causing/announcing change
+  usage: "~X% when measurable, NA when undefined"
+  docs: count files actually read via tool calls, update as more loaded
+  mslots: use hyphenated ranges for consecutive, comma-separate non-consecutive
+  artifacts: count only current message items
+
+examples:
+  bootstrap: "Claude | Persona:v1.0 | Proj:AI-Root | Chat:Footer-Spec | 2025-12-31 14:30:00 | Msg:0 | Usage:~8% | Docs:20:5,70:3 | MSlots:3-7 | Artifacts:0 | Tags: bootstrap"
+  mid_convo: "Claude | Persona:v1.0 | Proj:AI-Root | Chat:Footer-Spec | 2025-12-31 14:45:00 | Msg:5 | Usage:~25% | Docs:20:5,40:2,70:3 | MSlots:3-7,9 | Artifacts:1 | Tags: iteration"
+  minimal: "Claude | Proj:AI-Root | 2025-12-31 15:00:00 | Msg:8 | Docs:20:5,70:3 | MSlots:3-7 | Tags: quick"
+
+enforcement: Claude MUST include footer on every response in ai_root workspace.
+
+# boot_field: DEPRECATED v1.3 - see v1.2 if needed
+
+related: [_knowledge_manifest.latest.yml, mem_slots/manifest.yml]

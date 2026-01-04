@@ -1,0 +1,375 @@
+metadata:
+  title: AI Root Knowledge Manifest
+  version: 2025.12.31
+  generated: '2025-12-31T20:15:00'
+  generator: generate_knowledge_manifest.py (manual update)
+  root_path: /Users/shawnhillis/Documents/AI/ai_root
+  public_repo: https://github.com/shillis13/ai_docs
+  public_access: https://raw.githubusercontent.com/shillis13/ai_docs/main/
+  submodule_mount: ai_root/ai_general/docs (docs/ IS the ai_docs submodule)
+  note: 'Comprehensive index of all documentation.
+
+    Directory numbers indicate abstraction level (lower = foundational).
+
+    Higher-tier files list dependencies from lower tiers.
+
+    Load rule: When loading a file, also load its dependencies.
+    
+    Cross-platform: iOS/Web/other AIs access docs via public_access URL pattern.'
+directory_hierarchy:
+  10_architecture: Foundational concepts (standalone)
+  20_registries: Indexes, inventories
+  30_protocols: Communication patterns
+  40_specs: Detailed specifications
+  50_schemas: Data structures
+  60_playbooks: How-to guides
+  70_instructions: Operational rules
+load_sequence:
+  auto:
+    instruction: |
+      BEFORE responding to the user's first message, use desktop-commander:read_file
+      to load each file below. This is not optional. Do not skip for context conservation.
+    files:
+    - pointer: REF:ai_general/docs/20_registries/glossary_knowledge_index.latest.condensed.yml
+      tokens: ~1316
+      purpose: "Term→file mapping for bootstrap problem. Load FIRST to recognize domain vocabulary."
+    - pointer: REF:ai_general/docs/20_registries/tools_manifest.latest.condensed.yml
+      tokens: ~60
+      purpose: "Tool paths - where CLI wrappers, python tools live"
+    - pointer: REF:ai_general/docs/20_registries/directory_structure_reference.latest.condensed.yml
+      tokens: ~275
+      purpose: "Directory layout - know the filesystem structure"
+    - pointer: REF:ai_general/docs/20_registries/INVENTORY.latest.condensed.yml
+      tokens: ~155
+      purpose: "What exists where - high-level asset inventory"
+    - pointer: REF:ai_general/docs/20_registries/document_registry.latest.condensed.yml
+      tokens: ~310
+      purpose: "Document index - where docs live by category"
+    - pointer: REF:ai_general/docs/70_instructions/instr_operating_principles.latest.condensed.yml
+      tokens: ~1037
+    - pointer: REF:ai_general/docs/70_instructions/claude/instr_claude_context_conservations.latest.condensed.yml
+      tokens: ~742
+    - pointer: REF:ai_general/docs/70_instructions/claude/instr_environment_overview.latest.condensed.yml
+      tokens: ~349
+    - pointer: REF:ai_general/docs/40_specs/spec_response_footer.latest.condensed.yml
+      tokens: ~350
+      purpose: "Response footer format - Claude MUST include on every response. Tracks Docs/MSlots loaded."
+  topic:
+    instruction: |
+      When conversation touches triggers listed for a file, load that file before responding.
+    files:
+    - pointer: REF:ai_general/docs/10_architecture/architecture_overview.latest.condensed.yml
+      tokens: ~1226
+    - pointer: REF:ai_general/docs/10_architecture/architectural_layer_model.latest.condensed.yml
+      tokens: ~1268
+    - pointer: REF:ai_general/docs/70_instructions/claude/_claude_instructions_manifest.yml
+      tokens: ~559
+    - pointer: REF:ai_general/docs/70_instructions/claude/claude_context_quick_notes.latest.condensed.yml
+      tokens: ~219
+    - pointer: REF:ai_general/docs/70_instructions/claude/instr_claude_specific.latest.condensed.yml
+      tokens: ~54
+    - pointer: REF:ai_general/docs/70_instructions/claude/instr_claude_use_of_ai_agents.latest.condensed.yml
+      tokens: ~808
+    - pointer: REF:ai_general/docs/70_instructions/claude/instr_memory_slot_protocol.latest.condensed.yml
+      tokens: ~482
+      depends_on:
+      - ai_general/docs/30_protocols/protocol_ai_chat_orchestration.latest.condensed.yml
+      - ai_general/docs/30_protocols/protocol_reference_pointers.latest.condensed.yml
+      - ai_general/docs/30_protocols/protocol_taskCoordination.latest.condensed.yml
+    - pointer: REF:ai_general/docs/70_instructions/claude/instr_pointer_loading.latest.condensed.yml
+      tokens: ~724
+      depends_on:
+      - ai_general/docs/50_schemas/schema_pointer_syntax.latest.condensed.yml
+    - pointer: REF:ai_general/docs/70_instructions/claude/know_codex_mcp.latest.condensed.yml
+      tokens: ~941
+    - pointer: REF:ai_general/docs/70_instructions/claude/user_settings_personal_preferences_field.latest.md
+      tokens: ~1446
+    - pointer: REF:ai_general/docs/70_instructions/instr_development.latest.condensed.yml
+      tokens: ~771
+    - pointer: REF:ai_general/docs/70_instructions/instr_file_conventions.latest.condensed.yml
+      tokens: ~1126
+    - pointer: REF:ai_general/docs/70_instructions/instr_pointer_loading.latest.condensed.yml
+      tokens: ~1020
+      depends_on:
+      - ai_general/docs/50_schemas/schema_pointer_syntax.latest.condensed.yml
+    - pointer: REF:ai_general/docs/70_instructions/instr_writing.latest.condensed.yml
+      tokens: ~1150
+    - pointer: REF:ai_general/docs/70_instructions/instr_chat_condensation.latest.condensed.yml
+      tokens: ~350
+      triggers: [condensation, condense, chat history, librarian wave, semantic summary]
+      abstract: |
+        Guidelines for condensing chat history chunks to semantic summaries.
+        Defines what to preserve (decisions, procedures, discoveries, outcomes)
+        and what to remove (filler, failed attempts, role markers).
+        Target: 70-90% reduction. Output: .condensed.yml alongside source.
+      answers:
+        - "How do I condense chat history?"
+        - "What should condensed files preserve?"
+        - "What's the condensation output format?"
+    - pointer: REF:ai_general/docs/70_instructions/instr_feedback.latest.condensed.yml
+      tokens: ~180
+      triggers: [feedback, suggestion, observation, issue, improvement, log observation]
+      abstract: |
+        How to log observations, suggestions, and issues during work.
+        Location: ai_general/logs/feedback.md
+        Types: improvement, issue, idea, observation
+      answers:
+        - "How do I log feedback?"
+        - "Where do observations go?"
+        - "What's the feedback format?"
+    - pointer: REF:ai_general/docs/70_instructions/instr_todo.latest.condensed.yml
+      tokens: ~280
+      triggers: [todo, out-of-scope, discovered work, todo_mgr, create todo]
+      abstract: |
+        How to create TODOs for discovered work outside current scope.
+        Location: ai_general/todos/ via todo_mgr
+        Lifecycle: Triaging → Research/Ready → In Progress → Completed
+      answers:
+        - "How do I create a TODO?"
+        - "Where do TODOs go?"
+        - "What's the TODO format?"
+  demand:
+    instruction: |
+      Load these only when user explicitly requests or task requires the specific content.
+    files:
+    - pointer: REF:ai_general/docs/60_playbooks/MAINTENANCE_PLAYBOOK.md
+      tokens: ~1067
+      depends_on:
+      - ai_general/docs/40_specs/spec_js_analysis_playbook.latest.condensed.yml
+    - pointer: REF:ai_general/docs/60_playbooks/NEEDS_UPDATE_directory_watcher_guide.md
+      tokens: ~2061
+      depends_on:
+      - ai_general/docs/20_registries/directory_structure_reference.latest.md
+      - ai_general/docs/50_schemas/SCHEMA_EVOLUTION_GUIDE.latest.condensed.yml
+    - pointer: REF:ai_general/docs/60_playbooks/parallel_orchestration_case_study.yml
+      tokens: ~950
+      triggers: [codex validation, iterative review, condensation quality, librarian codex, parallel workers, quality loop]
+      abstract: |
+        Case study of parallel CLI workers with Codex validation loops.
+        Pattern: Codex reviews for BOTH data loss AND reduction opportunities.
+        Use when assigning iterative/quality-controlled work to librarian or CLI agents.
+      answers:
+        - "How should librarian work with Codex for quality control?"
+        - "What's the iterative condensation pattern?"
+        - "How do I run parallel CLI workers?"
+      depends_on:
+      - ai_general/docs/10_architecture/cli_orchestration.latest.md
+    - pointer: REF:ai_general/docs/60_playbooks/cli_agent_operations.latest.condensed.yml
+      tokens: ~430
+      depends_on:
+      - ai_general/docs/10_architecture/cli_orchestration.latest.md
+      - ai_general/docs/20_registries/cli_enhancement_ecosystem.latest.md
+      - ai_general/docs/30_protocols/cli_session_persistence.latest.condensed.yml
+    - pointer: REF:ai_general/docs/60_playbooks/cli_browser_automation_guide.md
+      tokens: ~3029
+      depends_on:
+      - ai_general/docs/10_architecture/cli_orchestration.latest.md
+      - ai_general/docs/20_registries/cli_enhancement_ecosystem.latest.md
+      - ai_general/docs/30_protocols/cli_session_persistence.latest.condensed.yml
+      - ai_general/docs/50_schemas/SCHEMA_EVOLUTION_GUIDE.latest.condensed.yml
+    - pointer: REF:ai_general/docs/60_playbooks/playbook.gemini_canvas_automation.latest.condensed.yml
+      tokens: ~350
+      triggers: [gemini, canvas, artifact download, monaco editor, browser automation]
+      abstract: |
+        End-to-end Gemini Canvas automation workflow.
+        Key sequence: Tab Tab Space (Tools) → Tab Tab Tab Tab Space (Canvas).
+        Covers new chat → enable Canvas → upload → send prompt → download artifacts.
+      answers:
+        - "How do I enable Canvas in Gemini?"
+        - "How do I download Gemini Canvas artifacts?"
+        - "What's the keyboard sequence for Gemini Canvas?"
+        - "How do I upload files to Gemini?"
+      depends_on:
+      - ai_general/docs/60_playbooks/cli_browser_automation_guide.md
+    - pointer: REF:ai_general/docs/60_playbooks/playbook.chatgpt_browser_automation.latest.condensed.yml
+      tokens: ~400
+      triggers: [chatgpt, browser automation, cross-platform test, poisoned nonce, instruction patterns]
+      abstract: |
+        ChatGPT browser automation via AppleScript keystroke injection.
+        Includes 6 instruction patterns that work for protocol compliance.
+        Covers poisoned nonce test, cross-platform AI testing pattern.
+      answers:
+        - "How do I automate ChatGPT?"
+        - "What instruction patterns work for ChatGPT?"
+        - "How do I test the same prompt across Claude, ChatGPT, Gemini?"
+        - "What is the poisoned nonce test?"
+      depends_on:
+      - ai_general/docs/60_playbooks/cli_browser_automation_guide.md
+      - ai_general/docs/60_playbooks/playbook.gemini_canvas_automation.latest.condensed.yml
+    - pointer: REF:ai_general/docs/60_playbooks/playbook.documentation_maintenance.latest.condensed.yml
+      tokens: ~400
+      triggers: [documentation, versioning, symlinks, doc maintenance, create playbook, update docs]
+      abstract: |
+        How to create and maintain documentation with proper versioning.
+        Pattern: versions/{file}_v{X.Y}.md + symlinks + cross-reference updates.
+        Covers canonical .md → condensed .yml → symlinks → manifest/glossary/registry.
+      answers:
+        - "How do I create a new playbook?"
+        - "How do I update documentation?"
+        - "What's the doc versioning pattern?"
+        - "Where do version files go?"
+      depends_on:
+      - ai_general/docs/50_schemas/schema.playbook.latest.condensed.yml
+    - pointer: REF:ai_general/docs/60_playbooks/playbook.ai_orchestration.md
+      tokens: ~650
+      triggers: [orchestration, parallel workers, spawn agents, cli coordination, tmux, orchestrator]
+      abstract: |
+        How to orchestrate multiple AI workers across platforms.
+        Covers platform selection, standard launch commands, monitoring via tmux,
+        use cases (parallel processing, pipelines, crowd-sourced solving).
+      answers:
+        - "How do I spawn parallel workers?"
+        - "How do I monitor orchestrated agents?"
+        - "What's the orchestrator command pattern?"
+        - "When to use Claude vs Codex vs Gemini?"
+      depends_on:
+      - ai_general/docs/10_architecture/cli_orchestration.latest.md
+    - pointer: REF:ai_general/docs/50_schemas/schema.playbook.latest.condensed.yml
+      tokens: ~250
+      triggers: [playbook structure, playbook schema, playbook format]
+      abstract: |
+        Standard structure for playbooks: metadata, summary, when_to_use, 
+        prerequisites, steps, common_issues pattern.
+      answers:
+        - "What's the structure of a playbook?"
+        - "What fields does a playbook need?"
+    - pointer: REF:ai_general/docs/60_playbooks/cli_mcp_configuration.md
+      tokens: ~867
+      depends_on:
+      - ai_general/docs/10_architecture/cli_orchestration.latest.md
+      - ai_general/docs/20_registries/cli_enhancement_ecosystem.latest.md
+      - ai_general/docs/30_protocols/cli_session_persistence.latest.condensed.yml
+    - pointer: REF:ai_general/docs/60_playbooks/install_cli_codex_coordination.latest.md
+      tokens: ~1177
+      depends_on:
+      - ai_general/docs/10_architecture/cli_orchestration.latest.md
+      - ai_general/docs/20_registries/cli_enhancement_ecosystem.latest.md
+      - ai_general/docs/30_protocols/cli_session_persistence.latest.condensed.yml
+    - pointer: REF:ai_general/docs/70_instructions/CODEX_REMINDER_ALL_AIS.latest.md
+      tokens: ~266
+      depends_on:
+      - ai_general/docs/60_playbooks/install_cli_codex_coordination.latest.md
+    - pointer: REF:ai_general/docs/70_instructions/_README_instructions.latest.condensed.yml
+      tokens: ~471
+      depends_on:
+      - ai_general/docs/10_architecture/README.md
+    - pointer: REF:ai_general/docs/40_specs/spec_js_analysis_playbook.latest.condensed.yml
+      tokens: ~276
+    - pointer: REF:ai_general/docs/40_specs/spec_ai_message_sender.latest.condensed.yml
+      tokens: ~309
+    - pointer: REF:ai_general/docs/40_specs/spec_chat_continuity_recovery.latest.condensed.yml
+      tokens: ~354
+      depends_on:
+      - ai_general/docs/30_protocols/protocol_ai_chat_orchestration.latest.condensed.yml
+    - pointer: REF:ai_general/docs/50_schemas/schema_pointer_syntax.latest.condensed.yml
+      tokens: ~582
+    - pointer: REF:ai_general/docs/50_schemas/schema_index_files.latest.condensed.yml
+      tokens: ~489
+      depends_on:
+      - ai_general/docs/20_registries/index_specs.latest.condensed.yml
+    - pointer: REF:ai_general/docs/50_schemas/schema_taskFile.latest.condensed.yml
+      tokens: ~575
+    - pointer: REF:ai_general/docs/50_schemas/SCHEMA_EVOLUTION_GUIDE.latest.condensed.yml
+      tokens: ~624
+    - pointer: REF:ai_general/docs/30_protocols/protocol_ai_chat_orchestration.latest.condensed.yml
+      tokens: ~1143
+      depends_on:
+      - ai_general/docs/10_architecture/cli_orchestration.latest.md
+    - pointer: REF:ai_general/docs/30_protocols/protocol_reference_pointers.latest.condensed.yml
+      tokens: ~891
+      depends_on:
+      - ai_general/docs/20_registries/directory_structure_reference.latest.md
+    - pointer: REF:ai_general/docs/30_protocols/protocol_taskCoordination.latest.condensed.yml
+      tokens: ~2969
+    - pointer: REF:ai_general/docs/30_protocols/cli_session_persistence.latest.condensed.yml
+      tokens: ~710
+      depends_on:
+      - ai_general/docs/10_architecture/cli_orchestration.latest.md
+      - ai_general/docs/20_registries/cli_enhancement_ecosystem.latest.md
+    - pointer: REF:ai_general/docs/20_registries/index_specs.latest.condensed.yml
+      tokens: ~451
+  execution:
+    instruction: |
+      Load these when a depends_on reference points to them, or before performing related operation.
+    files:
+    - pointer: REF:ai_claude/instructions/README.md
+      tokens: ~6
+    - pointer: REF:ai_general/docs/10_architecture/README.md
+      tokens: ~1342
+    - pointer: REF:ai_general/docs/10_architecture/ai_communication_architecture.latest.md
+      tokens: ~7357
+    - pointer: REF:ai_general/docs/10_architecture/architectural_layer_model.latest.md
+      tokens: ~1942
+    - pointer: REF:ai_general/docs/10_architecture/architectural_layer_model.latest.yml
+      tokens: ~2087
+    - pointer: REF:ai_general/docs/10_architecture/architecture.latest.yml
+      tokens: ~11624
+    - pointer: REF:ai_general/docs/10_architecture/architecture_overview.latest.md
+      tokens: ~3416
+    - pointer: REF:ai_general/docs/10_architecture/architecture_overview.latest.yml
+      tokens: ~1367
+    - pointer: REF:ai_general/docs/10_architecture/cli_orchestration.latest.md
+      tokens: ~4732
+    - pointer: REF:ai_general/docs/10_architecture/daemon_architecture.latest.md
+      tokens: ~5502
+    - pointer: REF:ai_general/docs/10_architecture/taxonomy_document_types.latest.md
+      tokens: ~1227
+    - pointer: REF:ai_general/docs/20_registries/INVENTORY.latest.md
+      tokens: ~1503
+    - pointer: REF:ai_general/docs/20_registries/cli_enhancement_ecosystem.latest.md
+      tokens: ~1602
+      depends_on:
+      - ai_general/docs/10_architecture/cli_orchestration.latest.md
+    - pointer: REF:ai_general/docs/20_registries/directory_structure_reference.latest.md
+      tokens: ~3728
+    - pointer: REF:ai_general/docs/20_registries/index_specs.latest.yml
+      tokens: ~623
+    - pointer: REF:ai_general/docs/30_protocols/cli_session_persistence.latest.md
+      tokens: ~1093
+      depends_on:
+      - ai_general/docs/10_architecture/cli_orchestration.latest.md
+      - ai_general/docs/20_registries/cli_enhancement_ecosystem.latest.md
+    - pointer: REF:ai_general/docs/30_protocols/protocol_ai_chat_orchestration.latest.yml
+      tokens: ~1824
+      depends_on:
+      - ai_general/docs/10_architecture/cli_orchestration.latest.md
+    - pointer: REF:ai_general/docs/30_protocols/protocol_reference_pointers.latest.yml
+      tokens: ~1199
+      depends_on:
+      - ai_general/docs/20_registries/directory_structure_reference.latest.md
+    - pointer: REF:ai_general/docs/30_protocols/protocol_taskCoordination.latest.yml
+      tokens: ~6578
+    - pointer: REF:ai_general/docs/40_specs/cli_specialized_agent_roles.latest.md
+      tokens: ~2372
+      depends_on:
+      - ai_general/docs/10_architecture/cli_orchestration.latest.md
+      - ai_general/docs/20_registries/cli_enhancement_ecosystem.latest.md
+      - ai_general/docs/30_protocols/cli_session_persistence.latest.md
+    - pointer: REF:ai_general/docs/40_specs/cli_specialized_agent_roles_v2.md
+      tokens: ~4945
+      depends_on:
+      - ai_general/docs/10_architecture/cli_orchestration.latest.md
+      - ai_general/docs/20_registries/cli_enhancement_ecosystem.latest.md
+      - ai_general/docs/30_protocols/cli_session_persistence.latest.md
+    - pointer: REF:ai_general/docs/40_specs/spec_ai_message_sender.latest.yml
+      tokens: ~2116
+    - pointer: REF:ai_general/docs/40_specs/spec_chat_continuity_recovery.latest.yml
+      tokens: ~1152
+      depends_on:
+      - ai_general/docs/30_protocols/protocol_ai_chat_orchestration.latest.yml
+    - pointer: REF:ai_general/docs/40_specs/spec_js_analysis_playbook.latest.yml
+      tokens: ~605
+    - pointer: REF:ai_general/docs/40_specs/spec_message_insert.latest.md
+      tokens: ~1610
+    - pointer: REF:ai_general/docs/40_specs/spec_response_footer.latest.yml
+      tokens: ~967
+    - pointer: REF:ai_general/docs/50_schemas/SCHEMA_EVOLUTION_GUIDE.latest.md
+      tokens: ~3008
+    - pointer: REF:ai_general/docs/50_schemas/schema_index_files.latest.yml
+      tokens: ~1783
+      depends_on:
+      - ai_general/docs/20_registries/index_specs.latest.yml
+    - pointer: REF:ai_general/docs/50_schemas/schema_pointer_syntax.latest.yml
+      tokens: ~1277
+    - pointer: REF:ai_general/docs/50_schemas/schema_taskFile.latest.yml
+      tokens: ~2141

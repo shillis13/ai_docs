@@ -1,0 +1,37 @@
+metadata:
+  title: Instruction - Feedback Logging
+  version: 1.0.0
+  last_updated: 2026-01-02
+  status: active
+  load_priority: topic
+  canonical: instr_feedback.md
+  tokens: ~180
+
+purpose: How to log observations, suggestions, issues discovered during work
+
+location: ai_general/logs/feedback.md
+
+when_to_log:
+  do:
+    - improvement: Better ways to do things, process refinements
+    - issue: Bugs, inconsistencies, outdated info, broken links
+    - idea: New capabilities, features, integrations
+    - observation: Patterns, insights, things that seem off
+  dont:
+    - Task completion (use task protocol)
+    - Actionable work items (use todo_mgr)
+    - Blocking errors (report to orchestrator immediately)
+
+format: |
+  ## YYYY-MM-DD HH:MM - Agent/Session
+  **Type:** improvement | issue | idea | observation
+  **Context:** What you were doing
+  **Content:** The actual feedback
+  ---
+
+guidelines:
+  - Be specific (paths, line numbers, exact terms)
+  - Be actionable (what should change)
+  - One item per entry
+  - Include context
+  - Don't duplicate recent entries

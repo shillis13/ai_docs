@@ -45,6 +45,10 @@ load_sequence:
       tokens: ~1126
     - pointer: REF:ai_general/docs/70_instructions/instr_writing.condensed.yml
       tokens: ~1150
+    - pointer: REF:ai_general/docs/70_instructions/instr_feedback.condensed.yml
+      tokens: ~180
+    - pointer: REF:ai_general/docs/70_instructions/instr_todo.condensed.yml
+      tokens: ~280
   demand:
     description: Load only when explicitly needed - specs, schemas, playbooks
     files:

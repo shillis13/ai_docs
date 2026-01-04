@@ -1,9 +1,9 @@
 # Knowledge Glossary + Index
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Schema:** schema_knowledge_glossary_v1
-**Generated:** 2025-12-19
-**Term Count:** 43
+**Generated:** 2026-01-01
+**Term Count:** 50
 **File Count:** 18
 
 ---
@@ -48,11 +48,36 @@ When a worker claims a task, it renames with prefix `claimed_{YYYYMMDD_HHMMSS}_{
 
 ### Entity Domain
 
-**Claude CLI** (aliases: CLI, claude_cli, CLI worker)
-Autonomous execution workers running Claude in terminal via `claude_cli.sh` wrapper. Supports named sessions, agent profiles, and background execution.
+**AI CLIs** (aliases: CLIs, CLI agents, terminal AIs)
+Terminal-based command-line AI agents capable of autonomous work. Includes Claude CLI, Gemini CLI, and Codex CLI. These are AI workers that can be coordinated via file-based task systems.
+- Coordination: `ai_comms/{cli_name}/tasks/`
+- Note: Distinct from Codex MCP which is a tool, not a worker
+
+**Claude CLI** (aliases: Claude Code, claude_cli)
+Claude running in terminal via `claude_cli.sh` wrapper. Supports tmux sessions, agent profiles (-A librarian/dev-lead/custodian/ops), named sessions (-n), and auto mode (-a).
+- Script: `~/bin/ai/cli/claude_cli.sh`
+- Coordination: `ai_comms/claude_cli/`
+
+**Codex CLI** (aliases: Codex, codex_cli)
+OpenAI's Codex running in terminal via `codex_cli.sh` wrapper. Used for code analysis, generation, and autonomous execution tasks.
+- Script: `~/bin/ai/cli/codex_cli.sh`
+- Coordination: `ai_comms/codex_cli/`
+- Note: Different from Codex MCP (see Tools Domain)
+
+**Gemini CLI** (aliases: Gemini Code, gemini_cli)
+Google's Gemini running in terminal. Can participate in wave orchestration.
+- Coordination: `ai_comms/gemini_cli/`
 
 **Desktop Claude** (aliases: Desktop, Claude Desktop)
-The primary orchestrator Claude running in the desktop app. Manages coordination, memory, and high-level decision making.
+The primary orchestrator Claude running in the desktop app. Manages coordination, memory, and high-level decision making. Not a CLI - operates through GUI with MCP tool access.
+
+### Tools Domain
+
+**Codex MCP** (aliases: Codex server, codex tool)
+OpenAI's Codex operating as an MCP Server, invoked directly by Desktop Claude as an internal tool. Returns results synchronously within the same conversation. NOT an AI worker or CLI - it's a tool that Desktop Claude uses for delegated analysis and code tasks.
+- Usage: `codex:codex` tool call
+- Timeout: ~30-60 seconds
+- Note: For async work, use Codex CLI instead
 
 ### Concept Domain
 
@@ -64,6 +89,12 @@ The challenge that Claude needs to know what's IN files to know WHEN to load the
 Syntax for referring to files without loading them: `REF:path/to/file.yml`. Enables lazy loading and reduced context consumption.
 
 ### Workflow Domain
+
+**Condensed Chat History** (aliases: condensed chat, chat condensation)
+A semantic summary of a chat created on-demand, NOT pre-stored artifacts. Created when needed from raw exports or conversation_search results.
+- Process: raw chat → extract decisions/outcomes/learnings → ~80% token reduction
+- Output: `.condensed.yml` format
+- Note: If asked to "import condensed history," CREATE the summary rather than searching for existing files
 
 **Chat Continuity Recovery** (aliases: broken chat recovery, context exhaustion recovery)
 Automated recovery from broken chats caused by context exhaustion. Detects "prompt is too long", exports chat, condenses, and continues in new chat with digest.
@@ -86,6 +117,11 @@ Atomic hierarchical ID generation for orchestration tasks. Uses mkdir spinlock f
 |------|--------|------------------|
 | AI Root | architecture | architecture_overview.condensed.yml |
 | Layer Model | architecture | architectural_layer_model.condensed.yml |
+| AI CLIs | entity | (umbrella term for CLI agents) |
+| Claude CLI | entity | ai_comms/claude_cli/ |
+| Codex CLI | entity | ai_comms/codex_cli/ |
+| Gemini CLI | entity | ai_comms/gemini_cli/ |
+| Codex MCP | tools | (MCP tool, not a CLI) |
 | AT Self-Wake | protocol | protocol_at_self_wake.condensed.yml |
 | Claim Prefix | protocol | protocol_taskCoordination.condensed.yml |
 | Bootstrap Problem | concept | schema_knowledge_glossary_v1.yml |
