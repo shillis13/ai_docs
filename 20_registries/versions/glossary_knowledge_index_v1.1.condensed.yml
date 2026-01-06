@@ -1,4 +1,4 @@
-meta: {v: 1.2.0, schema: schema_knowledge_glossary_v1, generated: 2026-01-01, terms: 50, files: 18}
+meta: {v: 1.3.1, schema: schema_knowledge_glossary_v1, generated: 2026-01-05, terms: 53, files: 18}
 
 purpose: Solves bootstrap problem - Claude needs to know what's IN files to know WHEN to load them. Provides term recognition without full doc loading.
 
@@ -17,11 +17,13 @@ terms:
     claim_prefix: {aliases: [claimed prefix], def: "claimed_{YYYYMMDD_HHMMSS}_{PID}_ prefix prevents race conditions", ref: protocol_taskCoordination.condensed.yml}
 
   entity:
-    ai_clis: {aliases: [CLIs, CLI agents, terminal AIs], def: "terminal-based AI agents for autonomous work. Includes Claude CLI, Gemini CLI, Codex CLI. Coordinated via ai_comms/{cli}/tasks/", note: "distinct from Codex MCP which is a tool, not a worker"}
+    ai_clis: {aliases: [CLIs, CLI agents, terminal AIs], def: "terminal-based AI agents for autonomous work. Includes Claude CLI, Gemini CLI, Codex CLI, Cline CLI. Coordinated via ai_comms/{cli}/tasks/", note: "distinct from Codex MCP which is a tool, not a worker"}
     claude_cli: {aliases: [Claude Code, claude_cli], def: "Claude in terminal via claude_cli.sh wrapper. Tmux sessions, agent profiles (-A), named sessions (-n), auto mode (-a)", script: ~/bin/ai/cli/claude_cli.sh, coord: ai_comms/claude_cli/}
+    cline_cli: {aliases: [Cline, cline_cli], def: "local agentic AI via Cline + llama-server. Qwen3-Coder backend on port 8081. Workspace rules via .clinerules", script: ~/bin/ai/cli/cline_cli.py, coord: ai_comms/cline/, workspace: ai_cline/}
     codex_cli: {aliases: [Codex, codex_cli], def: "OpenAI Codex in terminal via codex_cli.sh wrapper. Code analysis and autonomous tasks", script: ~/bin/ai/cli/codex_cli.sh, coord: ai_comms/codex_cli/, note: "different from Codex MCP"}
     gemini_cli: {aliases: [Gemini Code, gemini_cli], def: "Google Gemini in terminal. Wave orchestration capable", coord: ai_comms/gemini_cli/}
     desktop_claude: {aliases: [Desktop, Claude Desktop], def: "primary orchestrator in desktop app - coordination, memory, decisions. Not a CLI"}
+    llama_server: {aliases: [llama-server, local LLM], def: "llama.cpp inference server on port 8081. Backend for Cline CLI and mcp-openai. Managed via SwiftBar", port: 8081, models: ai_models/llm/}
 
   tools:
     codex_mcp: {aliases: [Codex server, codex tool], def: "OpenAI Codex as MCP Server, invoked by Desktop Claude as internal tool. Synchronous results. NOT an AI worker or CLI", usage: "codex:codex tool call", timeout: "30-60s", note: "for async work use Codex CLI instead"}
@@ -29,6 +31,7 @@ terms:
   concept:
     bootstrap_problem: {aliases: [context bootstrap], def: "challenge: need to know file contents to know when to load. Solved by glossary", ref: schema_knowledge_glossary_v1.yml}
     reference_pointers: {aliases: ["REF:", file pointers], def: "REF:path/to/file.yml syntax for lazy loading, reduced context"}
+    time_loop: {aliases: [time loop, UI reset], def: "Claude Desktop phenomenon where response fails mid-generation and UI resets context as if prompt was never submitted. Appears to user as going back in time. Distinct from local model reasoning loops.", platform: Claude Desktop only}
 
   workflow:
     condensed_chat_history: {aliases: [condensed chat, chat condensation], def: "semantic summary created ON-DEMAND, NOT pre-stored. Process: raw chat → extract decisions/outcomes → ~80% reduction → .condensed.yml", note: "If asked to 'import condensed history', CREATE the summary rather than searching"}
@@ -39,14 +42,17 @@ terms:
 quick_lookup:
   - {term: AI Root, domain: architecture, ref: architecture_overview.condensed.yml}
   - {term: Layer Model, domain: architecture, ref: architectural_layer_model.condensed.yml}
-  - {term: AI CLIs, domain: entity, note: "umbrella for Claude/Codex/Gemini CLI"}
+  - {term: AI CLIs, domain: entity, note: "umbrella for Claude/Codex/Gemini/Cline CLI"}
   - {term: Claude CLI, domain: entity, coord: ai_comms/claude_cli/}
+  - {term: Cline CLI, domain: entity, coord: ai_comms/cline/, note: "local AI via llama-server"}
   - {term: Codex CLI, domain: entity, coord: ai_comms/codex_cli/}
   - {term: Gemini CLI, domain: entity, coord: ai_comms/gemini_cli/}
+  - {term: llama-server, domain: entity, port: 8081, note: "backend for Cline"}
   - {term: Codex MCP, domain: tools, note: "MCP tool, NOT a CLI or worker"}
   - {term: AT Self-Wake, domain: protocol, ref: protocol_at_self_wake.condensed.yml}
   - {term: Claim Prefix, domain: protocol, ref: protocol_taskCoordination.condensed.yml}
   - {term: Bootstrap Problem, domain: concept, ref: schema_knowledge_glossary_v1.yml}
+  - {term: Time Loop, domain: concept, note: "Claude Desktop UI reset phenomenon"}
   - {term: Condensed Chat History, domain: workflow, note: "created on-demand, not pre-stored"}
   - {term: Chat Recovery, domain: workflow, ref: spec_chat_continuity_recovery.condensed.yml}
   - {term: Task Lifecycle, domain: protocol, ref: protocol_taskCoordination.condensed.yml}

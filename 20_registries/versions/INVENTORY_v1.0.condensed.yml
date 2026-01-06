@@ -46,6 +46,24 @@ systems:
     state: same pattern as Claude CLI, symlinked
     issues: [underutilized, no clear differentiation]
 
+  cline_cli:
+    location: ai_comms/cline/
+    workspace: ai_cline/
+    purpose: local agentic AI via Cline + llama-server
+    backend: llama-server port 8081, Qwen3-Coder-30B-A3B
+    wrapper: ~/bin/ai/cli/cline_cli.py
+    state: operational, same task pattern as other CLIs
+    config: .clinerules (workspace rules), no custom system prompt
+    issues: [no daemon (same as others), checkpoint required]
+
+  llama_server:
+    location: ai_llama_cpp/
+    models: ai_models/llm/
+    purpose: local LLM inference backend
+    port: 8081
+    state: operational, SwiftBar managed
+    issues: [manual model switching]
+
 summary:
   all_systems: operational
   test_coverage: manual only

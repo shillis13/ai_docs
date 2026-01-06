@@ -1,0 +1,63 @@
+meta: {v: 1.1.0, updated: 2026-01-04, purpose: "canonical paths for AI-accessible tools"}
+
+overview: Single source of truth for tool locations - all AIs reference before invoking
+
+cli_wrappers:
+  base: ~/bin/ai/cli
+  claude_cli.py:
+    path: ~/bin/ai/cli/claude_cli.py
+    invoke: "python3 ~/bin/ai/cli/claude_cli.py"
+    desc: "Claude CLI with tmux, agents, session management"
+    flags: {-t: tmux, -a: auto, "-A TYPE": "agent (librarian, dev-lead, custodian, ops)", "-n NAME": named session, -c: continue}
+    examples: ['python3 claude_cli.py -a -A librarian -t "prompt"', 'python3 claude_cli.py -t -a -c "continue"']
+  codex_cli.py:
+    path: ~/bin/ai/cli/codex_cli.py
+    invoke: "python3 ~/bin/ai/cli/codex_cli.py"
+    desc: "OpenAI Codex CLI with tmux"
+    flags: {-t: tmux, -a: "full auto (--dangerously-bypass-approvals-and-sandbox)", -s: session name, -w: workdir}
+  gemini_cli.py:
+    path: ~/bin/ai/cli/gemini_cli.py
+    invoke: "python3 ~/bin/ai/cli/gemini_cli.py"
+    desc: "Gemini CLI with tmux, wave orchestration"
+    flags: {-t: tmux, -a: auto, -s: session name}
+
+agent_shortcuts:
+  note: "Convenience wrappers for specific agent profiles"
+  librarian_gemini.sh: "Gemini librarian agent"
+  custodian_claude.sh: "Claude custodian agent"
+  dev_lead_claude.sh: "Claude dev-lead agent"
+  ops_codex.sh: "Codex ops agent"
+
+cli_utilities:
+  lifecycle: {base: ~/bin/ai/cli/lifecycle/, scripts: [cleanup_cli_sessions.sh, list_cli_sessions.sh, launch_claude_cli_task.scpt, launch_codex_cli_task.scpt]}
+  wrappers: {base: ~/bin/ai/cli/wrappers/, scripts: [cli_script_wrapper.sh, cli_tmux_wrapper.sh, check_lock.sh, monitor_cli_sessions.py]}
+  wave: {scripts: [spawn_wave_librarians.sh, wave_launcher.sh, wave_monitor.sh]}
+
+python_tools:
+  base: ~/bin/all_languages/python/src
+  todo_mgr:
+    path: ~/bin/all_languages/python/src/todo_mgr/todo_mgr.py
+    desc: "TODO system - kanban, status, queries"
+    cmds: ["kanban", "status <dir> <status>", "query --status Ready"]
+  other: [ai_utils/ (chat, memory), doc_utils/, yaml_utils/]
+
+chat_pipeline:
+  base: ~/bin/ai/chat_pipeline
+  scripts: [export_chats.py, preprocess_exports.py, convert_to_yaml.py]
+
+automation:
+  base: ~/bin/ai
+  dirs: [desktop_automation/, claude_automation/]
+
+quick_ref:
+  claude_cli: "python3 ~/bin/ai/cli/claude_cli.py"
+  codex_cli: "python3 ~/bin/ai/cli/codex_cli.py"
+  gemini_cli: "python3 ~/bin/ai/cli/gemini_cli.py"
+  todo_mgr: "python3 ~/bin/all_languages/python/src/todo_mgr/todo_mgr.py"
+  list_sessions: ~/bin/ai/cli/lifecycle/list_cli_sessions.sh
+
+notes:
+  - "~ = /Users/shawnhillis"
+  - "CLI wrappers are now Python (migrated from .sh 2026-01)"
+  - "All python scripts need explicit python3"
+  - "Agent shortcuts (.sh) still work for convenience"

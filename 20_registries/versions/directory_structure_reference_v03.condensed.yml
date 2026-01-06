@@ -29,6 +29,18 @@ top_level:
     purpose: Claude config, instructions, memories
     subdirs: [ai_specific_memories/, ai_scripts/, connectors/, instructions/, skills/, specs/]
 
+  ai_cline:
+    purpose: Cline CLI workspace (local agentic AI via llama-server)
+    subdirs: [config/, instructions/, memories/, work/, logs/]
+
+  ai_claude_cli:
+    purpose: Claude CLI agent workspace
+    subdirs: [agents/, config/, extensions/, instructions/, memories/, work/]
+
+  ai_codex:
+    purpose: Codex CLI workspace
+    subdirs: [config/, work/]
+
   ai_general:
     purpose: shared resources, docs, tools
     subdirs:
@@ -58,9 +70,11 @@ top_level:
     subdirs:
       announcements/: broadcasts to all AIs
       "{ai}/": mailbox (drafts/, instant_messaging/, note_passing/, notifications/, prompting/, saved/, tasks/)
+      cline/: Cline CLI coordination (tasks/, logs/)
       claude_cli/: CLI coordination (→ ~/.claude/coordination)
       codex_cli/: Codex CLI coordination
       gemini_cli/: Gemini CLI coordination
+      llama_cpp/: llama-server coordination
       counters/: atomic ID counters (*.NextId)
       orchestration/: wave orchestration
 

@@ -301,13 +301,13 @@ echo "Hello world" | piper \
 
 ### CLI Worker Integration
 
-Local LLMs become another worker type in CLI coordination:
+llama.cpp becomes another worker type in CLI coordination:
 
 ```
 ai_comms/
-├── claude_cli/          # Cloud Claude workers
-├── codex_cli/           # Codex MCP workers
-└── local_llm/           # NEW: Local LLM workers
+├── claude_cli/          # Claude CLI workers
+├── codex_cli/           # OpenAI Codex CLI workers
+└── llama_cpp/           # NEW: llama.cpp workers
     ├── tasks/
     │   ├── to_execute/
     │   ├── in_progress/
@@ -315,7 +315,7 @@ ai_comms/
     └── logs/
 ```
 
-**Wrapper Script:** `~/bin/local-llm-worker`
+**Wrapper Script:** `~/bin/llama-cpp-worker`
 - Monitors task queue
 - Routes to appropriate model (code/chat/raw)
 - Returns results via file protocol
@@ -323,8 +323,8 @@ ai_comms/
 ### MCP Integration
 
 llama.cpp can be wrapped as MCP server:
-- Tool: `local_llm:complete`
-- Tool: `local_llm:embed`
+- Tool: `llama_cpp:complete`
+- Tool: `llama_cpp:embed`
 - Desktop Claude gains local inference capability
 
 ### Use Cases by Model Type
