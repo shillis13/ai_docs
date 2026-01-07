@@ -1,6 +1,6 @@
 # Knowledge Glossary + Index
 
-**Version:** 1.2.0
+**Version:** 1.3.2
 **Schema:** schema_knowledge_glossary_v1
 **Generated:** 2026-01-01
 **Term Count:** 50

@@ -1,1 +1,0 @@
-versions/cli_browser_automation_guide_v1.0.md

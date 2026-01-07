@@ -141,7 +141,7 @@ test_categories:
 
   - category: CLI MCP Configuration
     source_docs:
-      - 60_playbooks/cli_mcp_configuration.md
+      - 60_playbooks/playbook.cli_mcp_configuration.latest.md
     discovery_hints:
       - "Search for 'MCP configuration' or 'CLI MCP'"
       - "Found via playbooks directory listing"
@@ -157,7 +157,7 @@ test_categories:
 
   - category: Codex CLI Install & Coordination
     source_docs:
-      - 60_playbooks/install_cli_codex_coordination_latest.md
+      - 60_playbooks/playbook.install_cli_codex_coordination.latest.md
     discovery_hints:
       - "Search for 'Codex install' or 'coordination install'"
       - "Found via playbooks or Codex MCP knowledge doc"
@@ -173,7 +173,7 @@ test_categories:
 
   - category: CLI Browser Automation Instructioning
     source_docs:
-      - 60_playbooks/cli_browser_automation_guide.md
+      - 60_playbooks/playbook.cli_browser_automation_guide.latest.md
     discovery_hints:
       - "Search for 'browser automation' or 'CLI instruction'"
       - "Found via playbooks directory"

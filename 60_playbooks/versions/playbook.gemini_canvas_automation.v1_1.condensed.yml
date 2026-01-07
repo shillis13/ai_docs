@@ -47,4 +47,4 @@ canvas_vs_inline:
   canvas: {appear: "Open button + Monaco panel", script: gemini_download_canvas_filtered.js, when: multi-file/complex}
   inline: {appear: code block in chat, script: gemini_download_filtered.js, when: simple snippets}
 
-related: [gemini_chat/README.md, cli_browser_automation_guide.md]
+related: [gemini_chat/README.md, playbook.cli_browser_automation_guide.latest.md]

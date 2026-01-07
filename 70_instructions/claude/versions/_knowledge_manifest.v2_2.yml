@@ -1,9 +1,9 @@
 metadata:
   title: AI Root Knowledge Manifest
-  version: 2026.01.04
-  generated: '2026-01-04T15:05:00'
+  version: 2026.01.06
+  generated: '2026-01-06T22:55:00'
   generator: generate_knowledge_manifest.py (manual update)
-  updated_by: Claude Desktop (moved spec_message_insert to auto-load)
+  updated_by: Claude Desktop (renamed playbooks with playbook. prefix)
   root_path: /Users/shawnhillis/Documents/AI/ai_root
   public_repo: https://github.com/shillis13/ai_docs
   public_access: https://raw.githubusercontent.com/shillis13/ai_docs/main/
@@ -140,7 +140,7 @@ load_sequence:
       tokens: ~1067
       depends_on:
       - ai_general/docs/40_specs/spec_js_analysis_playbook.latest.condensed.yml
-    - pointer: REF:ai_general/docs/60_playbooks/NEEDS_UPDATE_directory_watcher_guide.md
+    - pointer: REF:ai_general/docs/60_playbooks/playbook.directory_watcher_guide.latest.md
       tokens: ~2061
       depends_on:
       - ai_general/docs/20_registries/directory_structure_reference.latest.md
@@ -164,7 +164,7 @@ load_sequence:
       - ai_general/docs/10_architecture/cli_orchestration.latest.md
       - ai_general/docs/20_registries/cli_enhancement_ecosystem.latest.md
       - ai_general/docs/30_protocols/cli_session_persistence.latest.condensed.yml
-    - pointer: REF:ai_general/docs/60_playbooks/cli_browser_automation_guide.md
+    - pointer: REF:ai_general/docs/60_playbooks/playbook.cli_browser_automation_guide.latest.md
       tokens: ~3029
       depends_on:
       - ai_general/docs/10_architecture/cli_orchestration.latest.md
@@ -184,7 +184,7 @@ load_sequence:
         - "What's the keyboard sequence for Gemini Canvas?"
         - "How do I upload files to Gemini?"
       depends_on:
-      - ai_general/docs/60_playbooks/cli_browser_automation_guide.md
+      - ai_general/docs/60_playbooks/playbook.cli_browser_automation_guide.latest.md
     - pointer: REF:ai_general/docs/60_playbooks/playbook.chatgpt_browser_automation.latest.condensed.yml
       tokens: ~400
       triggers: [chatgpt, browser automation, cross-platform test, poisoned nonce, instruction patterns]
@@ -198,7 +198,7 @@ load_sequence:
         - "How do I test the same prompt across Claude, ChatGPT, Gemini?"
         - "What is the poisoned nonce test?"
       depends_on:
-      - ai_general/docs/60_playbooks/cli_browser_automation_guide.md
+      - ai_general/docs/60_playbooks/playbook.cli_browser_automation_guide.latest.md
       - ai_general/docs/60_playbooks/playbook.gemini_canvas_automation.latest.condensed.yml
     - pointer: REF:ai_general/docs/60_playbooks/playbook.documentation_maintenance.latest.condensed.yml
       tokens: ~400
@@ -237,13 +237,13 @@ load_sequence:
       answers:
         - "What's the structure of a playbook?"
         - "What fields does a playbook need?"
-    - pointer: REF:ai_general/docs/60_playbooks/cli_mcp_configuration.md
+    - pointer: REF:ai_general/docs/60_playbooks/playbook.cli_mcp_configuration.latest.md
       tokens: ~867
       depends_on:
       - ai_general/docs/10_architecture/cli_orchestration.latest.md
       - ai_general/docs/20_registries/cli_enhancement_ecosystem.latest.md
       - ai_general/docs/30_protocols/cli_session_persistence.latest.condensed.yml
-    - pointer: REF:ai_general/docs/60_playbooks/install_cli_codex_coordination.latest.md
+    - pointer: REF:ai_general/docs/60_playbooks/playbook.install_cli_codex_coordination.latest.md
       tokens: ~1177
       depends_on:
       - ai_general/docs/10_architecture/cli_orchestration.latest.md
@@ -252,7 +252,7 @@ load_sequence:
     - pointer: REF:ai_general/docs/70_instructions/CODEX_REMINDER_ALL_AIS.latest.md
       tokens: ~266
       depends_on:
-      - ai_general/docs/60_playbooks/install_cli_codex_coordination.latest.md
+      - ai_general/docs/60_playbooks/playbook.install_cli_codex_coordination.latest.md
     - pointer: REF:ai_general/docs/70_instructions/_README_instructions.latest.condensed.yml
       tokens: ~471
       depends_on:

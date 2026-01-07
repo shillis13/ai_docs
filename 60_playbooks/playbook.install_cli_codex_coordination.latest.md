@@ -1,0 +1,1 @@
+versions/playbook.install_cli_codex_coordination_v1.0.md

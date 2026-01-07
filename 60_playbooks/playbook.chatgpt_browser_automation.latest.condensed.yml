@@ -66,4 +66,4 @@ common_issues:
 
 depends_on:
   - ai_general/docs/60_playbooks/playbook.gemini_canvas_automation.latest.md
-  - ai_general/docs/60_playbooks/cli_browser_automation_guide.md
+  - ai_general/docs/60_playbooks/playbook.cli_browser_automation_guide.latest.md

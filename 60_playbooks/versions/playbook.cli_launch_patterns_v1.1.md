@@ -1,7 +1,8 @@
 # CLI Launch Patterns for Desktop Claude
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Created:** 2025-11-30
+**Updated:** 2026-01-06
 **Purpose:** Standard patterns for Desktop Claude to launch and monitor Claude CLI and Codex CLI
 
 ---
@@ -68,7 +69,37 @@ tmux kill-session -t SESSION_NAME
 
 # Codex CLI - full automation  
 ~/bin/ai/cli/codex_cli.sh -t -s codex_task -p -a "your prompt"
+
+# Cline CLI - local LLM (requires llm_serve.sh running first)
+~/bin/ai/cli/cline_cli.py --queue "your task"
 ```
+
+### Cline CLI (Local LLM)
+
+Cline uses a local llama-server backend instead of cloud APIs.
+
+**Prerequisites:**
+```bash
+# Start local LLM server FIRST
+ai_general/scripts/local_llm/llm_serve.sh code   # Port 8081
+```
+
+**Usage:**
+```bash
+# Queue a task (async)
+~/bin/ai/cli/cline_cli.py --queue "Analyze this file"
+
+# Run directly (sync)
+~/bin/ai/cli/cline_cli.py --run "Simple task"
+
+# Raw mode (skip context injection)
+~/bin/ai/cli/cline_cli.py --queue "Quick fix" --raw
+```
+
+**Key Differences:**
+- No tmux required (Python wrapper handles execution)
+- Workspace context from `.clinerules` auto-injected
+- Backend: Qwen3-Coder-30B via llama-server/MLX
 
 ---
 
@@ -139,19 +170,26 @@ start_process("tmux list-sessions")
 |:----|:-------------|
 | claude_cli.sh | `~/Documents/AI/ai_root/ai_general/logs/claude_cli/` |
 | codex_cli.sh | `~/Documents/AI/ai_root/ai_general/logs/codex_cli/` |
+| cline_cli.py | `~/Documents/AI/ai_root/ai_cline/logs/` |
 
 ---
 
 ## Quick Reference
 
 ```bash
+# Start local LLM server (required for Cline)
+ai_general/scripts/local_llm/llm_serve.sh code
+
 # Launch Claude CLI (from AppleScript)
 ~/bin/ai/cli/claude_cli.sh -t -s SESSION -p -a "prompt"
 
 # Launch Codex CLI (from AppleScript)
 ~/bin/ai/cli/codex_cli.sh -t -s SESSION -p -a "prompt"
 
-# Monitor
+# Launch Cline CLI (local LLM)
+~/bin/ai/cli/cline_cli.py --queue "task"
+
+# Monitor (Claude/Codex tmux sessions)
 tmux capture-pane -t SESSION -p -S -500
 
 # Input

@@ -1,1 +1,1 @@
-versions/INVENTORY_v1.0.md
+versions/INVENTORY_v1.1.md
