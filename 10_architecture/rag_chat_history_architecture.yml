@@ -1,0 +1,167 @@
+---
+metadata:
+  title: RAG Architecture for Chat History Search
+  version: 1.0.0
+  created: 2025-01-08
+  status: proposed
+
+problem:
+  description: |
+    Large chat history files (10-100KB each) exceed practical context limits.
+    Current approach: Load entire files into LLM context for extraction.
+    Result: OOM crashes, wasted tokens on irrelevant content.
+  
+  current_pain:
+    - 100KB file = 25K tokens consumed regardless of query relevance
+    - Qwen3-32B crashes when KV cache exceeds ~24GB
+    - No semantic search across chat history corpus
+
+solution:
+  architecture: |
+    ┌─────────────────────────────────────────────────────────────┐
+    │                    RAG Pipeline                              │
+    ├─────────────────────────────────────────────────────────────┤
+    │  INDEXING (one-time, offline)                               │
+    │  ────────────────────────────                               │
+    │  *.condensed.yml files                                      │
+    │         │                                                    │
+    │         ▼                                                    │
+    │  ┌──────────────────────────────┐                           │
+    │  │  Chunker                      │  Split by yaml blocks    │
+    │  │  (~500-1000 tokens/chunk)    │  or semantic boundaries  │
+    │  └──────────────────────────────┘                           │
+    │         │                                                    │
+    │         ▼                                                    │
+    │  ┌──────────────────────────────┐                           │
+    │  │  Embedding Model (~500MB)    │  sentence-transformers   │
+    │  │  all-MiniLM-L6-v2 or        │  or MLX nomic-embed      │
+    │  │  nomic-embed-text-v1.5      │                           │
+    │  └──────────────────────────────┘                           │
+    │         │                                                    │
+    │         ▼                                                    │
+    │  ┌──────────────────────────────┐                           │
+    │  │  ChromaDB                    │  Local persistent store   │
+    │  │  ~/ai_root/ai_memories/      │  ~50MB for 1000 chunks   │
+    │  │  vector_store/               │                           │
+    │  └──────────────────────────────┘                           │
+    │                                                              │
+    │  QUERY TIME                                                  │
+    │  ──────────                                                  │
+    │  User: "What did we decide about CLI coordination?"         │
+    │         │                                                    │
+    │         ▼                                                    │
+    │  ┌──────────────────────────────┐                           │
+    │  │  Same embedding model        │  Query → vector           │
+    │  └──────────────────────────────┘                           │
+    │         │                                                    │
+    │         ▼                                                    │
+    │  ┌──────────────────────────────┐                           │
+    │  │  ChromaDB similarity search  │  Top-k relevant chunks   │
+    │  │  k=5, threshold=0.7          │                           │
+    │  └──────────────────────────────┘                           │
+    │         │                                                    │
+    │         ▼ (~2-4K tokens instead of 25K)                     │
+    │  ┌──────────────────────────────┐                           │
+    │  │  Qwen3-32B                   │  Answer with context      │
+    │  └──────────────────────────────┘                           │
+    └─────────────────────────────────────────────────────────────┘
+
+components:
+  embedding_model:
+    options:
+      - name: all-MiniLM-L6-v2
+        size: 90MB
+        speed: fastest
+        quality: good
+        notes: CPU-only, sentence-transformers default
+      
+      - name: nomic-embed-text-v1.5
+        size: 550MB
+        speed: fast
+        quality: excellent
+        notes: Best quality/size ratio, 8192 token context
+      
+      - name: mlx-community/nomicai-modernbert-embed-base-bf16
+        size: ~500MB
+        speed: fast (GPU)
+        quality: excellent
+        notes: MLX native, runs on Apple GPU alongside LLM
+    
+    recommendation: nomic-embed-text-v1.5 via sentence-transformers
+    rationale: |
+      - Already have sentence-transformers installed
+      - 8K context handles large chunks
+      - Excellent retrieval quality
+      - Small enough to coexist with Qwen3-32B
+
+  vector_store:
+    choice: ChromaDB
+    rationale: Already installed, simple, persistent, good enough
+    location: ~/Documents/AI/ai_root/ai_memories/vector_store/
+    
+  chunking_strategy:
+    for_condensed_yml:
+      method: yaml_block_aware
+      description: |
+        Split on top-level YAML keys while preserving structure.
+        Each chunk = one conversation segment or topic block.
+      target_size: 500-1000 tokens
+      overlap: 100 tokens (for context continuity)
+    
+    for_large_files:
+      method: recursive_character
+      description: |
+        For non-YAML files, use LangChain's recursive splitter.
+        Respects paragraph/sentence boundaries.
+      target_size: 1000 tokens
+      overlap: 200 tokens
+
+implementation:
+  phase_1_mvp:
+    goal: Index condensed chat histories, query via CLI
+    steps:
+      - Create ai_memories/vector_store/ directory
+      - Write index_chat_histories.py script
+      - Write query_memories.py CLI tool
+      - Index existing *.condensed.yml files
+    effort: 2-4 hours
+    
+  phase_2_integration:
+    goal: Integrate with Cline/Claude workflows
+    steps:
+      - MCP server wrapping RAG query
+      - Auto-retrieve context before LLM calls
+      - Update extraction tasks to use RAG pre-filter
+    effort: 4-8 hours
+    
+  phase_3_advanced:
+    goal: Hybrid search, auto-indexing
+    steps:
+      - Add BM25 keyword search alongside vector
+      - File watcher to auto-index new condensed files
+      - Query rewriting for better retrieval
+    effort: 8+ hours
+
+memory_budget:
+  embedding_model: ~600MB
+  chromadb_runtime: ~100MB
+  qwen3_32b_4bit: 17GB
+  kv_cache_headroom: ~23GB
+  total: ~41GB (fits in 64GB system)
+
+existing_infrastructure:
+  installed:
+    - chromadb 1.3.4 (in ai_story_teller venv)
+    - sentence-transformers 5.1.2
+  location: ~/Documents/AI/ai_root/ai_story_teller/_venv/
+  reuse: Can symlink or create shared venv
+
+next_steps:
+  immediate:
+    - Download nomic-embed-text-v1.5 model
+    - Create ai_memories/vector_store/ directory
+    - Write MVP indexing script
+  
+  decision_needed:
+    - Shared venv vs separate venv for RAG tools?
+    - Index ALL condensed files or start with subset?
