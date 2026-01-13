@@ -1,4 +1,4 @@
-meta: {v: 1.3.2, schema: schema_knowledge_glossary_v1, generated: 2026-01-06, terms: 59, files: 20}
+meta: {v: 1.4.0, schema: schema_knowledge_glossary_v1, generated: 2026-01-12, terms: 69, files: 20}
 
 purpose: Solves bootstrap problem - Claude needs to know what's IN files to know WHEN to load them. Provides term recognition without full doc loading.
 
@@ -25,6 +25,14 @@ terms:
     desktop_claude: {aliases: [Desktop, Claude Desktop], def: "primary orchestrator in desktop app - coordination, memory, decisions. Not a CLI"}
     llama_server: {aliases: [llama-server, local LLM], def: "llama.cpp inference server on port 8081. Backend for Cline CLI and mcp-openai. Managed via SwiftBar", port: 8081, models: ai_models/llm/}
 
+  role:
+    librarian: {aliases: [memory librarian], def: "Memory system curator, manages ai_memories/ and chat history pipeline", scope: ai_memories/, note: "keeps exports/condensations flowing"}
+    dev_lead: {aliases: [dev lead, development coordinator], def: "Development coordinator, owns todos and task creation", scope: ai_general/todos/}
+    custodian: {aliases: [repo custodian], def: "Repository maintainer, structural integrity", scope: ai_root/, note: "guards structure, hygiene, consistency"}
+    ops: {aliases: [operations], def: "CLI coordination and task execution", scope: ai_comms/, note: "dispatches CLI agents and drives executions"}
+    peer_review: {aliases: [peer reviewer], def: "Code/design reviewer, quality assurance", note: "performs reviews before merge or release"}
+    tester: {aliases: [qa tester], def: "Testing specialist, validation and verification", note: "drives test coverage and validation runs"}
+
   tools:
     codex_mcp: {aliases: [Codex server, codex tool], def: "OpenAI Codex as MCP Server, invoked by Desktop Claude as internal tool. Synchronous results. NOT an AI worker or CLI", usage: "codex:codex tool call", timeout: "30-60s", note: "for async work use Codex CLI instead"}
     claude_code_plugins: {aliases: [plugins, plugin system, /plugin], def: "Extension system for Claude Code - commands, agents, skills, MCP servers bundled as plugins", ref: claude_code_plugins_reference.latest.yml, cli: "claude plugin <cmd>", repl: "/plugin", note: "CLI subcommands work from shell; REPL commands only inside session"}
@@ -33,10 +41,14 @@ terms:
     episodic_memory_plugin: {aliases: [episodic-memory, conversation memory], def: "Semantic search across past Claude Code conversations. Persistent memory between sessions", source: superpowers-marketplace}
     desktop_skills: {aliases: [claude.ai skills, upload skills, SKILL.md], def: "Model-invoked instruction packages for Claude Desktop. Auto-activate based on context. Structure: SKILL.md + optional scripts/references/assets/", ref: claude_desktop_skills_reference.latest.yml, install: "Settings > Capabilities > Skills > + Add", note: "Different from Claude Code plugins"}
     csv_data_summarizer: {aliases: [csv analyzer], def: "Desktop skill - auto-analyzes CSV uploads with stats & visualizations. No prompting needed", type: community_skill}
+    cli_agent_mcp: {aliases: [cli-agent MCP, CLI agent MCP server], def: "MCP server for launching and managing CLI agents", path: ai_general/apps/mcps/cli-agent/, note: "entrypoint for spinning up CLI workers"}
 
   concept:
     bootstrap_problem: {aliases: [context bootstrap], def: "challenge: need to know file contents to know when to load. Solved by glossary", ref: schema_knowledge_glossary_v1.yml}
+    bootstrap_hierarchy: {aliases: [bootstrap order, load order], def: "CLI bootstrap sequence: global.md → platform/{platform}.md → role/{role}/role.yml context_files → tasking.md (if -T)", path: ai_general/prompts/, note: "replaced ~/.claude/agents.json approach"}
+    context_files: {aliases: [context_files list, role context], def: "REF: pointers in role.yml defining what files to load for that role", note: "resolved at launch by cli_cli.py or cli-agent MCP"}
     reference_pointers: {aliases: ["REF:", file pointers], def: "REF:path/to/file.yml syntax for lazy loading, reduced context"}
+    role_yml: {aliases: [role.yml, role definition], def: "Role config file with context_files, duties, ownership. Located at ai_general/prompts/roles/{role}/role.yml", note: "replaced hardcoded agent definitions"}
     time_loop: {aliases: [time loop, UI reset], def: "Claude Desktop phenomenon where response fails mid-generation and UI resets context as if prompt was never submitted. Appears to user as going back in time. Distinct from local model reasoning loops.", platform: Claude Desktop only}
 
   workflow:
@@ -54,7 +66,14 @@ quick_lookup:
   - {term: Codex CLI, domain: entity, coord: ai_comms/codex_cli/}
   - {term: Gemini CLI, domain: entity, coord: ai_comms/gemini_cli/}
   - {term: llama-server, domain: entity, port: 8081, note: "backend for Cline"}
+  - {term: Librarian, domain: role, note: "curates ai_memories/ + chat history pipeline"}
+  - {term: Dev Lead, domain: role, note: "coordinates development and task creation"}
+  - {term: Custodian, domain: role, note: "maintains repo structure and integrity"}
+  - {term: Ops, domain: role, note: "dispatches CLI agents and executes tasks"}
+  - {term: Peer Review, domain: role, note: "code/design reviewer for QA"}
+  - {term: Tester, domain: role, note: "validation and verification specialist"}
   - {term: Codex MCP, domain: tools, note: "MCP tool, NOT a CLI or worker"}
+  - {term: CLI-Agent MCP, domain: tools, path: ai_general/apps/mcps/cli-agent/, note: "MCP server to launch/manage CLI agents"}
   - {term: Claude Code Plugins, domain: tools, ref: claude_code_plugins_reference.latest.yml, note: "CLI: claude plugin, REPL: /plugin"}
   - {term: Plugin Marketplace, domain: tools, note: "repos hosting plugin catalogs"}
   - {term: Superpowers, domain: tools, note: "obra's core skills - TDD, debugging, /brainstorm"}
@@ -64,6 +83,9 @@ quick_lookup:
   - {term: AT Self-Wake, domain: protocol, ref: protocol_at_self_wake.condensed.yml}
   - {term: Claim Prefix, domain: protocol, ref: protocol_taskCoordination.condensed.yml}
   - {term: Bootstrap Problem, domain: concept, ref: schema_knowledge_glossary_v1.yml}
+  - {term: Bootstrap Hierarchy, domain: concept, note: "global → platform → role → tasking load order"}
+  - {term: Context Files, domain: concept, note: "REF: pointers in role.yml for role-specific loads"}
+  - {term: role.yml, domain: concept, note: "role config: context_files, duties, ownership"}
   - {term: Time Loop, domain: concept, note: "Claude Desktop UI reset phenomenon"}
   - {term: Condensed Chat History, domain: workflow, note: "created on-demand, not pre-stored"}
   - {term: Chat Recovery, domain: workflow, ref: spec_chat_continuity_recovery.condensed.yml}

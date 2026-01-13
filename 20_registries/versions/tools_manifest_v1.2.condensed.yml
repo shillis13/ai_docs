@@ -1,4 +1,4 @@
-meta: {v: 1.1.0, updated: 2026-01-04, purpose: "canonical paths for AI-accessible tools"}
+meta: {v: 1.2.0, updated: 2026-01-12, purpose: "canonical paths for AI-accessible tools"}
 
 overview: Single source of truth for tool locations - all AIs reference before invoking
 
@@ -7,9 +7,10 @@ cli_wrappers:
   claude_cli.py:
     path: ~/bin/ai/cli/claude_cli.py
     invoke: "python3 ~/bin/ai/cli/claude_cli.py"
-    desc: "Claude CLI with tmux, agents, session management"
-    flags: {-t: tmux, -a: auto, "-A TYPE": "agent (librarian, dev-lead, custodian, ops)", "-n NAME": named session, -c: continue}
+    desc: "Claude CLI with tmux, agents, session management. Bootstrap: global.md → platform/claude.md → roles/{type}/role.yml"
+    flags: {-t: tmux, -a: auto, "-A TYPE": "agent (librarian, dev_lead, custodian, ops, peer_review, tester)", "-n NAME": named session, -c: continue, "-T": task mode (loads tasking.md)}
     examples: ['python3 claude_cli.py -a -A librarian -t "prompt"', 'python3 claude_cli.py -t -a -c "continue"']
+    bootstrap: "Roles defined in ai_general/prompts/roles/{type}/role.yml"
   codex_cli.py:
     path: ~/bin/ai/cli/codex_cli.py
     invoke: "python3 ~/bin/ai/cli/codex_cli.py"
@@ -22,11 +23,13 @@ cli_wrappers:
     flags: {-t: tmux, -a: auto, -s: session name}
 
 agent_shortcuts:
-  note: "Convenience wrappers for specific agent profiles"
+  note: "Convenience wrappers for specific agent profiles. Role configs in ai_general/prompts/roles/"
   librarian_gemini.sh: "Gemini librarian agent"
   custodian_claude.sh: "Claude custodian agent"
   dev_lead_claude.sh: "Claude dev-lead agent"
   ops_codex.sh: "Codex ops agent"
+  peer_review_codex.sh: "Codex peer-review agent"
+  tester_claude.sh: "Claude tester agent"
 
 cli_utilities:
   lifecycle: {base: ~/bin/ai/cli/lifecycle/, scripts: [cleanup_cli_sessions.sh, list_cli_sessions.sh, launch_claude_cli_task.scpt, launch_codex_cli_task.scpt]}
@@ -49,6 +52,18 @@ automation:
   base: ~/bin/ai
   dirs: [desktop_automation/, claude_automation/]
 
+mcps:
+  task-coord:
+    path: ai_general/apps/mcps/task-coord/server.py
+    type: MCP server
+    purpose: "Task coordination MCP server for playbooks and task management"
+    tools: [list_playbooks, get_playbook, start_playbook, stop_playbook, list_templates, gen_task, list_tasks, get_task, move_task, list_platforms]
+  cli-agent:
+    path: ai_general/apps/mcps/cli-agent/server.py
+    type: MCP server
+    purpose: "Launch and manage CLI agents with role-based bootstrapping"
+    tools: [launch_agent, launch_librarian, launch_dev_lead, launch_custodian, launch_ops, launch_peer_review, launch_tester, kill, attach, send_keys, list_sessions, get_status]
+
 quick_ref:
   claude_cli: "python3 ~/bin/ai/cli/claude_cli.py"
   codex_cli: "python3 ~/bin/ai/cli/codex_cli.py"
@@ -61,3 +76,5 @@ notes:
   - "CLI wrappers are now Python (migrated from .sh 2026-01)"
   - "All python scripts need explicit python3"
   - "Agent shortcuts (.sh) still work for convenience"
+  - "Roles moved from ~/.claude/agents.json to ai_general/prompts/roles/ (2026-01-12)"
+  - "New roles: peer_review, tester added alongside librarian, dev_lead, custodian, ops"

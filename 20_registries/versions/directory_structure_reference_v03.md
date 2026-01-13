@@ -112,6 +112,10 @@ ai_claude/
 **Contains:**
 ```
 ai_general/
+├── apps/                     # Shared apps and MCP servers
+│   └── mcps/
+│       └── cli-agent/        # CLI agent launcher MCP server
+│
 ├── data/                     # Schemas and shared data structures
 │   ├── schema_chat_history_v01.yaml
 │   └── schema_chat_index_v01.yaml
@@ -137,20 +141,24 @@ ai_general/
 │   └── persona_modeling/
 │
 ├── prompts/                  # Reusable prompt library
-│   ├── exported/
-│   │   └── promptblaze_export_YYYYMMDD.json
-│   ├── group_architecture_and_design/
-│   ├── group_code_development/
-│   │   ├── prompt_generate_functions_with_test.md
-│   │   ├── prompt_refactor_for_maintainability.md
-│   │   └── prompt_regex_pattern_builder.md
-│   ├── group_code_review/
-│   ├── group_debugging_and_performance/
-│   ├── group_learning_and_education/
-│   ├── group_lifestyle_health/
-│   ├── group_prompt_creation/
-│   └── imported/
-│       └── promptblaze_import_YYYYMMDD.json
+│   ├── roles/                # Role definitions for CLI agents
+│   │   ├── manifest.yml      # Role registry
+│   │   ├── custodian/
+│   │   ├── dev_lead/
+│   │   ├── librarian/
+│   │   ├── ops/
+│   │   ├── peer_review/
+│   │   └── tester/
+│   │       ├── role.yml      # Metadata, context_files, duties, ownership
+│   │       └── prompt.md     # Role-specific bootstrap prompt
+│   ├── platforms/            # Platform-specific prompts
+│   │   ├── claude.md
+│   │   ├── codex.md
+│   │   └── gemini.md
+│   ├── global.md             # Universal bootstrap instructions
+│   ├── tasking.md            # Task execution protocol
+│   └── archive/              # Deprecated prompts (legacy storage)
+│       └── agent.{role}.md   # Old agent role prompts (deprecated, moved here)
 │
 ├── research_and_reports/     # Research outputs
 │   ├── ai_ethics/
@@ -165,6 +173,8 @@ ai_general/
     ├── spec_footer_v02.md
     └── spec_message_insert_v01.md
 ```
+
+Legacy `agent.{role}.md` prompt files are deprecated and relocated to `ai_general/prompts/archive/`.
 
 ### ai_memories/
 **Purpose:** Central memory processing pipeline - converts chat exports to searchable, indexed memories  

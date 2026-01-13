@@ -1,8 +1,8 @@
 # AI Coordination Systems Inventory
 
-**Version:** 1.1  
-**Created:** 2025-11-27  
-**Updated:** 2026-01-06  
+**Version:** 1.2
+**Created:** 2025-11-27
+**Updated:** 2026-01-12
 **Status:** Active  
 **Location:** `ai_general/todos/completed/todo_0001_ai_orchestration_overview/`
 
@@ -159,6 +159,42 @@
 
 ---
 
+## 7. CLI Agent MCP Server
+
+**Location:** `ai_general/apps/mcps/cli-agent/`
+**Config:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+**Purpose:** MCP server for Desktop Claude to launch and manage CLI agent instances.
+
+**Present State:**
+- Python-based MCP server using FastMCP
+- Tools: launch_agent, launch_librarian, launch_dev_lead, launch_custodian, launch_ops, launch_peer_review, launch_tester
+- Session management: list_sessions, get_status, kill, attach, send_keys
+- Role-based bootstrapping from `ai_general/prompts/roles/`
+
+**Bootstrap Hierarchy:**
+1. `ai_general/prompts/global.md` (always loaded)
+2. `ai_general/prompts/platforms/{platform}.md` (claude.md, codex.md, gemini.md)
+3. `ai_general/prompts/roles/{role}/role.yml` → loads context_files
+4. `ai_general/prompts/tasking.md` (if task mode enabled)
+
+**Role Definitions:**
+Each role has `role.yml` (context_files, duties, ownership) and `prompt.md`:
+- librarian: ai_memories/ curator, chat history pipeline
+- dev_lead: development coordination, task creation
+- custodian: repository structure, file hygiene
+- ops: CLI coordination, task execution
+- peer_review: code/design review, QA (NEW)
+- tester: validation, verification (NEW)
+
+**Known Issues:**
+- [ ] Hot reload of role definitions not implemented
+- [ ] No health check endpoint
+
+**Test Coverage:** Manual testing only
+
+---
+
 ## Summary Metrics
 
 | System | Status | Test Coverage | Priority Issues |
@@ -169,6 +205,7 @@
 | Pulse System | Operational | Manual | 3 |
 | Notification System | Operational | None | 3 |
 | Codex CLI | Underutilized | Minimal | 2 |
+| CLI Agent MCP | Operational | Manual | 2 |
 
 ---
 
@@ -209,5 +246,5 @@
 
 ---
 
-**Document Status:** v1.0 - Ready for review
-**Last Updated:** 2025-11-27
+**Document Status:** v1.2 - Updated for bootstrap refactor
+**Last Updated:** 2026-01-12

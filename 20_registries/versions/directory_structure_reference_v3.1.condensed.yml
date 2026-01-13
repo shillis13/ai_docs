@@ -1,4 +1,4 @@
-meta: {v: 3.0, updated: 2026-01-01, arch: "multi-repo AI-centric", status: active}
+meta: {v: 3.1, updated: 2026-01-12, arch: "multi-repo AI-centric", status: active}
 
 external:
   repo: https://github.com/shillis13/ai_docs
@@ -44,14 +44,25 @@ top_level:
   ai_general:
     purpose: shared resources, docs, tools
     subdirs:
+      apps/: MCP servers and applications
       data/: schemas, shared data structures
       docs/: architecture, concept docs
       instructions/: universal instructions (versioned)
       projects/: project-specific docs
-      prompts/: reusable prompt library
+      prompts/: CLI bootstrap prompts and role definitions
       research_and_reports/: research outputs
       scripts/: shared automation
       specs/: technical specifications
+    apps_detail:
+      mcps/: MCP servers (task-coord/, cli-agent/)
+    prompts_detail:
+      global.md: always loaded by CLI agents
+      platforms/: platform-specific (claude.md, codex.md, gemini.md)
+      roles/: role definitions (librarian/, dev_lead/, custodian/, ops/, peer_review/, tester/)
+      tasking.md: loaded when -T or task mode enabled
+    role_structure:
+      each_role: "{role}/role.yml (context_files, duties, ownership), {role}/prompt.md"
+      manifest: roles/manifest.yml (role registry)
 
   ai_memories:
     purpose: central memory pipeline - exports → indexed memories
@@ -105,6 +116,9 @@ principles:
   - shared_resources: common in ai_general/ (instructions, specs, schemas)
   - central_pipeline: ai_memories/ processes from ANY AI, condensed ON-DEMAND
   - communication: ai_comms/ enables mailboxes, tasks, waves, atomic counters
+
+deprecated:
+  "~/.claude/agents.json": {replaced_by: "ai_general/prompts/roles/", reason: "role definitions now in versioned repo with structured YAML"}
 
 related:
   - ai_general/docs/10_architecture/architecture_overview.latest.md
