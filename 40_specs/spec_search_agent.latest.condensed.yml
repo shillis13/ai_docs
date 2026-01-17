@@ -1,0 +1,63 @@
+metadata:
+  title: Search Agent Specification
+  version: 2.5.0
+  date: 2026-01-16
+  status: active
+  source: spec_search_agent.latest.md
+
+summary: |
+  Gemini-based dual-mode search over 4+ year conversation archive (500 chats, 4700 chunks).
+  SEARCH mode: curated results with metadata. ANSWER mode: editorial synthesis with citations.
+  4-layer cascade: topics → topics+synonyms → content → content+synonyms. All case-insensitive.
+
+modes:
+  search:
+    trigger: "find", "search", "list", "show me"
+    output: Curated result list with Why Relevant, Patterns Noticed, To Go Deeper
+    limit: 5-10 results max
+  answer:
+    trigger: Questions ("what", "why", "how", "explain")
+    output: Editorial synthesis with [N] inline citations, Summary, Details, Sources
+    requirement: Every claim cited with source + token size
+
+search_cascade:
+  layer_1: Topics index - original terms
+  layer_2: Topics index - with synonyms (if <3 results)
+  layer_3: Content search - original terms
+  layer_4: Content search - with synonyms
+  rule: Case-insensitive always. Never stop at Layer 1 for "no results".
+
+indexes:
+  all_topics.latest.csv: 6600 rows, topic→chat mapping
+  chat_index.latest.csv: 500 chats, metadata (messages, signals)
+  condensed_index.latest.csv: 4700 chunks, file paths + sizes
+
+synonyms:
+  cryptocurrency: crypto, bitcoin, ethereum, blockchain
+  ChatGPT: chatgpt, chatty, gpt
+  memory: mem, slot, persistence
+  problem: issue, error, bug, failure
+
+mcp_function:
+  name: search_knowledge_base
+  params:
+    - query: str
+    - mode: search|answer|auto (default: auto)
+    - use_synonyms: bool (default: true)
+    - max_results: int (default: 10)
+    - granularity: chat|chunk (default: chat)
+    - max_tokens: int|None (budget constraint)
+    - output_file: bool
+    - retrieve_artifacts: bool
+
+test_results:
+  v2.5_chatty_test:
+    query: "What problems have we had with Chatty?"
+    mode: ANSWER
+    result: 5 problem categories, 9 citations, correct inference (Chatty=ChatGPT)
+    improvement: v2 had wrong inference (thought browser extension)
+
+files:
+  prompt: ai_comms/gemini_cli/prompts/search_agent_v2.5.md
+  spec: ai_general/docs/40_specs/spec_search_agent.latest.md
+  test_output: ai_comms/gemini_cli/tasks/outputs/answer_test_chatty_problems_20260116.md

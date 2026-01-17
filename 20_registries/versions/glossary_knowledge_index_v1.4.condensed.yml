@@ -1,4 +1,4 @@
-meta: {v: 1.4.0, schema: schema_knowledge_glossary_v1, generated: 2026-01-12, terms: 69, files: 20}
+meta: {v: 1.5.0, schema: schema_knowledge_glossary_v1, generated: 2026-01-16, terms: 73, files: 21}
 
 purpose: Solves bootstrap problem - Claude needs to know what's IN files to know WHEN to load them. Provides term recognition without full doc loading.
 
@@ -41,6 +41,10 @@ terms:
     episodic_memory_plugin: {aliases: [episodic-memory, conversation memory], def: "Semantic search across past Claude Code conversations. Persistent memory between sessions", source: superpowers-marketplace}
     desktop_skills: {aliases: [claude.ai skills, upload skills, SKILL.md], def: "Model-invoked instruction packages for Claude Desktop. Auto-activate based on context. Structure: SKILL.md + optional scripts/references/assets/", ref: claude_desktop_skills_reference.latest.yml, install: "Settings > Capabilities > Skills > + Add", note: "Different from Claude Code plugins"}
     csv_data_summarizer: {aliases: [csv analyzer], def: "Desktop skill - auto-analyzes CSV uploads with stats & visualizations. No prompting needed", type: community_skill}
+    search_agent: {aliases: [knowledge search, conversation search], def: "Gemini-based dual-mode search over 4yr conversation archive. SEARCH mode returns curated results, ANSWER mode synthesizes editorial with citations. 4-layer cascade: topics→synonyms→content→content+synonyms", ref: spec_search_agent.latest.condensed.yml, prompt: ai_comms/gemini_cli/prompts/search_agent_v2.5.md, version: "2.5"}
+    search_cascade: {aliases: [4-layer search], def: "Search fallback: L1 topics → L2 topics+synonyms → L3 content → L4 content+synonyms. All case-insensitive. Never stop at L1 for 'no results'", ref: spec_search_agent.latest.condensed.yml}
+    answer_mode: {aliases: [editorial mode], def: "Search agent mode for questions - synthesizes editorial answer with [N] inline citations + Sources section + token sizes. Triggers: what, why, how, explain", ref: spec_search_agent.latest.condensed.yml}
+    search_mode: {aliases: [results mode], def: "Search agent mode for discovery - returns curated list with Why Relevant, Patterns Noticed, To Go Deeper. Triggers: find, search, list, show", ref: spec_search_agent.latest.condensed.yml}
     cli_agent_mcp: {aliases: [cli-agent MCP, CLI agent MCP server], def: "MCP server for launching and managing CLI agents", path: ai_general/apps/mcps/cli-agent/, note: "entrypoint for spinning up CLI workers"}
 
   concept:
@@ -80,6 +84,10 @@ quick_lookup:
   - {term: Episodic Memory, domain: tools, note: "semantic search past Claude Code sessions"}
   - {term: Desktop Skills, domain: tools, ref: claude_desktop_skills_reference.latest.yml, note: "SKILL.md packages for claude.ai, auto-invoke"}
   - {term: CSV Data Summarizer, domain: tools, note: "desktop skill - auto CSV analysis"}
+  - {term: Search Agent, domain: tools, ref: spec_search_agent.latest.condensed.yml, note: "dual-mode (SEARCH/ANSWER) over conversation archive"}
+  - {term: Search Cascade, domain: tools, note: "4-layer: topics → synonyms → content → content+synonyms"}
+  - {term: Answer Mode, domain: tools, note: "search agent mode for questions - editorial + citations"}
+  - {term: Search Mode, domain: tools, note: "search agent mode for discovery - curated results"}
   - {term: AT Self-Wake, domain: protocol, ref: protocol_at_self_wake.condensed.yml}
   - {term: Claim Prefix, domain: protocol, ref: protocol_taskCoordination.condensed.yml}
   - {term: Bootstrap Problem, domain: concept, ref: schema_knowledge_glossary_v1.yml}

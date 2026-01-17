@@ -1,0 +1,201 @@
+---
+metadata:
+  title: Research Orchestration Pipeline
+  version: 2.0.0
+  type: playbook
+  created: 2025-01-17
+  author: Claude + PianoMan
+  status: active
+  
+summary: |
+  Single-orchestrator pattern for context-heavy research tasks.
+  One agent spawns lightweight workers for search and extraction,
+  then synthesizes the results. Handles feedback loops internally.
+  
+when_to_use:
+  triggers:
+    - Research query would exhaust single instance context
+    - Need to search across many files (>10)
+    - Complex topic requiring evidence gathering before synthesis
+    - Historical analysis across chat archives
+  examples:
+    - "Analyze user's relationship dynamics with AIs over time"
+    - "How has the coordination system evolved since v1?"
+    - "What decisions led to the current architecture?"
+    
+architecture:
+  pattern: single-orchestrator-multiple-workers
+  
+  flow: |
+    [Requester] 
+        │
+        ▼
+    [Orchestrator/Synthesizer]
+        │
+        ├─► spawn ─► [Search Worker] ─► candidates.yml
+        │                                    │
+        │◄──────────────── await ────────────┘
+        │
+        ├─► spawn ─► [Extract Worker] ─► evidence.yml
+        │                                    │
+        │◄──────────────── await ────────────┘
+        │
+        ├─► evaluate evidence
+        │   └─► if gaps: loop back to search/extract
+        │
+        ├─► synthesize answer (in own context)
+        │
+        └─► deliver to requester
+  
+  why_single_orchestrator:
+    - One point of control for entire pipeline
+    - Feedback loops are internal decisions
+    - Synthesizer sees all evidence holistically
+    - No external babysitting required
+    - Cleaner failure handling
+    
+  worker_design:
+    - Lightweight single-purpose instances
+    - Write results to shared task directory
+    - Signal completion via messages MCP
+    - Self-terminate after phase completes
+    - Never hold state - everything goes to files
+
+prerequisites:
+  mcps_required:
+    - cli-agent (spawn workers)
+    - knowledge-search (search the archive)
+    - messages (completion signals, final delivery)
+    - Desktop Commander or filesystem (read/write task dir)
+  
+  directory_structure:
+    task_dir: /ai_comms/research_tasks/{task_id}/
+    files:
+      - query.yml: Original request
+      - candidates.yml: Search worker output
+      - evidence.yml: Extract worker output
+      - synthesis.yml: Final orchestrator output
+      - state.yml: Pipeline tracking (optional)
+
+steps:
+  1_submit_task:
+    action: Generate task from template
+    tool: task-coord:gen_task
+    params:
+      platform: gemini_cli
+      template: research_orchestrator
+      params:
+        query: "The research question"
+        requester: "desktop_claude"
+      execute: true
+    result: Orchestrator instance launched
+    
+  2_orchestrator_runs:
+    action: Orchestrator handles internally
+    automatic: true
+    phases:
+      - Parse query, create task directory
+      - Spawn search worker, await candidates.yml
+      - Spawn extract worker, await evidence.yml
+      - Evaluate evidence, loop if gaps
+      - Synthesize answer
+      - Deliver via messages MCP
+      
+  3_receive_results:
+    action: Check for completion
+    tool: messages:list_direct
+    params:
+      recipient: desktop_claude
+    result: synthesis.yml path in message
+
+integration_with_task_coord:
+  current_state: |
+    task-coord MCP has templates and can launch agents.
+    Research orchestration should be a first-class playbook.
+    
+  required_changes:
+    playbook_definition:
+      name: research_orchestration
+      description: "Multi-stage research with single orchestrator"
+      start_action:
+        tool: cli-agent:launch_librarian
+        params:
+          platform: gemini_cli
+          prompt: "{{template:research_orchestrator}}"
+      params:
+        - name: query
+          required: true
+          description: "The research question"
+        - name: requester
+          default: desktop_claude
+          description: "Who receives results"
+          
+    template_location: |
+      ai_comms/staged/orchestration/template_research_orchestrator.v2.yml
+      
+    start_playbook_behavior: |
+      1. Generate unique task_id
+      2. Create task directory
+      3. Render template with params
+      4. Launch single orchestrator instance
+      5. Return task_id for tracking
+      
+    no_external_monitoring: |
+      Unlike traditional multi-stage playbooks, task-coord does NOT:
+      - Monitor intermediate states
+      - Manage transitions between stages
+      - Handle feedback loops
+      
+      The orchestrator owns all of that internally.
+      task-coord just launches and awaits final message.
+
+examples:
+  basic_research:
+    request: |
+      Analyze how the CLI coordination system has evolved
+      from v1 through v4.
+    command: |
+      task-coord:start_playbook
+        name: research_orchestration
+        params:
+          query: "Evolution of CLI coordination system v1 through v4"
+          requester: desktop_claude
+    result: |
+      Orchestrator spawns, searches for coordination docs,
+      extracts relevant history, synthesizes timeline,
+      delivers summary to desktop_claude.
+      
+  relationship_analysis:
+    request: |
+      Compare relationship dynamics between user and Claude
+      versus user and ChatGPT over time.
+    command: |
+      task-coord:start_playbook
+        name: research_orchestration
+        params:
+          query: "Compare relationship dynamics: user-Claude vs user-ChatGPT, evolution over time"
+          requester: desktop_claude
+
+common_issues:
+  worker_context_exhaustion:
+    symptom: Extract worker fails partway through
+    cause: Too many/large candidates
+    fix: Orchestrator should limit candidates to top 15-20
+    
+  orchestrator_context_fills:
+    symptom: Can't synthesize all evidence
+    cause: Evidence.yml too large
+    fix: Workers should pre-categorize, orchestrator reads by category
+    
+  infinite_loop:
+    symptom: Keeps spawning search workers
+    cause: No iteration limit or always finding gaps
+    fix: Hard limit of 3 iterations enforced in template
+
+revision_history:
+  - version: 2.0.0
+    date: 2025-01-17
+    changes: Redesigned as single-orchestrator pattern. Orchestrator spawns workers internally rather than external multi-stage coordination.
+  - version: 1.0.0
+    date: 2025-01-17
+    changes: Initial three-stage external coordination design (superseded)

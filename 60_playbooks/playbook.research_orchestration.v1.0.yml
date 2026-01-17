@@ -1,0 +1,219 @@
+metadata:
+  title: Research Orchestration Playbook
+  version: 1.0.0
+  created: 2025-01-17
+  author: Claude Desktop + PianoMan
+  status: active
+  tags: [orchestration, research, librarian, multi-stage, context-management]
+
+summary: |
+  Three-stage pipeline for research tasks that exceed single-instance context limits.
+  Separates search/filter, extract/sort, and synthesize into independent instances
+  with file-based state handoff. Supports feedback loops for iterative refinement.
+
+when_to_use:
+  - Research queries likely to touch many files (>20 candidates)
+  - Analysis requiring extensive evidence gathering before synthesis
+  - Questions spanning multiple conversation archives or large corpora
+  - Any task where single-instance context exhaustion is likely
+
+when_not_to_use:
+  - Simple lookups with <10 expected source files
+  - Questions answerable from a single document
+  - Time-critical queries where pipeline latency is unacceptable
+
+architecture:
+  overview: |
+    Three Gemini instances in pipeline, communicating via files.
+    Each stage has bounded context load, enabling full corpus searches
+    without exhaustion before synthesis.
+    
+  stages:
+    search_filter:
+      instance: Gemini A
+      role: Discovery and candidate identification
+      input: Original query
+      output: candidates.yml (file list with metadata)
+      context_load: LOW - metadata and snippets only
+      tools: [knowledge-search, filesystem read for filtering]
+      responsibilities:
+        - Parse query into search terms
+        - Execute searches across relevant archives
+        - Read files only enough to assess relevance (first 50-100 lines)
+        - Estimate token counts from file sizes
+        - Score relevance, filter noise
+        - Output ranked candidate list
+        
+    extract_sort:
+      instance: Gemini B
+      role: Evidence extraction and organization
+      input: candidates.yml
+      output: evidence.yml
+      context_load: MEDIUM - reads files but distills immediately
+      tools: [filesystem read, write]
+      responsibilities:
+        - Read candidate files fully
+        - Extract relevant quotes/passages with citations
+        - Assess actual relevance (may differ from Stage 1 estimate)
+        - Sort evidence by relevance to original query
+        - Flag if additional searches needed (feedback to Stage 1)
+        - Write structured evidence file
+        
+    synthesize:
+      instance: Gemini C
+      role: Analysis and answer formation
+      input: evidence.yml
+      output: synthesis.yml + message to requester
+      context_load: LOW - pre-digested evidence only
+      tools: [filesystem read/write, messages MCP]
+      responsibilities:
+        - Review evidence holistically
+        - Identify patterns, contradictions, themes
+        - Form coherent answer/analysis
+        - Cite evidence appropriately
+        - Flag if evidence gaps exist (feedback to Stage 1 or 2)
+        - Deliver final output
+
+  feedback_loops:
+    stage2_to_stage1:
+      trigger: "Extract stage finds candidates were mis-scored or gaps exist"
+      mechanism: Write to feedback_log.yml with search refinement request
+      response: Stage 1 re-runs with adjusted criteria, appends to candidates.yml
+      
+    stage3_to_stage2:
+      trigger: "Synthesis needs deeper evidence on specific aspect"
+      mechanism: Write to feedback_log.yml with extraction request
+      response: Stage 2 re-reads specific files, appends to evidence.yml
+      
+    stage3_to_stage1:
+      trigger: "Synthesis identifies entirely new search angle needed"
+      mechanism: Write to feedback_log.yml with new query
+      response: Full pipeline re-run with new query, results merged
+
+file_structure:
+  base_path: /ai_comms/research_tasks/{task_id}/
+  files:
+    query.yml: |
+      Original research request with metadata
+    candidates.yml: |
+      Stage 1 output - file list with relevance scores, token estimates
+    evidence.yml: |
+      Stage 2 output - extracted quotes, citations, sorted by relevance
+    synthesis.yml: |
+      Stage 3 output - final analysis/answer
+    feedback_log.yml: |
+      Inter-stage requests for additional work
+    state.yml: |
+      Pipeline state tracking (which stages complete, retries, etc.)
+
+
+prerequisites:
+  infrastructure:
+    - Gemini CLI available and configured
+    - knowledge-search MCP accessible to CLI instances
+    - messages MCP for final delivery
+    - Task directory writable
+  knowledge:
+    - Understand corpus structure (ai_memories/, chat archives)
+    - Familiarity with YAML evidence format
+
+steps:
+  1_initiate:
+    action: Create task directory and query.yml
+    actor: Requester (Desktop Claude or user)
+    details: |
+      mkdir -p /ai_comms/research_tasks/{task_id}
+      Write query.yml with:
+        - original_query: The research question
+        - requester: Who to notify on completion
+        - priority: high/medium/low
+        - created: timestamp
+        - constraints: Any scope limits (date range, platforms, etc.)
+        
+  2_launch_search:
+    action: Launch Stage 1 (Search/Filter) instance
+    actor: Orchestrator
+    command: |
+      cli-agent:launch_librarian
+        platform: gemini_cli
+        prompt: [Use template_research_stage1_search.md]
+        context_files: [query.yml path]
+        
+  3_monitor_stage1:
+    action: Wait for candidates.yml creation
+    actor: Orchestrator
+    mechanism: Poll for file or await message
+    timeout: 10 minutes typical
+    
+  4_launch_extract:
+    action: Launch Stage 2 (Extract/Sort) instance  
+    actor: Orchestrator
+    trigger: candidates.yml exists and has entries
+    command: |
+      cli-agent:launch_librarian
+        platform: gemini_cli
+        prompt: [Use template_research_stage2_extract.md]
+        context_files: [query.yml, candidates.yml paths]
+        
+  5_monitor_stage2:
+    action: Wait for evidence.yml creation
+    actor: Orchestrator
+    mechanism: Poll for file or await message
+    timeout: 15 minutes typical (reads more content)
+    
+  6_launch_synthesize:
+    action: Launch Stage 3 (Synthesize) instance
+    actor: Orchestrator
+    trigger: evidence.yml exists and has entries
+    command: |
+      cli-agent:launch_librarian
+        platform: gemini_cli
+        prompt: [Use template_research_stage3_synthesize.md]
+        context_files: [query.yml, evidence.yml paths]
+        
+  7_handle_feedback:
+    action: Process any feedback requests
+    actor: Orchestrator
+    mechanism: |
+      Watch feedback_log.yml for new entries
+      If Stage 2 requests more search: re-run Stage 1 with refinement
+      If Stage 3 requests more evidence: re-run Stage 2 on specific files
+      If Stage 3 requests new angle: full pipeline with new query
+      
+  8_deliver:
+    action: Final delivery
+    actor: Stage 3 instance
+    mechanism: |
+      Write synthesis.yml
+      Send message to requester via messages MCP
+      Update state.yml to completed
+
+common_issues:
+  stage1_no_results:
+    symptom: candidates.yml empty or missing
+    causes: [Bad search terms, corpus doesn't contain relevant data]
+    resolution: Review query, try broader terms, verify corpus coverage
+    
+  stage2_context_exhaustion:
+    symptom: Gemini hits token limit during extraction
+    causes: [Too many candidates, files too large]
+    resolution: |
+      Reduce batch size in candidates.yml
+      Have Stage 2 process in multiple passes
+      Filter candidates more aggressively in Stage 1
+      
+  feedback_loop_infinite:
+    symptom: Stages keep requesting more from each other
+    causes: [Query too broad, evidence genuinely sparse]
+    resolution: |
+      Set max_iterations in state.yml
+      Accept partial answer after N iterations
+      Escalate to human for query refinement
+
+examples:
+  relationship_analysis:
+    query: "Compare user's relationships with Claude vs ChatGPT at peak intimacy"
+    stage1_searches: [friend, partner, intimacy, trust, feelings, love, relationship]
+    stage1_output: ~50 candidate files across both archives
+    stage2_extracts: Key quotes about relationship nature, turning points, emotional exchanges
+    stage3_synthesizes: Comparative analysis with evidence citations

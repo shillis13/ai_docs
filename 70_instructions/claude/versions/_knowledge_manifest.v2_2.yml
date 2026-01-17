@@ -365,6 +365,18 @@ load_sequence:
       tokens: ~605
     - pointer: REF:ai_general/docs/40_specs/spec_response_footer.latest.yml
       tokens: ~967
+    - pointer: REF:ai_general/docs/40_specs/spec_search_agent.latest.condensed.yml
+      tokens: ~400
+      triggers: [search agent, knowledge search, conversation search, ANSWER mode, SEARCH mode, 4-layer cascade]
+      abstract: |
+        Gemini-based dual-mode search over 4yr conversation archive (500 chats, 4700 chunks).
+        SEARCH mode: curated results with Why Relevant, Patterns Noticed.
+        ANSWER mode: editorial synthesis with inline citations + sources.
+        4-layer cascade: topics → synonyms → content → content+synonyms.
+      answers:
+        - "How do I search the conversation archive?"
+        - "What's the search agent?"
+        - "How does ANSWER mode work?"
     - pointer: REF:ai_general/docs/50_schemas/SCHEMA_EVOLUTION_GUIDE.latest.md
       tokens: ~3008
     - pointer: REF:ai_general/docs/50_schemas/schema_index_files.latest.yml
