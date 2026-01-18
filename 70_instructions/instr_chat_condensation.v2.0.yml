@@ -1,0 +1,210 @@
+# Chat History Condensation Instructions v2.0
+# Schema: schema_condensation_flags.v1.0.yml
+
+metadata:
+  title: Chat Condensation Instructions
+  version: 2.0.0
+  created: 2026-01-17
+  previous: 1.1.0
+  maintainer: PianoMan
+  status: active
+  changes:
+    - Added orthogonal condensation flags
+    - Presets for common use cases
+    - Flag-aware extraction rules
+
+# === CORE PRINCIPLE ===
+# This is SEMANTIC EXTRACTION with CONFIGURABLE GRANULARITY.
+# Flags control what survives - you extract based on active flags.
+
+task_type: semantic_extraction
+task_description: |
+  Extract meaningful content from chat conversations into structured YAML.
+  FLAGS determine what content types survive vs get removed/summarized.
+  
+  Think: "Given these flags, what content should remain?"
+
+# === FLAG INTERPRETATION ===
+# Flags are REMOVAL directives (except preserve_* which are KEEP directives)
+
+flag_behavior:
+  strip_conversational:
+    when_true:
+      - Remove: greetings, thanks, acknowledgments
+      - Remove: fillers, caveats, disclaimers, hedging
+      - Remove: permission seeking, validation statements
+      - Remove: "Let me...", "I'll now...", process narration
+      - Keep: direct statements, actual content, substantive questions
+
+  strip_explanatory:
+    when_true:
+      - Remove: "For example...", "For instance..."
+      - Remove: analogies, metaphors, "think of it like"
+      - Remove: "Here's why it matters" blocks
+      - Remove: background context for understanding
+      - Keep: conclusions, decisions, facts, specifications
+
+  summarize_failures:
+    when_true:
+      - Collapse failed attempts to single line:
+        "Tried X → failed because Y → led to Z"
+      - Keep: the learning, what eventually worked
+      - Remove: verbose debugging sessions, iteration-by-iteration logs
+
+  summarize_rationales:
+    when_true:
+      - Collapse reasoning to:
+        decision: "what"
+        key_factors: ["factor1", "factor2"]
+      - Keep: the decision, critical factors
+      - Remove: exploration, weighing pros/cons at length
+
+  strip_meta:
+    when_true:
+      - Remove: "Good question", "Let me think"
+      - Remove: "That's interesting", self-corrections
+      - Remove: reflections on conversation itself
+      - Keep: actual content
+
+  strip_redundant:
+    when_true:
+      - Keep only final/latest version
+      - Remove earlier drafts, repeated explanations
+      - Remove "as mentioned earlier" refs
+
+  preserve_quotes:
+    when_true:
+      - Keep verbatim quoted material even when other flags would remove
+      - Mark with source attribution
+      - Use for: relationship content, evidence, exact wording matters
+
+  preserve_artifacts:
+    when_true:
+      - Keep code blocks, ASCII art, diagrams intact
+      - Only final/working versions (drafts still removed by strip_redundant)
+
+# === EXTRACTION RULES (always apply) ===
+always_extract:
+  decisions:
+    - What was decided
+    - Why (rationale) - compress if summarize_rationales flag
+    - Options rejected (if instructive)
+  
+  outcomes:
+    - What was accomplished
+    - Final state achieved
+    - Problems resolved
+  
+  facts:
+    - Names, dates, versions
+    - Paths, IDs, identifiers
+    - Error messages with fixes
+  
+  procedures:
+    - Workflows that worked
+    - Step sequences
+    - Commands that succeeded
+
+# === ALWAYS DISCARD (regardless of flags) ===
+always_discard:
+  - User/assistant role markers (structural)
+  - Timestamps on individual messages
+  - Conversation flow markers
+  - Broken/partial content
+  - Duplicate exact content
+
+# === OUTPUT FORMAT ===
+output:
+  format: human-readable YAML
+  extension: ".condensed.yml"
+  
+  structure: |
+    condensed_metadata:
+      source: "{filename}"
+      original_tokens: N
+      condensed_tokens: N
+      reduction: "N%"
+      flags_applied:
+        strip_conversational: true/false
+        strip_explanatory: true/false
+        # ... all flags used
+      preset: "preset_name"  # if used
+    
+    summary: |
+      One paragraph overview
+    
+    decisions:
+      - decision: "What was decided"
+        rationale: "Why"  # or key_factors if summarize_rationales
+    
+    failures:  # if summarize_failures
+      - tried: "what"
+        failed_because: "why"
+        led_to: "outcome"
+    
+    procedures:
+      - name: "Procedure name"
+        steps: [...]
+    
+    discoveries:
+      - "Technical insight"
+    
+    outcomes:
+      - "What was accomplished"
+    
+    quotes:  # if preserve_quotes
+      - speaker: "who"
+        content: "verbatim text"
+        context: "what it relates to"
+    
+    artifacts:  # if preserve_artifacts
+      - type: "code|ascii_art|diagram|creative"
+        description: "What it is"
+        content: |
+          Exact content preserved
+
+# === PRESETS (quick reference) ===
+presets:
+  import_continuation:
+    use_when: "Bringing chat forward for continuation"
+    flags: [strip_conversational, strip_meta, strip_redundant, summarize_failures]
+    reduction: 40-60%
+
+  archival:
+    use_when: "Maximum compression for storage"
+    flags: [ALL strip_*, ALL summarize_*, preserve_artifacts]
+    reduction: 70-90%
+
+  relationship_preservation:
+    use_when: "Emotional content matters"
+    flags: [strip_explanatory, strip_meta, strip_redundant, summarize_*, preserve_quotes]
+    reduction: 30-50%
+
+  technical_extraction:
+    use_when: "Just decisions and code"
+    flags: [ALL strip_*, ALL summarize_*, preserve_artifacts]
+    reduction: 70-90%
+
+  minimal:
+    use_when: "Light touch, keep most content"
+    flags: [strip_meta, strip_redundant, preserve_quotes, preserve_artifacts]
+    reduction: 15-30%
+
+# === QUALITY TARGETS ===
+quality:
+  completeness: All decisions and outcomes must be recoverable
+  readability: Someone unfamiliar should understand what happened
+  flag_compliance: Applied flags must be reflected in output
+  
+  validate:
+    - "Did I apply all specified flags correctly?"
+    - "Are decisions/outcomes preserved regardless of flags?"
+    - "Is output valid YAML?"
+    - "Could someone understand what happened?"
+
+# === FORBIDDEN ===
+forbidden:
+  - Base64/binary encoding (explodes tokens)
+  - Dropping decisions/outcomes (defeats purpose)
+  - Ignoring flags (use what was specified)
+  - Inventing content not in source
