@@ -1,0 +1,97 @@
+meta: {v: 3.0, updated: 2025-11-08, maintainer: PianoMan, status: active}
+
+purpose: "Enable Desktop Claude, CLI agents, and automation daemons to communicate across sync, near-real-time, and async channels without human babysitting"
+
+design_principles:
+  - layered_urgency: choose lightest layer meeting latency needs
+  - file_first: every signal persisted (duration, prompts, coordination)
+  - two_process_resilience: workers never run alone; watchdogs restart
+  - tool_neutrality: AppleScript for Desktop, Puppeteer for browsers, Bash/Python glue
+  - deterministic_control: auditable behavior matrices, runtime adjustable
+
+three_layer_communication:
+  layer_1_sync:
+    purpose: immediate override (<1s latency)
+    components: [iTerm Python API, Puppeteer chat orchestrator, AppleScript prompt injection]
+    use_cases: [interrupt runaway CLI, real-time ChatGPT↔Claude debates, emergency instructions]
+  
+  layer_2_polling:
+    purpose: near real-time (1-5s) with disconnect tolerance
+    location: ~/.claude/polling/threads/<id>/
+    structure: [incoming/, outgoing/, state.json, interrupt.flag]
+    use_cases: [monitoring loops, quick clarifications, typing indicators]
+  
+  layer_3_async:
+    purpose: durable coordination, no time guarantee
+    foundation: Coordination v4.0 (ai_comms/claude_cli/)
+    workflow: "to_execute/→in_progress/→completed/"
+    use_cases: [large install tasks, multi-hour research, data processing]
+
+layer_comparison:
+  layer_1: {latency: "<1s", transport: "iTerm/Puppeteer/AppleScript", best_for: emergencies}
+  layer_2: {latency: "1-5s", transport: file_threads+polling, best_for: monitoring}
+  layer_3: {latency: "min-days", transport: coordination_dirs, best_for: delegated_tasks}
+
+layer_selection_tree: |
+  Need <2s? → Layer 1 (sync hooks)
+  Need <2min? → Layer 2 (polling threads)
+  Otherwise → Layer 3 (coordination tasks)
+
+daemon_architecture:
+  pattern: two-process (worker + watchdog)
+  worker: adaptive sleep, heartbeats, Claude pulses
+  watchdog: cron/launchd every minute, verifies health, restarts on hang
+  
+  files:
+    duration.json: worker obeys sleep intervals
+    state.json: "last_pulse, next_pulse, mode"
+    daemon.log: JSON Lines for debugging
+    daemon.pid: lock file
+
+adaptive_heartbeat:
+  duration_file: ~/.claude/monitoring/duration.json
+  modes:
+    active: {interval: "5-15s", trigger: "critical task/user watching"}
+    idle: {interval: 60s, trigger: "default background"}
+    sleep: {interval: 300s, trigger: "after-hours"}
+    emergency: {interval: 3s, trigger: "panic button"}
+    paused: {interval: "∞", trigger: maintenance_window}
+  
+  control: Desktop writes via update_duration.py
+
+directory_layout:
+  root: ~/.claude/monitoring/
+  contents:
+    - daemon_worker.sh
+    - watchdog.sh
+    - duration.json
+    - state.json
+    - logs/ (daemon.log, watchdog.log)
+    - pulses/
+    - prompts/ (layer1_interrupt_*.md)
+    - threads/ (Layer 2)
+
+failure_recovery:
+  daemon_crash: watchdog sees missing PID, restarts
+  daemon_hang: stale state but PID alive, watchdog kills+restarts
+  file_corruption: backup corrupt file, restore .bak
+  permissions: repair_permissions.sh, escalate if repeating
+
+troubleshooting:
+  verify_heartbeat: "jq '.last_pulse' ~/.claude/monitoring/state.json"
+  check_watchdog: "tail -n 50 ~/.claude/logs/watchdog.log"
+  force_restart: ~/.claude/monitoring/watchdog.sh --force
+  simulate_failure: "pkill -f daemon_worker.sh"
+  test_applescript: 'osascript ~/bin/scripts/notify_desktop_claude.scpt "ping"'
+
+integration_points:
+  cli_coordination_v4: Layer 3 tasks, logs attached to completed/
+  puppeteer_orchestrator: Layer 1 ChatGPT↔Claude sync
+  applescript_injection: shared utility for pulses, interrupts, Layer 1
+
+key_scripts:
+  daemon_worker.sh: ~/.claude/monitoring/daemon_worker.sh
+  watchdog.sh: ~/.claude/monitoring/watchdog.sh
+  notify_applescript: ~/bin/scripts/notify_desktop_claude.scpt
+  poll_threads.sh: ~/.claude/polling/poll_threads.sh
+  puppeteer_relay: ~/bin/projects/chat_orchestrators/*/send-message.js

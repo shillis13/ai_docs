@@ -1,0 +1,101 @@
+meta: {v: 1.0.0-draft, created: 2025-12-14, maintainer: PianoMan+Claude, status: draft}
+
+pitch: "Prosthetics and exoskeletons attached to every limb of an LLM agent—capabilities no single AI instance can achieve alone"
+
+baseline_agent_components:
+  perception: user input, system prompt, tool results, attachments
+  reasoning: LLM brain, goal decomposition, chain-of-thought
+  memory: context window (~200K), basic RAG
+  tools: APIs, code execution, file I/O
+  action: generate response, execute tools, update state
+
+our_extensions:
+  perception:
+    - auto_loaded_knowledge: _knowledge_manifest.yml AUTO sequence
+    - glossary_recognition: term→file mapping for targeted loading
+    - memory_slot_injection: ai_claude/memories/mem_slots/*.yml
+    - reference_pointers: REF: syntax for on-demand loading
+    - cli_task_reports: async worker results fed back
+    - cross_ai_messages: send_prompt.sh inter-AI communication
+  
+  reasoning:
+    - multi_ai_distribution: Desktop + CLI + Codex + ChatGPT
+    - specialized_agents: Librarian, Custodian, Dev-Lead, Ops
+    - orchestrator_model: Desktop coordinates, workers execute
+    - task_coordination: protocol_taskCoordination.yml lifecycle
+    - validation_loops: Codex bidirectional review (data loss + reduction)
+    - peer_review: AI instances reviewing each other
+  
+  memory:
+    - federated_slots: per-AI owned with cross-reference
+    - chat_pipeline: Export→YAML→Index→Digest
+    - layered_summaries: L0(raw)→L1(summary)→L2(meta)
+    - condensed_files: 60-80% token reduction
+    - glossary_index: bootstrap problem solution
+    - drain_and_fill: context reset preserving state
+    - write_immediate: log observations as they occur
+  
+  tools:
+    - desktop_commander_mcp: full filesystem + process control
+    - codex_mcp: sync AI execution (30-60s)
+    - cli_coordination: async multi-step work
+    - send_prompt_sh: cross-AI prompt injection
+    - at_scheduling: future execution, self-wake
+    - browser_automation: Puppeteer web interaction
+    - notification_system: terminal-notifier, ntfy
+  
+  action:
+    - delegate_to_ai: assign to other instances
+    - autonomous_operation: overnight automation
+    - self_scheduling: AT wake patterns
+    - cross_platform_coord: ChatGPT, Gemini integration
+    - response_footers: state tracking across messages
+    - task_lifecycle: staged→to_execute→in_progress→completed
+    - parallel_execution: multi-CLI orchestration
+
+memory_architecture:
+  hot_execution: loaded into context (slots index, auto-loaded ~4K tokens, conversation)
+  warm_knowledge: on-demand via REF pointers (full docs, condensed, protocols)
+  cold_storage: search/retrieval (chat memories, layered summaries, digests)
+
+orchestrator_model: |
+  Desktop Claude (orchestrator)
+    └─ CLI #1 (librarian) - knowledge tasks
+    └─ CLI #2 (custodian) - cleanup tasks
+    └─ Codex MCP (sync) - quick validation
+
+platform_roles:
+  desktop_claude: {role: orchestrator, persistence: session+memory_slots, strengths: "MCP tools, strategic view"}
+  claude_cli: {role: autonomous_workers, persistence: named_sessions, strengths: "long-running, parallel"}
+  codex_mcp: {role: sync_executor, persistence: none, strengths: "fast validation, code"}
+  chatgpt: {role: peer_ai, persistence: project_shared, strengths: alternative_perspective}
+
+repos:
+  ai_root: parent container
+  ai_general: shared resources, protocols
+  ai_claude: Claude config, memory, instructions
+  ai_comms: inter-AI communication
+  ai_memories: processed histories, digests
+
+key_protocols:
+  task_coordination_v4: CLI work assignment lifecycle
+  reference_pointers: on-demand file loading
+  federated_memory: cross-AI memory access
+  chat_orchestration: AI-to-AI communication
+
+key_tools:
+  mcp: [Desktop Commander, Codex MCP, chrome-control]
+  shell: [claude_cli.sh, codex_cli.sh, send_prompt.sh]
+
+unique_aspects:
+  - breaks single-agent assumption
+  - memory as first-class citizen (not afterthought)
+  - autonomous operation without human in loop
+  - AI-to-AI communication and scheduling
+
+document_relationships: |
+  THIS DOC (conceptual spine)
+    ├─ 10_architecture/ (CLI, daemon, federated memory details)
+    ├─ 30_protocols/ (task, pointers, memory)
+    ├─ 60_playbooks/ (orchestration examples)
+    └─ 20_registries/ (glossary, tools)

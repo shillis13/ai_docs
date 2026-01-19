@@ -1,0 +1,131 @@
+meta: {v: 2.0, created: 2025-11-09, status: design_spec, protocol_ref: "Task Coordination Protocol v7.0"}
+
+core_insight: |
+  CLI instances can persist longer than Desktop sessions, orchestrate complex workflows,
+  ask questions, request permissions, and coordinate with other CLIs.
+
+hierarchy:
+  actual: |
+    Desktop Claude (strategic coordinator)
+        └─ CLI Orchestrator (tactical coordinator)
+             └─ CLI_A, CLI_B, CLI_C (specialized executors)
+  
+  protocol_v7: |
+    Desktop → CLI orchestrator → child orchestrators → executors
+    Naming: {parent}_t{N}.{M} for nested subtasks
+    Claiming: claimed_{timestamp}_{pid}_ prefix
+    Visibility: child@ symlinks in parent dirs
+
+communication_patterns:
+  simple_task:
+    flow: "Desktop→to_execute/→CLI claims→executes→completed/"
+    when: well-defined tasks with clear success criteria
+  
+  complex_with_questions:
+    flow: "Desktop→to_execute/→CLI→instant_messaging for blockers→Desktop answers→CLI continues→completed/"
+    when: blockers, questions, or permission requests likely
+  
+  multi_cli_orchestration:
+    flow: |
+      1. Desktop→CLI_Orch task
+      2. CLI_Orch breaks down, assigns to subordinate CLIs
+      3. Subordinates→CLI_Orch instant_messaging for questions
+      4. CLI_Orch escalates to Desktop if can't answer
+      5. CLI_Orch synthesizes results→completed/
+    when: parallel execution of complex multi-faceted work
+
+response_files:
+  ".response.md": milestone/intermediate updates inside task dir
+  ".completion.md": final deliverables in completed/{task_id}/
+
+symlink_pattern: "Parent creates child_task@ → ../../completed/{child_task}/ after child completes"
+
+non_response_communication:
+  types:
+    permission_request: {example: "Need sudo access", channel: instant_messaging, urgency: high}
+    blocker: {example: "API is down", channel: instant_messaging, urgency: high}
+    critical_question: {example: "Found 3 configs, which?", channel: instant_messaging, urgency: high}
+    progress_update: {example: "Stage 2/5 complete", channel: notifications, urgency: medium}
+    context_request: {example: "Need original requirements", channel: note_passing, urgency: low}
+    peer_review_hold: {example: "Ready for review at step 3", channel: tasks+notification, urgency: medium}
+
+monitoring_approaches:
+  passive_file_based:
+    method: "Desktop polls notifications/, instant_messaging/, in_progress/progress.md"
+    pros: [simple, works across transports]
+    cons: [polling delay, can't see terminal, no real-time]
+  
+  active_iterm_api:
+    method: "Watch CLI terminal in real-time, inject commands"
+    pros: [real-time, inject mid-execution, see actual activity]
+    cons: [macOS/iTerm specific, fragile parsing]
+  
+  hybrid:
+    method: "File-based primary, terminal supplementary"
+    structured: "CLI→IM questions, Desktop→IM answers"
+    terminal: "Monitor for progress, errors, stuck states"
+
+iterm_api_uses:
+  - inject_commands: send commands to specific sessions
+  - monitor_blockers: watch for ERROR/PERMISSION/QUESTION patterns
+  - immediate_response: seconds vs minutes polling delay
+
+cli_to_cli_communication:
+  when: CLI orchestrates multiple subordinate CLIs (no terminal access)
+  paths:
+    task_assignment: CLI_Orch→CLI_A/tasks/incoming/
+    questions: CLI_A→CLI_Orch/instant_messaging/
+    answers: CLI_Orch→CLI_A/instant_messaging/
+    results: CLI_A→CLI_Orch/task_responses/incoming/
+
+orchestrator_initialization:
+  1_establish_identity: "mkdir ai_comms/claude_cli_orch_{PID}/"
+  2_register_subordinates: "registry/subordinates.json with id, role, status"
+  3_establish_comm_paths: "bidirectional channels for each subordinate"
+  4_create_escalation: "path to Desktop instant_messaging"
+
+orchestrator_workflow:
+  - receive complex task from Desktop
+  - break into subtasks
+  - assign to appropriate subordinate CLI
+  - monitor subordinate instant_messaging for questions
+  - answer questions or escalate to Desktop
+  - collect responses from task_responses/
+  - synthesize results
+  - report to Desktop via completed/
+
+channel_decision_tree: |
+  Can CLI answer itself? → Proceed
+  Simple clarification + iTerm? → Terminal (seconds)
+  Simple clarification no iTerm? → instant_messaging
+  Complex discussion? → instant_messaging (preserves context)
+  Permission needed? → instant_messaging (audit trail)
+  Between CLIs? → instant_messaging (no terminal)
+  Urgent blocker? → Terminal + IM both
+  Progress update? → notifications (batched)
+  Rich context? → note_passing (formatted)
+
+checklists:
+  desktop_assigning:
+    - assess if task needs orchestration
+    - specify "establish comm paths" if yes
+    - monitor instant_messaging for questions
+    - monitor terminal for blockers (if iTerm)
+  
+  cli_starting:
+    - read task spec completely
+    - identify potential blockers
+    - initialize as orchestrator if needed
+    - establish comm paths to subordinates
+  
+  cli_on_blocker:
+    - can I solve this myself?
+    - if no, write to instant_messaging/{task_id}/
+    - include context, details, what needed
+    - wait for response (poll 30s)
+
+related_docs:
+  - ai_communication_architecture_latest.md
+  - ai_comms/README.md
+  - protocol_taskCoordination_latest.yml
+  - daemon_architecture_latest.md

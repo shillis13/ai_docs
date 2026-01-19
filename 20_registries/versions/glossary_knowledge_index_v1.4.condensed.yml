@@ -48,6 +48,7 @@ terms:
     cli_agent_mcp: {aliases: [cli-agent MCP, CLI agent MCP server], def: "MCP server for launching and managing CLI agents", path: ai_general/apps/mcps/cli-agent/, note: "entrypoint for spinning up CLI workers"}
 
   concept:
+    message_inserts: {aliases: [memory inserts, INSERT blocks, structured inserts], def: "Structured comment blocks (<<<INSERT type=X>>>...<<<END INSERT>>>) for machine-readable markers. Types: BOOKMARK, MEMORY, DECISION, QUESTION. Enables stateless platforms (Web/iOS) to mark observations for later harvest by Desktop Claude", ref: spec_message_insert.latest.condensed.yml, note: "primary persistence mechanism for platforms without filesystem access"}
     bootstrap_problem: {aliases: [context bootstrap], def: "challenge: need to know file contents to know when to load. Solved by glossary", ref: schema_knowledge_glossary_v1.yml}
     bootstrap_hierarchy: {aliases: [bootstrap order, load order], def: "CLI bootstrap sequence: global.md → platform/{platform}.md → role/{role}/role.yml context_files → tasking.md (if -T)", path: ai_general/prompts/, note: "replaced ~/.claude/agents.json approach"}
     context_files: {aliases: [context_files list, role context], def: "REF: pointers in role.yml defining what files to load for that role", note: "resolved at launch by cli_cli.py or cli-agent MCP"}
@@ -90,6 +91,7 @@ quick_lookup:
   - {term: Search Mode, domain: tools, note: "search agent mode for discovery - curated results"}
   - {term: AT Self-Wake, domain: protocol, ref: protocol_at_self_wake.condensed.yml}
   - {term: Claim Prefix, domain: protocol, ref: protocol_taskCoordination.condensed.yml}
+  - {term: Message Inserts, domain: concept, ref: spec_message_insert.latest.condensed.yml, note: "<<<INSERT>>> blocks for cross-platform persistence"}
   - {term: Bootstrap Problem, domain: concept, ref: schema_knowledge_glossary_v1.yml}
   - {term: Bootstrap Hierarchy, domain: concept, note: "global → platform → role → tasking load order"}
   - {term: Context Files, domain: concept, note: "REF: pointers in role.yml for role-specific loads"}
