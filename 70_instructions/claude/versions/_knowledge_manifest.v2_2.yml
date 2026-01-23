@@ -58,6 +58,9 @@ load_sequence:
     - pointer: REF:ai_general/docs/40_specs/spec_message_insert.latest.condensed.yml
       tokens: ~500
       purpose: "Message insertion protocol - behavioral spec for cross-chat communication. Affects how to handle inserted messages."
+    - pointer: REF:ai_general/docs/70_instructions/claude/instr_claude_use_of_ai_agents.latest.condensed.yml
+      tokens: ~900
+      purpose: "CLI/Codex delegation patterns - when/how to delegate, MCP tool control (--allowed-mcp-server-names)"
   topic:
     instruction: |
       When conversation touches triggers listed for a file, load that file before responding.
@@ -72,8 +75,6 @@ load_sequence:
       tokens: ~219
     - pointer: REF:ai_general/docs/70_instructions/claude/instr_claude_specific.latest.condensed.yml
       tokens: ~54
-    - pointer: REF:ai_general/docs/70_instructions/claude/instr_claude_use_of_ai_agents.latest.condensed.yml
-      tokens: ~808
     - pointer: REF:ai_general/docs/70_instructions/claude/instr_memory_slot_protocol.latest.condensed.yml
       tokens: ~482
       depends_on:

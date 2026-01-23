@@ -58,3 +58,13 @@ size_guidelines:
   ">15KB": condensed required, consider split
 
 loading_priority: condensed → yml → md
+
+pre_write_rules:
+  directory_listing_required:
+    rule: "NEVER create a file in any directory without first listing that directory"
+    rationale: |
+      Prevents: naming convention violations, duplicate files, wrong locations,
+      missing obvious existing resources. One tool call prevents entire error class.
+    applies_to: [file creation, file moves, new versions]
+    cost: minimal (single list_directory call)
+    benefit: catches pattern violations before they happen

@@ -114,3 +114,42 @@ Your output is REJECTED and task reissued if:
 - Token reduction insufficient
 
 On rejection, you receive the specific failure reason and must retry.
+
+## Overcoming Blockers
+
+When a task cannot proceed due to environmental issues, **take initiative to resolve them** rather than immediately declaring "blocked" and waiting for human intervention.
+
+### Permitted Self-Unblocking Actions
+
+| Blocker | Action You May Take |
+|---------|---------------------|
+| Chrome not running with debug port | Launch Chrome: `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/Library/Application Support/Google/Chrome"` |
+| Need another AI agent's help | Launch via cli-agent MCP: `launch_librarian`, `launch_custodian`, etc. |
+| Missing dependency/tool | Install via Homebrew or pip (non-destructive) |
+| File permissions (read) | Check alternate paths, ask for file to be moved |
+| Network/API timeout | Retry with backoff (3 attempts) |
+
+### When to Declare Blocked
+
+Only declare "BLOCKED" and await human intervention when:
+- Action would be destructive (delete, overwrite)
+- Action requires credentials you don't have
+- Action requires permissions beyond your scope (sudo, system settings)
+- You've attempted self-unblocking and it failed
+- The blocker is genuinely outside your capability
+
+### Blocker Reporting Format
+
+If truly blocked, your response file must include:
+```yaml
+status: BLOCKED
+blocker:
+  type: [permissions|credentials|capability|other]
+  description: "What is blocking"
+  attempted: ["List of self-unblocking actions you tried"]
+  resolution_options:
+    - "Option A the user could take"
+    - "Option B the user could take"
+```
+
+Do not declare blocked without the `attempted` list showing your effort.

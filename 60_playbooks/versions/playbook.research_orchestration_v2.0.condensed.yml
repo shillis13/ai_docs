@@ -1,0 +1,43 @@
+# playbook.research_orchestration_v2.0.condensed.yml
+metadata:
+  source: playbook.research_orchestration_v2.0.md
+  version: "2.0.0"
+  condensed_by: Claude Desktop
+
+summary: Single-orchestrator spawns search/extract workers, synthesizes internally. No external monitoring.
+
+pattern: single-orchestrator-multiple-workers
+
+flow: |
+  Requester → Orchestrator → spawn Search Worker → candidates.yml
+                          → spawn Extract Worker → evidence.yml
+                          → evaluate (loop if gaps)
+                          → synthesize → deliver
+
+when_to_use:
+  - Query would exhaust single instance context
+  - Search across >10 files
+  - Evidence gathering before synthesis
+  - Historical analysis across archives
+
+prerequisites:
+  mcps: [cli-agent, knowledge-search, messages, Desktop Commander]
+  task_dir: /ai_comms/research_tasks/{task_id}/
+  files: [query.yml, candidates.yml, evidence.yml, synthesis.yml]
+
+steps:
+  1: task-coord:gen_task with template research_orchestrator
+  2: Orchestrator runs internally (spawn workers, evaluate, synthesize)
+  3: messages:list_direct to receive results
+
+worker_design:
+  - Lightweight, single-purpose
+  - Write to shared task dir
+  - Signal via messages MCP
+  - Self-terminate after phase
+  - Stateless (files hold state)
+
+common_issues:
+  worker_exhaustion: Limit candidates to 15-20
+  orchestrator_fills: Pre-categorize evidence
+  infinite_loop: Hard limit 3 iterations

@@ -22,6 +22,8 @@ load_sequence:
       tokens: ~742
     - pointer: REF:ai_general/docs/70_instructions/claude/instr_environment_overview.condensed.yml
       tokens: ~349
+    - pointer: REF:ai_general/docs/70_instructions/claude/instr_claude_use_of_ai_agents.condensed.yml
+      tokens: ~900
   topic:
     description: Load when related topic arises - architecture and active projects
     files:
@@ -29,8 +31,6 @@ load_sequence:
       tokens: ~219
     - pointer: REF:ai_general/docs/70_instructions/claude/instr_claude_specific.condensed.yml
       tokens: ~54
-    - pointer: REF:ai_general/docs/70_instructions/claude/instr_claude_use_of_ai_agents.condensed.yml
-      tokens: ~808
     - pointer: REF:ai_general/docs/70_instructions/claude/instr_memory_slot_protocol.condensed.yml
       tokens: ~482
     - pointer: REF:ai_general/docs/70_instructions/claude/instr_pointer_loading.condensed.yml

@@ -51,6 +51,19 @@ tools:
       - simple data analysis/transformation
     fallback: For complex orchestration, use CLI Coordination instead
 
+  gemini_cli:
+    mcp_control:
+      flag: --allowed-mcp-server-names
+      purpose: Whitelist MCP servers at launch (blocks all others)
+      usage: Optional, caller decides per-launch
+      example: |
+        gemini --allowed-mcp-server-names chat-playwright,chat-pipeline,task-coord "Execute task"
+      when_to_use:
+        - browser automation tasks (whitelist chat-playwright, block osascript/desktop-commander)
+        - restrict agent to task-appropriate tools
+        - prevent tool misuse (e.g., focus-stealing, process killing)
+      note: Passed through gemini_cli.py as passthrough arg to gemini binary
+
 delegate_when:
   - filesystem exploration (unknown structure)
   - multiple/large files (>3 files OR >500 lines)
