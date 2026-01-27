@@ -14,7 +14,8 @@ terms:
 
   protocol:
     at_self_wake: {aliases: [AT alarm, self-wake], def: "Desktop Claude schedules AT jobs to self-prompt after delegating. AT=Desktop's alarm not CLI's doorbell", ref: protocol_at_self_wake.condensed.yml}
-    claim_prefix: {aliases: [claimed prefix], def: "claimed_{YYYYMMDD_HHMMSS}_{PID}_ prefix prevents race conditions", ref: protocol_taskCoordination.condensed.yml}
+    claim_prefix: {aliases: [claimed prefix], def: "DEPRECATED v9.0 - replaced by flag files. Was: claimed_{TS}_{PID}_ prefix", ref: protocol_taskCoordination.condensed.yml, status: deprecated}
+    flag_files: {aliases: [state flags, lifecycle flags], def: "Zero-byte files marking task state: {reqId}_{datetime}_started, _completed, _error, _cancelled. v9.0 replacement for claim_prefix", ref: protocol_taskCoordination.condensed.yml}
 
   entity:
     ai_clis: {aliases: [CLIs, CLI agents, terminal AIs], def: "terminal-based AI agents for autonomous work. Includes Claude CLI, Gemini CLI, Codex CLI, Cline CLI. Coordinated via ai_comms/{cli}/tasks/", note: "distinct from Codex MCP which is a tool, not a worker"}
@@ -90,7 +91,8 @@ quick_lookup:
   - {term: Answer Mode, domain: tools, note: "search agent mode for questions - editorial + citations"}
   - {term: Search Mode, domain: tools, note: "search agent mode for discovery - curated results"}
   - {term: AT Self-Wake, domain: protocol, ref: protocol_at_self_wake.condensed.yml}
-  - {term: Claim Prefix, domain: protocol, ref: protocol_taskCoordination.condensed.yml}
+  - {term: Claim Prefix, domain: protocol, ref: protocol_taskCoordination.condensed.yml, status: deprecated, note: "v9.0 replaced by flag_files"}
+  - {term: Flag Files, domain: protocol, ref: protocol_taskCoordination.condensed.yml, note: "v9.0 state markers: *_started, *_completed"}
   - {term: Message Inserts, domain: concept, ref: spec_message_insert.latest.condensed.yml, note: "<<<INSERT>>> blocks for cross-platform persistence"}
   - {term: Bootstrap Problem, domain: concept, ref: schema_knowledge_glossary_v1.yml}
   - {term: Bootstrap Hierarchy, domain: concept, note: "global → platform → role → tasking load order"}

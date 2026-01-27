@@ -307,9 +307,9 @@
 ### Task Coordination Protocol
 **Aliases:** CLI coordination, task protocol
 **Domain:** protocol
-**Definition:** Directory-based task lifecycle management: staged → to_execute → in_progress → completed|error. Defines file formats, claim mechanism, orchestration patterns.
+**Definition:** Directory-based task lifecycle management: staged → to_execute → in_progress → completed|error. v9.0 uses flag files (*_started, *_completed) instead of directory renaming.
 **Primary Reference:** REF:ai_general/docs/30_protocols/protocol_taskCoordination.condensed.yml
-**Related Terms:** claim_prefix, task_lifecycle
+**Related Terms:** flag_files, task_lifecycle
 
 ---
 

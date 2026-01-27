@@ -1,0 +1,51 @@
+meta: {v: 9.0, schema: protocol_taskCoordination, updated: 2026-01-26}
+
+summary: |
+  Directory-based task coordination for CLI agents. v9.0 uses flag files 
+  instead of directory/file renaming for state tracking.
+
+lifecycle:
+  states: [staged, to_execute, in_progress, completed, error, cancelled]
+  flow: staged → to_execute → in_progress → completed | error | cancelled
+
+directory_pattern: "{reqId}_{slug}/"  # Unchanged through entire lifecycle
+task_file_pattern: "{reqId}_{slug}.md"  # Unchanged through entire lifecycle
+
+flag_files:
+  purpose: "Zero-byte files marking state transitions"
+  pattern: "{reqId}_{datetime}_{state}"
+  datetime_format: "YYYYMMDDTHHMMSS"
+  states:
+    started: "Created when claiming task"
+    completed: "Created before moving to completed/"
+    error: "Created before moving to error/"
+    cancelled: "Created before moving to cancelled/"
+
+claiming:
+  steps:
+    - "mv to_execute/{task_dir} in_progress/{task_dir}"
+    - "touch in_progress/{task_dir}/{reqId}_{datetime}_started"
+  race_prevention: "Directory move is atomic; flag confirms ownership"
+
+completing:
+  steps:
+    - "touch in_progress/{task_dir}/{reqId}_{datetime}_completed"
+    - "mv in_progress/{task_dir} completed/{task_dir}"
+
+response_files:
+  milestone: "{reqId}_{slug}.response.md"  # Awaiting input/reporting progress
+  completion: "{reqId}_{slug}.completion.md"  # Final marker
+
+state_detection:
+  is_claimed: "ls {task_dir}/*_started"
+  is_complete: "ls {task_dir}/*_completed"
+  is_error: "ls {task_dir}/*_error"
+
+subtasks:
+  pattern: "{parent}_t{N}"
+  nesting: "{parent}_t{N}.{M}"
+  location: "Parent task directory or separate task dir"
+
+see_also:
+  - schema_taskFile.latest.yml
+  - QUICK_REFERENCE.md
