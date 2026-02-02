@@ -1,0 +1,84 @@
+metadata:
+  title: Library System Architecture
+  version: 1.0.0
+  created: 2026-02-01
+  source: architecture_library_system_v1.0.md
+  tokens: ~850
+
+summary: |
+  Semantic search across 4+ years of AI conversation history (~50MB, ~14M tokens).
+  Multi-stage pipeline processes conversations into searchable chunks.
+  Distributed search uses Gemini CLI sessions as 900K-token corpus holders.
+  Claude CLI orchestrates queries because Gemini CLI config is global (can't mix compaction settings).
+
+architecture:
+  ingestion_pipeline:
+    stages:
+      - name: export
+        location: ai_memories/10_raw_exports/
+        description: Raw exports from Claude, ChatGPT, Gemini
+      - name: normalize
+        location: ai_memories/20_normalized/
+        description: Convert to unified YAML structure
+      - name: chunk
+        location: ai_memories/30_chunked/
+        description: Split to ~4000 token chunks, preserve message boundaries
+      - name: condense
+        location: ai_memories/40_histories/{platform}/{YYYY}/{MM}/
+        description: 70-90% reduction preserving decisions, discoveries, procedures
+      - name: index
+        location: ai_memories/librarian/topic_index/
+        description: Term → conversation mappings for fast lookup
+      - name: archive
+        location: ai_memories/50_shards/
+        description: Combine into ~900K token shard files
+
+  search_modes:
+    direct:
+      tool: knowledge-search MCP
+      use_for: Quick lookups, finding specific conversations
+      capabilities: Topic index, synonym expansion, grep fallback
+    semantic:
+      tool: cli-agent:launch_researcher
+      use_for: Complex queries requiring synthesis
+      flow: Researcher (Claude CLI) → dispatches to Shards (Gemini CLI) → synthesizes
+
+  shards:
+    count: 16
+    size_each: ~900K tokens (~3.5MB)
+    coverage: Jan 2025 - Dec 2025
+    platform: Gemini CLI (saved sessions with corpus pre-loaded)
+    critical_setting: Context compaction OFF
+
+key_decision:
+  question: Why Claude CLI for Researcher instead of Gemini?
+  actual_reason: |
+    Gemini CLI configuration is global, not per-session.
+    Shards require compaction OFF to preserve corpus.
+    Orchestrator wants compaction ON for long conversations.
+    Can't have both → different platform needed.
+  post_hoc_rationalization: "Claude excels at orchestration, Gemini at corpus hosting"
+  note: Documentation often states the rationalization; this is the real constraint.
+
+operations:
+  init_shard: gemini_cli.py -a -i --files ai_memories/50_shards/shard-NN.yml --save shard-NN
+  query_shard: gemini_cli.py -a --sync --resume shard-NN "query"
+  launch_researcher: cli-agent:launch_researcher prompt="query"
+
+key_paths:
+  shard_corpus: ai_memories/50_shards/
+  shard_manifest: ai_memories/librarian/shard_manifest.yml
+  topic_index: ai_memories/librarian/topic_index/
+  researcher_role: ai_general/roles/researcher/
+  knowledge_search_mcp: ai_general/apps/mcps/knowledge-search/
+
+cost_model:
+  gemini_budget: ~100 requests/day
+  simple_query: 4 shards = 4 requests
+  comprehensive: 16 shards = 16 requests
+
+limitations:
+  - Shard queries take 30-90 seconds
+  - 2-4 week lag between conversation and searchability
+  - Single Gemini config prevents mixed compaction settings
+  - Conversations at shard boundaries may fragment

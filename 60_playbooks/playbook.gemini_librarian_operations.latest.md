@@ -1,0 +1,1 @@
+versions/playbook.gemini_librarian_operations_v1.0.md

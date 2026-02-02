@@ -1,0 +1,91 @@
+metadata:
+  title: Gemini Librarian Operations Playbook
+  version: "1.0"
+  created: "2026-01-31"
+  status: active
+  source: versions/playbook.gemini_librarian_operations_v1.0.md
+
+summary: |
+  Operational procedures for Gemini Librarian semantic search system.
+  Covers shard initialization, checkpoint management, query dispatch.
+
+when_to_use:
+  - Setting up librarian shards
+  - Adding new history to corpus
+  - Debugging shard queries
+  - Recovering corrupted checkpoints
+
+prerequisites:
+  - Gemini CLI in PATH
+  - Desktop Commander MCP
+  - Corpus in ai_memories/50_shards/
+  - Manifest at ai_memories/librarian/shard_manifest.yml
+
+procedures:
+  initialize_shard:
+    summary: Create checkpoint with corpus loaded
+    steps:
+      - cmd: tmux new-session -d -s shard-NN-init 'gemini --yolo --prompt-interactive "Read ENTIRE file ai_memories/50_shards/shard-NN_DATES.yml. Report byte count."'
+      - wait: 90s (15-20s per MB)
+      - cmd: tmux send-keys -t shard-NN-init '/chat save shard-NN' Enter Enter
+      - verify: grep "checkpoint saved"
+      - cmd: tmux kill-session -t shard-NN-init
+    critical:
+      - Double Enter often needed in tmux
+      - Overwrite prompt requires Enter to confirm
+      - Wait for file read before save
+
+  verify_checkpoints:
+    summary: Confirm all shards have checkpoints
+    steps:
+      - Start temp session, run /chat list
+      - Compare against manifest (shard-01 through shard-16)
+      - Re-init any missing
+
+  query_shard:
+    summary: Restore checkpoint and query
+    steps:
+      - cmd: tmux new-session -d -s shard-test 'gemini --yolo --prompt-interactive "standby"'
+      - cmd: tmux send-keys -t shard-test '/chat resume shard-NN' Enter
+      - wait: 15s for restore
+      - cmd: tmux send-keys -t shard-test 'QUERY' Enter
+      - wait: 45s for response
+      - cmd: tmux capture-pane -t shard-test -p -S -200
+      - cmd: tmux kill-session -t shard-test
+
+  rebuild_corpus:
+    summary: After new history added
+    steps:
+      - Run python3 build_corpus.py
+      - Check which shards changed
+      - Re-init affected shards
+
+troubleshooting:
+  invalid_session_identifier:
+    cause: --resume uses numbers/UUIDs, not checkpoint tags
+    fix: Use /chat resume <tag> inside running session
+
+  save_not_executing:
+    cause: tmux Enter didn't submit
+    fix: Send Enter again
+
+  tool_denied:
+    cause: Missing --yolo or MCP misconfigured
+    fix: Check --yolo flag and .gemini/settings.json
+
+  timeout:
+    cause: Complex query + large corpus
+    fix: Increase wait (up to 90s) or query fewer shards
+
+key_insight: |
+  /chat save <tag> creates checkpoints. --resume <n> uses session IDs.
+  Must use /chat resume <tag> from inside session to restore checkpoint.
+
+key_files:
+  shard_instructions: ai_root/GEMINI.md
+  settings: ai_root/.gemini/settings.json
+  manifest: ai_memories/librarian/shard_manifest.yml
+  lo_prompt: ai_memories/librarian/lo_prompt.md
+  corpus_builder: ai_memories/librarian/build_corpus.py
+  bulk_init: ai_memories/librarian/init_all_shards.sh
+  corpus: ai_memories/50_shards/shard-NN_*.yml
