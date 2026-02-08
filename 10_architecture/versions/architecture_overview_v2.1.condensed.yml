@@ -1,0 +1,96 @@
+meta: {v: 2.1.0, updated: 2026-02-04, maintainer: PianoMan, status: active}
+
+purpose: Multi-AI instances work together autonomously - Desktop Claude coordinates, CLI agents execute, persistent memory preserves context
+
+principles: [brutal honesty, AIs as partners, file-based coordination, context window is limiting resource, empirical validation, any AI can orchestrate]
+
+workspace:
+  root: ~/Documents/AI/ai_root/
+  dirs:
+    ai_claude/: Claude state, memories, logs
+    ai_chatgpt/: ChatGPT config, exports
+    ai_comms/: inter-AI coordination, task queues
+    ai_general/: shared docs, todos, scripts
+    ai_memories/: processed histories, knowledge
+
+platforms:
+  orchestrators_vs_workers: any AI can act as either, enables self-organizing hierarchies
+  desktop_claude: {role: primary orchestrator, access: [MCP servers, web search, artifacts, memory], details: 70_instructions/claude/}
+  cli_agents:
+    wrapper: ~/bin/ai/cli/claude_cli.py
+    agents:
+      dev-lead: {resp: dev coordination, scheduled: true}
+      librarian: {resp: knowledge pipeline, scheduled: true}
+      custodian: {resp: filesystem hygiene, scheduled: true}
+      ops: {resp: task execution, scheduled: true}
+      peer_review: {resp: code review, scheduled: true}
+      tester: {resp: testing and validation, scheduled: true}
+    config: ai_general/prompts/roles/{role}/role.yml
+  codex_cli: {role: coding agent, wrapper: ~/bin/ai/cli/codex_cli.py}
+  gemini_cli: {role: coding agent, wrapper: ~/bin/ai/cli/gemini_cli.py}
+  chatgpt: {alias: Chatty, role: peer collaborator}
+
+todo_system:
+  loc: ai_general/todos/
+  lifecycle: "idea → TODO → refined → Task → executed → completed"
+  dirs: [pending/, active/, blocked/, completed/]
+
+task_coordination:
+  loc: ai_comms/coordination/
+  lifecycle: [posted, ready, claimed, done, results]
+  dirs: {broadcasts/: any worker, "direct/{agent}/": specific, to_execute/: ready, "in_progress/{task}/": claimed, "completed/{task}/": done, "responses/{worker}/": results}
+  key: file-based = any AI with filesystem can participate
+
+communication:
+  layers:
+    1: {urgency: immediate, mech: "sync hooks (iTerm, AppleScript, Puppeteer)"}
+    2: {urgency: near-real-time, mech: "polling loops, heartbeat files"}
+    3: {urgency: background, mech: async file-based}
+  mechanisms: [alerts/notifications, response files, prompt injection]
+
+ai_to_ai:
+  desktop_as_driver: uses AppleScript/Puppeteer to drive web AIs (ChatGPT, Gemini, Grok)
+  orchestrated_chat: messages through coordination point - approve/edit/redirect/block
+
+autonomy:
+  scheduled_tasks: cron prompts Desktop Claude and CLI agents
+  adaptive: Desktop Claude can modify its own scheduled prompts
+  goal: overnight autonomous operation with graceful handoffs
+
+memory:
+  native_slots: "30 slots × 200 chars = hold pointers to external files"
+  pipeline: "10_exported → 20_preprocessed → 30_converted → 40_histories → 50_threads"
+  outputs: [chunked histories, topic traces, decisions, lessons, patterns, themes]
+  manager: librarian agent
+
+context_window:
+  limit: 200K tokens - fundamental constraint
+  strategies: [memory pointers save 40-55K, delegate to CLI/Codex, monitor at 60%, write to files, use thinking blocks]
+  antipatterns: [direct browser snapshots, reading multiple large files, implementation during architecture]
+
+constraints:
+  context_window: 200K tokens
+  mcp_timeout: 30-60s hard limit
+  bash_tool: sandbox only, never use
+  browser_snapshots: write to file + delegate
+
+doc_hierarchy:
+  10_: architecture
+  20_: concepts
+  30_: protocols
+  40_: specs
+  50_: guides
+  60_: playbooks
+  70_: instructions
+
+tooling:
+  scripts: ~/bin/ai/ (cli/, utils/)
+  shell: ~/.bash_prompt, ~/.repo_status
+  python: ~/bin/all_languages/python/src/ai_utils/
+
+quick_ref:
+  workspace: ai_root_summary.md
+  communication: ai_communication_architecture_latest.md
+  tasks: protocol_taskCoordination_latest.yml
+  agents: cli_specialized_agent_roles_v2.md
+  memory: spec_memory_pointer_schema_v1.0.yml

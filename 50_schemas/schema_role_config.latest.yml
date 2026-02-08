@@ -1,0 +1,174 @@
+metadata:
+  title: Role Configuration Schema
+  version: 1.0.0
+  updated: 2026-02-02
+  description: |
+    Unified schema for AI agent role configuration.
+    Supports both Desktop Claude (tiered loading) and CLI agents (flattened loading).
+
+schema:
+  metadata:
+    required: true
+    fields:
+      name:
+        type: string
+        required: true
+        description: Role identifier (e.g., desktop, librarian, ops)
+      version:
+        type: string
+        required: true
+        description: Semver version string
+      updated:
+        type: date
+        required: true
+        description: Last update date (YYYY-MM-DD)
+      description:
+        type: string
+        required: false
+        description: Brief description of the role
+
+  load_sequence:
+    required: false  # For backward compat, context_files also accepted
+    description: |
+      Tiered document loading specification.
+      Desktop Claude uses full tier system.
+      CLI agents flatten auto + topic tiers.
+    tiers:
+      auto:
+        description: Load BEFORE first response (mandatory)
+        instruction: Free-form instruction text for the AI
+        files: list of file_entry
+      topic:
+        description: Load when triggers match conversation content
+        instruction: Free-form instruction text
+        files: list of file_entry
+      demand:
+        description: Load only when explicitly needed (CLI agents skip this tier)
+        instruction: Free-form instruction text
+        files: list of file_entry
+      execution:
+        description: Load when depends_on references or performing related operation
+        instruction: Free-form instruction text
+        files: list of file_entry
+
+  file_entry:
+    description: Entry in a load_sequence tier's files list
+    formats:
+      simple_string:
+        example: "REF:ai_general/docs/70_instructions/file.yml"
+      full_object:
+        fields:
+          pointer:
+            type: string
+            required: true
+            description: File path with optional REF: prefix
+          tokens:
+            type: string
+            required: false
+            description: Approximate token count (e.g., ~500)
+          purpose:
+            type: string
+            required: false
+            description: Why this file is included
+          triggers:
+            type: list[string]
+            required: false
+            description: Keywords that trigger loading (topic/demand tiers)
+          abstract:
+            type: string
+            required: false
+            description: Brief summary of file contents
+          depends_on:
+            type: list[string]
+            required: false
+            description: Files that should also be loaded
+
+  context_files:
+    required: false
+    description: |
+      LEGACY FORMAT - still supported for backward compatibility.
+      Flat list of file paths. Use load_sequence for new roles.
+    type: list[string]
+    example:
+      - REF:ai_general/docs/70_instructions/instr_operating_principles.latest.condensed.yml
+      - REF:ai_general/prompts/roles/librarian/prompt.md
+
+  memory_path:
+    required: false
+    type: string
+    description: Path to role's memory directory (relative to ai_root)
+
+  duties:
+    required: false
+    type: list[duty]
+    description: Scheduled or recurring responsibilities (CLI agents)
+
+  duty:
+    fields:
+      name:
+        type: string
+        required: true
+      schedule:
+        type: string
+        required: false
+        description: "daily, weekly, on-demand, etc."
+      action:
+        type: string
+        required: true
+        description: What to do
+
+  ownership:
+    required: false
+    type: list[string]
+    description: Directories/systems this role owns
+
+  does_not_own:
+    required: false
+    type: list[string]
+    description: Explicit exclusions from ownership
+
+examples:
+  minimal_cli_role:
+    metadata:
+      name: tester
+      version: 1.0.0
+      updated: 2026-02-02
+    context_files:
+      - REF:ai_general/prompts/roles/tester/prompt.md
+      - REF:ai_general/docs/70_instructions/instr_operating_principles.latest.condensed.yml
+
+  tiered_desktop_role:
+    metadata:
+      name: desktop
+      version: 1.0.0
+      updated: 2026-02-02
+    load_sequence:
+      auto:
+        files:
+          - pointer: REF:ai_general/docs/20_registries/glossary_knowledge_index.latest.condensed.yml
+            tokens: ~1316
+            purpose: "Term→file mapping for bootstrap"
+      topic:
+        files:
+          - pointer: REF:ai_general/docs/70_instructions/instr_development.latest.condensed.yml
+            tokens: ~771
+            triggers: [coding, development, PR]
+    memory_path: ai_claude/memories/
+
+cli_loading_behavior: |
+  CLI agents (via lib_cli_common.py get_role_context_files):
+  1. Check for load_sequence (new format)
+     - If found: flatten auto + topic tiers into single list
+     - demand tier is EXCLUDED (too much context for task-focused agents)
+  2. Fall back to context_files (old format)
+     - Use flat list as-is
+  3. Strip REF: prefix from all paths
+  4. Return list for bootstrap prompt: "Read and follow instructions in: 'file1', 'file2', ..."
+
+desktop_loading_behavior: |
+  Desktop Claude (via role.yml as project file):
+  1. Load all auto tier files BEFORE first response
+  2. Monitor conversation for trigger keywords
+  3. Load topic tier files when triggers match
+  4. Load demand tier files only when explicitly requested
+  5. Load execution tier files when depends_on chains require them

@@ -1,4 +1,17 @@
-# Source: instr_environment_overview_latest.yml (v2.0.0)
+# Source: instr_environment_overview_latest.yml (v2.1.0)
+# Updated: 2026-02-07 - Opus 4.6 model update
+
+model:
+  current: claude-opus-4-6 (released 2026-02-05)
+  context_window: 200K tokens (claude.ai/Desktop App; 1M is API-only beta)
+  max_output: 128K tokens (up from 64K in Opus 4.5)
+  features:
+    - adaptive_thinking: self-calibrates reasoning depth (effort: low/medium/high/max)
+    - context_compaction: automatic summarization of older context in long conversations
+    - prefill_removed: assistant message prefilling no longer supported (400 error)
+  notes:
+    - 1M context requires API usage tier 4; NOT available in claude.ai or Desktop App
+    - writing quality may be slightly reduced vs Opus 4.5 (RL optimization tradeoff)
 
 platforms:
   mac_desktop_app: filesystem read/write to approved dirs, bash (excluding git)

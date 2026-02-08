@@ -1,5 +1,6 @@
-# Source: instr_claude_context_conservations.yml (v2.0.0, 2025-11-17)
+# Source: instr_claude_context_conservations.yml (v2.1.0, 2026-02-07)
 # Priority: critical - overrides defaults when conflicting
+# Updated: Opus 4.6 model, compaction reality acknowledged
 
 rules:
   conceptual_vs_implementation:
@@ -60,7 +61,10 @@ enforcement:
     - Am I viewing browser snapshot? → STOP, write to file
     - Is this exploratory? → Delegate to Codex MCP
   context_monitoring:
-    track_approximate_usage: throughout conversation
-    at_60_70_percent: wrap up thread, summarize to file, suggest fresh chat
+    compaction: Anthropic auto-summarizes older context when approaching limits (lossy)
+    implication: conversations no longer hard-crash at limit, but early context becomes summary
+    memory_slots_role: lossless ground truth that survives compaction - still essential
+    delegation_still_matters: compaction doesn't increase usable context, just extends conversation length
+    note: 200K window unchanged for claude.ai; 1M is API-only
 
 # Related: instr_claude_use_of_ai_agents.md, coordination_system_v4_digest.md

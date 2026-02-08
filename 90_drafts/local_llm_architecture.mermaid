@@ -1,0 +1,43 @@
+%%{init: {"theme":"dark","flowchart":{"useMaxWidth":true,"curve":"basis","nodeSpacing":50,"rankSpacing":60}}}%%
+flowchart LR
+    subgraph CALLERS["WHO CALLS"]
+        USER["Human via CLI"]
+        BATCH["batch_condense_llm.py\nAsync batch processor"]
+        SCRIPT["Any script"]
+    end
+
+    subgraph SERVER["MLX SERVER"]
+        SERVE["llm_server.sh\nstarts / monitors / cleans up"]
+        MLX["mlx_lm.server\nlocalhost:8081"]
+        MODEL["Qwen3-30B-A3B-Instruct\n4-bit MoE / ~16 GB weights\n256K context / ~24 GB KV max"]
+    end
+
+    subgraph DATA["CONDENSATION PIPELINE"]
+        HIST["40_histories/*.yml\nChat chunks"]
+        PROMPT["condensation_prompt_v1.yml\nSystem prompt"]
+        OUTPUT["*.condensed.yml\n70-90% reduction"]
+    end
+
+    LOG["ai_general/logs/mlx_memory.log"]
+
+    USER -->|"llm_query.sh"| MLX
+    SCRIPT -->|"HTTP POST\n/v1/chat/completions"| MLX
+    BATCH -->|"HTTP POST"| MLX
+
+    SERVE -->|spawns + health checks| MLX
+    MLX --- MODEL
+    SERVE -.->|"30s interval"| LOG
+
+    HIST -->|input| BATCH
+    PROMPT -->|system prompt| BATCH
+    BATCH -->|writes| OUTPUT
+
+    classDef caller fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#d1d5db
+    classDef server fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#d1d5db
+    classDef data fill:#1e293b,stroke:#64748b,stroke-width:1px,color:#94a3b8
+    classDef log fill:#1e293b,stroke:#475569,stroke-width:1px,color:#64748b
+
+    class USER,BATCH,SCRIPT caller
+    class SERVE,MLX,MODEL server
+    class HIST,PROMPT,OUTPUT data
+    class LOG log
