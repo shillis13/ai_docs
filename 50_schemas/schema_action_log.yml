@@ -1,0 +1,125 @@
+metadata:
+  title: Action Log Entry Schema
+  version: 1.0.0
+  created: 2026-02-13
+  status: active
+  location: ai_general/docs/50_schemas/schema_action_log.yml
+
+purpose: |
+  Standard format for AI action logging. Enables consistent tracking of
+  what actions were attempted, why, and outcomes. Supports interruption
+  recovery, debugging, and audit trails.
+
+extensibility: |
+  Additional fields beyond those defined here are explicitly permitted.
+  AIs may add context-specific fields as needed without schema updates.
+  Common extensions: context, refs, duration_ms, tool_params, etc.
+
+entry_schema:
+  required:
+    ts:
+      type: string
+      format: ISO 8601 timestamp
+      description: When action was logged
+      example: "2026-02-13T12:00:01Z"
+    
+    action:
+      type: string
+      description: What is being done (brief, specific)
+      example: "Read shard manifest to enumerate targets"
+    
+    why:
+      type: string  
+      description: Brief rationale - why this action now
+      example: "Need shard list before dispatch"
+    
+    status:
+      type: enum
+      values:
+        - planned    # About to attempt
+        - executing  # In progress
+        - done       # Completed successfully
+        - failed     # Completed with error
+        - skipped    # Decided not to execute
+        - interrupted # Did not complete (crash, timeout, etc)
+      description: Current state of action
+
+  optional:
+    type:
+      type: enum
+      values: [read, write, execute, delegate, query, other]
+      description: Category for filtering
+    
+    target:
+      type: string
+      description: File path, session name, URL, etc.
+      example: "/Users/.../shard_manifest.yml"
+    
+    result:
+      type: string
+      description: Outcome summary (typically on done/failed)
+      example: "Found 18 shards in manifest"
+    
+    error:
+      type: string
+      description: Error message or failure reason
+      example: "File not found"
+
+  # Any additional fields are allowed
+  # Common patterns:
+  #   context: {} - arbitrary key/value pairs
+  #   refs: [] - related file paths or task IDs  
+  #   notes: string - free-form commentary
+  #   duration_ms: int - execution time
+  #   tool: string - which tool/MCP was used
+  #   params: {} - tool parameters (for replay/debug)
+
+file_format:
+  description: |
+    Action log files are YAML arrays. Entries appended chronologically.
+    One log file per task or session.
+  
+  naming:
+    per_task: "{task_dir}/action_log.yml"
+    per_session: "ai_{platform}/logs/actions/{session_id}.yml"
+  
+  example: |
+    - ts: 2026-02-13T12:00:01Z
+      action: Read dispatch spec
+      why: Need to understand output structure before implementation
+      status: planned
+      type: read
+      target: ai_general/docs/40_specs/spec_parallel_query_dispatcher.yml
+
+    - ts: 2026-02-13T12:00:01Z
+      action: Read dispatch spec
+      why: Need to understand output structure before implementation
+      status: done
+      type: read
+      target: ai_general/docs/40_specs/spec_parallel_query_dispatcher.yml
+      result: Loaded 181 lines, identified output dir structure
+
+    - ts: 2026-02-13T12:00:05Z
+      action: Create task file for Codex
+      why: Delegate implementation to Codex MCP
+      status: executing
+      type: delegate
+      target: codex
+      notes: "v0.1 scope only - shards, parallel, basic status"
+
+guidelines:
+  when_to_log:
+    - Before any tool call (status: planned)
+    - After completion (status: done|failed)
+    - Skipped actions worth noting (status: skipped, why explains)
+    - On interruption if possible (status: interrupted)
+  
+  when_not_to_log:
+    - Pure thinking/reasoning (no external action)
+    - Asking clarifying questions (not an action)
+    - Reading context already in conversation (no tool call)
+  
+  granularity: |
+    Log meaningful units of work, not every micro-step.
+    "Read 3 config files to understand structure" > 3 separate entries.
+    But keep granular enough to recover from interruption.

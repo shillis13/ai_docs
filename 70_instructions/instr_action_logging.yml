@@ -1,0 +1,127 @@
+metadata:
+  title: Action Logging Protocol
+  version: 1.0.0
+  created: 2026-02-13
+  status: active
+  priority: high
+  applies_to: all_ai_instances
+
+purpose: |
+  All AI instances must log actions before executing them. This enables:
+  - Recovery from interruptions (know where you were)
+  - Debugging failures (see what was attempted)
+  - Understanding decision chains (why this action)
+  - Audit trails for review
+
+schema_reference: REF:ai_general/docs/50_schemas/schema_action_log.yml
+
+core_principle: |
+  Log BEFORE you act. If interrupted between logging and acting,
+  the log shows intent. If interrupted after acting, update shows outcome.
+
+log_locations:
+  in_task_context: |
+    When working on a task, log to: {task_dir}/action_log.yml
+    Task context is determined by presence of task.yml or status.yml in cwd.
+  
+  session_fallback: |
+    When no task context, log to session log:
+    - Desktop Claude: ai_claude/logs/actions/desktop_{date}.yml
+    - CLI agents: ai_comms/{platform}/logs/actions/{session_id}.yml
+  
+  create_if_missing: |
+    If log file doesn't exist, create it with empty array: []
+
+required_workflow:
+  step_1_plan: |
+    Before executing an action, append entry with status: planned
+    ```yaml
+    - ts: 2026-02-13T12:00:01Z
+      action: Read shard manifest
+      why: Need target list for dispatch
+      status: planned
+      type: read
+      target: ai_memories/librarian/shard_manifest.yml
+    ```
+  
+  step_2_execute: |
+    Execute the action (tool call, delegation, etc.)
+  
+  step_3_update: |
+    Append completion entry with status: done|failed
+    ```yaml
+    - ts: 2026-02-13T12:00:02Z
+      action: Read shard manifest
+      why: Need target list for dispatch
+      status: done
+      type: read
+      target: ai_memories/librarian/shard_manifest.yml
+      result: Found 18 shards, date range 2021-01 to 2025-12
+    ```
+
+batching_guidance: |
+  For rapid sequences of similar actions, batching is acceptable:
+  
+  Instead of:
+    - planned: read file A
+    - done: read file A
+    - planned: read file B  
+    - done: read file B
+    
+  Acceptable:
+    - planned: read config files A, B, C for context
+    - done: read config files A, B, C - understood output structure
+  
+  But keep granular enough that interruption recovery is possible.
+
+what_to_log:
+  always:
+    - File reads and writes
+    - Process/command execution
+    - Delegations (Codex, CLI agents, etc.)
+    - External queries (web search, API calls)
+    - Task state changes (status updates, moves)
+  
+  judgment_call:
+    - Multiple small reads of same type (batch OK)
+    - Exploratory reads that inform decision (log if influenced outcome)
+  
+  never:
+    - Internal reasoning (just thinking)
+    - Conversation with user (already in chat history)
+    - Reading content already in context window
+
+failure_logging: |
+  On failure, always log:
+  - status: failed
+  - error: what went wrong
+  - Any partial result if relevant
+  
+  Example:
+    - ts: 2026-02-13T12:00:05Z
+      action: Start Codex task for implementation
+      why: Delegate v0.1 development
+      status: failed
+      type: delegate
+      error: "Codex MCP timeout after 60s"
+      notes: "Will retry with smaller scope"
+
+interruption_handling: |
+  If you're recovering and find entries with status: planned but no
+  corresponding done/failed, treat as interrupted. Options:
+  - Retry the action
+  - Mark as status: interrupted and move on
+  - Ask user for guidance
+
+implementation_notes:
+  cli_agents: |
+    CLI agents should initialize action_log.yml at session start.
+    Use desktop-commander or filesystem tools to append entries.
+    
+  desktop_claude: |
+    Use Desktop Commander write_file with mode: append to add entries.
+    Or use memory MCP if action log is stored as memory slot.
+
+  log_rotation: |
+    For long-running sessions, consider daily rotation:
+    actions_20260213.yml, actions_20260214.yml, etc.
