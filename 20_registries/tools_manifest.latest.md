@@ -1,1 +1,1 @@
-versions/tools_manifest_v1.0.md
+versions/tools_manifest_v1.3.md

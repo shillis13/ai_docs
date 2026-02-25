@@ -1,0 +1,210 @@
+meta: {v: 1.3.0, updated: 2026-02-14, purpose: "canonical paths for AI-accessible tools"}
+
+overview: Single source of truth for tool locations - all AIs reference before invoking
+
+cli_wrappers:
+  base: ~/bin/ai/cli
+  claude_cli.py:
+    path: ~/bin/ai/cli/claude_cli.py
+    invoke: "python3 ~/bin/ai/cli/claude_cli.py"
+    desc: "Claude CLI with tmux, agents, session management. Bootstrap: global.md → platform/claude.md → roles/{type}/role.yml"
+    flags: {-t: tmux, -a: auto, "-A TYPE": "agent (librarian, dev_lead, custodian, ops, peer_review, tester, researcher, validator)", "-n NAME": named session, -c: continue, "-T": task mode (loads tasking.md)}
+    examples: ['python3 claude_cli.py -a -A librarian -t "prompt"', 'python3 claude_cli.py -t -a -c "continue"']
+  codex_cli.py:
+    path: ~/bin/ai/cli/codex_cli.py
+    invoke: "python3 ~/bin/ai/cli/codex_cli.py"
+    desc: "OpenAI Codex CLI with tmux"
+    flags: {-t: tmux, -a: "full auto (--dangerously-bypass-approvals-and-sandbox)", -s: session name, -w: workdir}
+  gemini_cli.py:
+    path: ~/bin/ai/cli/gemini_cli.py
+    invoke: "python3 ~/bin/ai/cli/gemini_cli.py"
+    desc: "Gemini CLI with tmux, wave orchestration, shard support"
+    flags: {-t: tmux, -a: auto, -s: session name}
+  cline_cli.py:
+    path: ~/bin/ai/cli/cline_cli.py
+    invoke: "python3 ~/bin/ai/cli/cline_cli.py"
+    desc: "Cline CLI wrapper with tmux support"
+  lib_cli_common.py:
+    path: ~/bin/ai/cli/lib_cli_common.py
+    desc: "Shared library for all CLI wrappers - tmux, session mgmt, common flags"
+
+agent_shortcuts:
+  note: "Convenience shell wrappers for specific agent profiles. Role configs in ai_general/roles/"
+  librarian_claude.sh: "Claude librarian agent"
+  librarian_gemini.sh: "Gemini librarian agent"
+  custodian_claude.sh: "Claude custodian agent"
+  dev_lead_claude.sh: "Claude dev-lead agent"
+  ops_codex.sh: "Codex ops agent"
+  gemini_session.sh: "Generic Gemini session launcher"
+
+agent_roles:
+  base: ai_general/roles/
+  manifest: ai_general/roles/manifest.yml
+  available: [librarian, dev_lead, custodian, ops, peer_review, tester, researcher, validator]
+  structure: "Each role has role.yml + prompt.md (or instructions.md)"
+  memory_paths: "ai_claude_cli/memories/{role}/"
+
+cli_utilities:
+  lifecycle:
+    base: ~/bin/ai/cli/lifecycle/
+    scripts: [cleanup_cli_sessions.sh, list_cli_sessions.sh, launch_claude_cli_task.scpt, launch_codex_cli_task.scpt]
+  wrappers:
+    base: ~/bin/ai/cli/wrappers/
+    scripts: [cli_script_wrapper.sh, cli_tmux_wrapper.sh, check_lock.sh, monitor_cli_sessions.py]
+  wave:
+    base: ~/bin/ai/cli/
+    scripts: [spawn_wave_librarians.sh, wave_launcher.sh, wave_monitor.sh]
+  shard_tools:
+    base: ~/bin/ai/cli/
+    scripts: [create_shards.py, rebuild_shards.py, transform_shard_roles.py]
+    desc: "Gemini shard creation and management for research orchestration"
+  monitoring:
+    base: ~/bin/ai/cli/
+    scripts: [agent_monitor.sh, tail_agent_log.sh, spawn_subtasks.sh]
+
+python_tools:
+  base: ~/bin/all_languages/python/src
+  todo_mgr:
+    path: ~/bin/all_languages/python/src/todo_mgr/todo_mgr.py
+    desc: "TODO system - kanban, status, queries"
+    cmds: ["kanban", "status <dir> <status>", "query --status Ready"]
+  other: [ai_utils/, doc_utils/, yaml_utils/, json_utils/, file_utils/, archive_utils/, dev_utils/, metadata_utils/, repo_tools/, email_tools/, gdir/]
+
+chat_pipeline:
+  base: ~/bin/ai/chat_pipeline
+  numbered_steps: [01_split_claude_bulk.py, 02_convert_claude_json_to_v2.py, 03_dedupe_conversations.py, 04_extract_embedded_step.py, 05_chunk_conversation.py, 06_organize_histories.py]
+  utilities: [build_chat_index.py, curate_topics.py, extract_artifacts.py, extract_embedded_content.py, remediate_oversized_chunks.py, process_claude_bulk.py, pipeline_chatgpt_full.py, batch_remediate.py]
+  yaml_fixers: [fix_yaml_errors.py, fix_yaml_errors_v2.py, fix_yaml_errors_v3.py, fix_yaml_errors_v4.py, fix_yaml_aggressive.py, fix_yaml_final.py]
+
+chat_processing:
+  base: ~/bin/ai/chat_processing
+  desc: "Higher-level chat conversion and chunking library (pip-installable)"
+  key_files: [chat_converter.py, chat_chunker.py, chat_export_splitter.py, doc_converter.py, md_structure_parser.py]
+  sub_libs: [lib_converters/, lib_formatters/, lib_parsers/]
+
+orchestration:
+  base: ~/bin/ai/orchestration
+  scripts: [dispatch_query.py, fire_callback.py, research_orchestrator.sh, orchestrate-chat.sh, watch_dir.sh]
+  desc: "Multi-AI orchestration, query dispatch, callback handling"
+
+prompting:
+  base: ~/bin/ai/prompting
+  scripts: [send_prompt.sh, lib_send_prompt_cli.sh, lib_send_prompt_desktop.sh, lib_send_prompt_webui.sh, scheduled_prompts_daemon.sh, send_scheduled_prompt.sh, set_scheduled_prompt.sh, ai_isBusy.sh]
+  desc: "Cross-platform prompt sending and scheduling"
+
+pulse:
+  base: ~/bin/ai/pulse
+  scripts: [pulse_mgr.sh, send_pulse.sh, pulse_config.sh]
+  desc: "Automated timed prompting for autonomous AI operation"
+
+desktop_automation:
+  base: ~/bin/ai/desktop_automation
+  scripts: [create_project_chat.applescript, get_desktop_chat_url.sh, new_project_chat.sh, export-claude-chat.py, chrome_dom_message_extractor.py, chat_url_monitor.py]
+  desc: "AppleScript and browser-based Claude Desktop automation"
+
+claude_automation:
+  base: ~/bin/ai/claude_automation
+  scripts: [create_claude_chat.js, new_chat.sh, open_claude_chat.sh]
+  desc: "Claude-specific chat creation and management (Node.js)"
+
+gemini_chat:
+  base: ~/bin/ai/gemini_chat
+  scripts: [gemini_chat_automation.applescript, gemini_download_canvas.js, gemini_download_canvas_filtered.js, gemini_upload_file.js, gemini_list_files.js, gemini_smart_canvas_toggle.applescript, gemini_ensure_canvas.applescript]
+  desc: "Gemini browser automation - canvas downloads, file upload, chat control"
+
+chat_continuity:
+  base: ~/bin/ai/chat_continuity
+  scripts: [chat_continuity.sh, continue-chat.sh, detectBrokenChat.sh, brokenChatDaemon.sh, ai_export_chat.sh]
+  desc: "Broken chat detection and auto-continuation"
+
+chats:
+  base: ~/bin/ai/chats
+  scripts: [chat-extract.js, chat-new.js, chat-open.js, chat-send.js, chat-wait.js, export_chats_since.sh, ai_export_chat.sh, ai_isBusy.sh]
+  desc: "Node.js chat interaction library - extract, create, send, wait"
+
+mcps:
+  task-coord:
+    path: ai_general/apps/mcps/task-coord/server.py
+    type: MCP server (Python)
+    purpose: "Task coordination - playbooks, task lifecycle, file watchers"
+    tools: [list_playbooks, get_playbook, start_playbook, stop_playbook, list_templates, gen_task, list_tasks, get_task, move_task, list_platforms, start_watcher, list_watchers, check_watcher, stop_watcher, cleanup_watchers]
+  cli-agent:
+    path: ai_general/apps/mcps/cli-agent/server.py
+    type: MCP server (Python)
+    purpose: "Launch and manage CLI agents with role-based bootstrapping"
+    tools: [launch_agent, launch_librarian, launch_dev_lead, launch_custodian, launch_ops, launch_peer_review, launch_tester, launch_researcher, launch_validator, kill, attach, send_keys, list_sessions, get_status]
+  knowledge-search:
+    path: ai_general/apps/mcps/knowledge-search/server.py
+    type: MCP server (Python)
+    purpose: "Search 4+ year AI conversation archive (500+ chats, 4700+ chunks)"
+    tools: [search, stats, grep_search]
+  memory:
+    path: ai_general/apps/mcps/memory/server.py
+    type: MCP server (Python)
+    purpose: "Federated memory slot system - read/write/search across AI instances"
+    tools: [get_manifest, read, append, update, delete, search, set_slot_config, stats]
+  messages:
+    path: ai_general/apps/mcps/messages/server.py
+    type: MCP server (Python)
+    purpose: "Inter-agent messaging - broadcasts, direct messages, threading"
+    tools: [broadcast, send_direct, list_broadcasts, list_direct, check_responses, acknowledge]
+  prompting:
+    path: ai_general/apps/mcps/prompting/server.py
+    type: MCP server (Python)
+    purpose: "Cross-platform prompt delivery - CLI, Desktop, Web targets"
+    tools: [send_prompt, is_busy, list_sessions, observe_session, wait_response, send_to_session]
+  todo:
+    path: ai_general/apps/mcps/todo/server.py
+    type: MCP server (Python)
+    purpose: "TODO management - create, status, flags, tags, kanban"
+    tools: [list, get, create, set_status, add_flag, remove_flag, add_tag, remove_tag, complete, trash, kanban]
+  chat-pipeline:
+    path: ai_general/apps/mcps/chat-pipeline/server.py
+    type: MCP server (Python)
+    purpose: "Chat history processing pipeline - normalize, chunk, condense"
+    tools: [pipeline_status, normalize, chunk_file, prepare_for_condensation, condense_history, review_quarantine, retry_quarantine, get_pipeline_config]
+  chat:
+    path: ai_general/apps/mcps/chat/server.js
+    type: MCP server (Node.js)
+    purpose: "Chat archive access and search (deprecated in favor of knowledge-search)"
+
+automation:
+  base: ~/bin/ai
+  dirs: [desktop_automation/, claude_automation/, gemini_chat/, orchestration/, prompting/, pulse/, chat_continuity/, chats/]
+
+local_llm:
+  base: ~/bin/ai/local_llm
+  llm_server.sh:
+    path: ~/bin/ai/local_llm/llm_server.sh
+    desc: "Local LLM server launcher (llama.cpp + MLX). Profile-based, single model at a time."
+    usage: "llm_server.sh {profile} [--port PORT] [--max-tokens N] [--context N]"
+    config: ai_general/data/llm_profiles.conf
+    models_dir: ai_models/llm/
+    default_port: 11881
+    engines: [llama, mlx]
+    note: "SwiftBar plugin (ai-infrastructure.5s.sh) provides status UI. Kill previous server automatically on profile switch."
+
+utils:
+  base: ~/bin/ai/utils
+  scripts: [file_size_stats.py, manageCronJobs.sh, new_iterm_tab.sh, next_id.sh, repo_status.py, restartClaudeApp.sh, validate_tools_manifest.py]
+
+quick_ref:
+  claude_cli: "python3 ~/bin/ai/cli/claude_cli.py"
+  codex_cli: "python3 ~/bin/ai/cli/codex_cli.py"
+  gemini_cli: "python3 ~/bin/ai/cli/gemini_cli.py"
+  cline_cli: "python3 ~/bin/ai/cli/cline_cli.py"
+  todo_mgr: "python3 ~/bin/all_languages/python/src/todo_mgr/todo_mgr.py"
+  list_sessions: ~/bin/ai/cli/lifecycle/list_cli_sessions.sh
+  send_prompt: ~/bin/ai/prompting/send_prompt.sh
+  pulse_mgr: ~/bin/ai/pulse/pulse_mgr.sh
+
+notes:
+  - "~ = /Users/shawnhillis"
+  - "CLI wrappers are Python (migrated from .sh 2026-01)"
+  - "All python scripts need explicit python3"
+  - "Roles live in ai_general/roles/ with role.yml + prompt.md per role"
+  - "8 roles: librarian, dev_lead, custodian, ops, peer_review, tester, researcher, validator"
+  - "cline_cli.py added for Cline integration (2026-02)"
+  - "10 MCP servers: task-coord, cli-agent, knowledge-search, memory, messages, prompting, todo, chat-pipeline, chat"
+  - "Shard tools (create_shards.py, rebuild_shards.py) support Gemini research orchestration"
+  - "validate_tools_manifest.py in ~/bin/ai/utils/ for self-validation"

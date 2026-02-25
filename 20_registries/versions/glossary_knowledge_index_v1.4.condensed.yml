@@ -24,7 +24,7 @@ terms:
     codex_cli: {aliases: [Codex, codex_cli], def: "OpenAI Codex in terminal via codex_cli.sh wrapper. Code analysis and autonomous tasks", script: ~/bin/ai/cli/codex_cli.sh, coord: ai_comms/codex_cli/, note: "different from Codex MCP"}
     gemini_cli: {aliases: [Gemini Code, gemini_cli], def: "Google Gemini in terminal. Wave orchestration capable", coord: ai_comms/gemini_cli/}
     desktop_claude: {aliases: [Desktop, Claude Desktop], def: "primary orchestrator in desktop app - coordination, memory, decisions. Not a CLI"}
-    llama_server: {aliases: [llama-server, local LLM], def: "llama.cpp inference server on port 8081. Backend for Cline CLI and mcp-openai. Managed via SwiftBar", port: 8081, models: ai_models/llm/}
+    llama_server: {aliases: [llama-server, local LLM, llm_server], def: "Local LLM inference server (llama.cpp or MLX). Profile-based via llm_server.sh. Default port 11881. Backend for Cline CLI, Goose, mcp-openai. SwiftBar plugin available for status/control", port: 11881, script: ~/bin/ai/local_llm/llm_server.sh, config: ai_general/data/llm_profiles.conf, models: ai_models/llm/}
 
   role:
     librarian: {aliases: [memory librarian], def: "Memory system curator, manages ai_memories/ and chat history pipeline", scope: ai_memories/, note: "keeps exports/condensations flowing"}
