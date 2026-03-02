@@ -1,0 +1,55 @@
+metadata:
+  title: Agent Workstate Tracking
+  version: 1.0.0
+  created: 2026-02-27
+  status: active
+  priority: high
+  tool: mcp-tasks v1.6.1 (flesler/mcp-tasks)
+
+purpose: |
+  Track per-agent work progress across context compactions and session restarts.
+  Eliminates "where did we leave off?" exchanges. Every agent writes its own
+  file; any agent can read all files for cross-visibility.
+
+directory: ai_general/workstate/
+
+session_start_protocol:
+  rule: |
+    BEFORE doing any work, register your workstate file:
+      tasks_setup <filename>.md /Users/shawnhillis/Documents/AI/ai_root/ai_general/workstate/
+    Then read existing state:
+      tasks_search
+    Resume from whatever a previous instance left behind.
+
+  file_naming:
+    desktop: desktop_1.md (default) or desktop_2.md (if told you're second instance)
+    cli_agents: cli_{role}.md (e.g. cli_dev_lead.md, cli_researcher.md)
+
+runtime_rules:
+  - Log state changes AS THEY HAPPEN. Not later. Not batched.
+  - Task text must include enough context for cold-start resume.
+  - "Working on the thing" = useless. Include what, where, what step, what's next.
+  - Write only to YOUR file. Read any file for visibility.
+
+statuses:
+  In Progress: Actively working now
+  To Do: Queued for this session
+  Done: Completed
+  Blocked: Can't proceed (include why in task text)
+  Backlog: Known work, not this session
+
+tools:
+  mcp_server: workstate (in claude_desktop_config.json)
+  available: tasks_setup, tasks_add, tasks_search, tasks_update, tasks_summary
+  cli_fallback: npx mcp-tasks setup/add/update/search/summary
+
+cross_agent_visibility: |
+  To read another agent's state, add their file as additional source:
+    tasks_setup cli_dev_lead.md /path/to/workstate/
+  Now tasks_search returns tasks from both your file and theirs.
+
+integration: |
+  - todo_mgr = project-level work tracking
+  - CLI Coordination v4 = delegation lifecycle
+  - workstate (this) = agent-level step tracking
+  - memory slots = learnings and observations
