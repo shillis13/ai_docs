@@ -1,0 +1,79 @@
+metadata:
+  title: Action Logging Protocol
+  version: 1.1.0
+  created: 2026-02-13
+  updated: 2026-03-02
+  status: active
+  priority: high
+  applies_to: all_ai_instances
+
+purpose: |
+  All AI instances log actions before executing them. This enables:
+  - Recovery from interruptions (last entry = where you were)
+  - Debugging failures (see what was attempted)
+  - Audit trails for review
+
+core_principle: |
+  Log BEFORE you act. Completion is implicit: if next entry exists, previous completed.
+  No explicit status markers needed - single thread per file.
+
+format: |
+  {ISO_TIMESTAMP} | started | {action} | {optional metadata}
+  
+  Examples:
+    2026-03-02T10:15:00 | started | Desktop Commander:read_file | path=.../notes.md
+    2026-03-02T10:15:30 | started | codex:codex | analyzing todo_mgr.py structure
+    2026-03-02T10:16:45 | started | assessing results | todo_mgr uses curses for REPL
+    2026-03-02T10:17:30 | started | delegating to CLI | req_0045 parallel file analysis
+
+nesting: |
+  Nested actions (sub-steps) can use indentation. Completion inferred from next line.
+  
+    2026-03-02T10:15:00 | started | analyzing todo_mgr changes
+    2026-03-02T10:15:10 | started |   reading todo_0063/notes.md
+    2026-03-02T10:15:15 | started |   reading todo_0064/notes.md
+    2026-03-02T10:15:30 | started | drafting approach
+  
+  If "drafting approach" exists, all reads completed.
+
+log_locations:
+  desktop_claude: ai_claude/logs/{YYYY-MM-DD}/activity.log
+  claude_cli: ai_claude_cli/logs/{YYYY-MM-DD}/activity.log
+  codex: ai_codex/logs/{YYYY-MM-DD}/activity.log
+  gemini_cli: ai_comms/gemini_cli/logs/{YYYY-MM-DD}/activity.log
+  
+  in_task_context: |
+    When working on a task, ALSO log to: {task_dir}/action_log.txt
+    Task context = presence of task.yml or *.status file in cwd.
+
+what_to_log:
+  always:
+    - Every tool call (Desktop Commander, Codex MCP, etc.)
+    - Delegation to CLI agents
+    - File reads and writes
+    - Process/command execution
+    - Significant investigational steps
+    - Assessment conclusions that drive decisions
+  
+  skip:
+    - Internal reasoning (just thinking)
+    - Conversation with user (already in chat)
+    - Reading content already in context window
+
+interruption_detection: |
+  Last entry in log = where interruption occurred.
+  No forensic guessing needed.
+
+time_loop_recovery: |
+  After time loop or context loss:
+  1. Check today's log for last entry
+  2. That action was in progress when interrupted
+  3. Work context recoverable from log history
+
+maintenance:
+  retention: Daily directories, low volume, keep indefinitely
+  cleanup: Manual archival as needed
+
+related:
+  - spec_response_footer.latest.yml
+  - instr_claude_context_conservations.latest.yml
