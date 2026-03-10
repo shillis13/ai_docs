@@ -98,6 +98,24 @@ decision_tree:
     ">100_lines": prefer delegation
   complex_orchestration: use CLI, not Codex
 
+orchestrator_callback_responsibility:
+  rule: |
+    When delegating work (creating child tasks, spawning child orchestrators),
+    the parent orchestrator MUST ensure callback mechanisms exist BEFORE work begins.
+  requirements:
+    - Use task-coord:gen_task with callback parameter. Do NOT manually write task files.
+    - gen_task creates .callback.yml — fires automatically on move_task to terminal status.
+    - Parent must VERIFY child orchestrators set up callbacks for THEIR downstream tasks.
+    - Without callbacks, completed work goes unnoticed — orchestrator sits idle.
+  available_mechanisms:
+    - gen_task callback (.callback.yml) — preferred, automatic on move_task
+    - task-coord:start_watcher on completed/ directories — file-system level detection
+    - prompting:send_prompt — for immediate notification to a target session
+  anti_patterns:
+    - Writing task files manually and using mv (bypasses callback infrastructure)
+    - Dumping status to inbox directories nobody polls
+    - Assuming workers will proactively notify without explicit callback setup
+
 context_priority: |
   Preserve context for: strategic thinking, user collaboration, synthesis, project knowledge/relationships.
   Delegate: exploration, execution, data processing.

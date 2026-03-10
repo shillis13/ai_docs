@@ -8,7 +8,7 @@ cli_wrappers:
     path: ~/bin/ai/cli/claude_cli.py
     invoke: "python3 ~/bin/ai/cli/claude_cli.py"
     desc: "Claude CLI with tmux, agents, session management. Bootstrap: global.md → platform/claude.md → roles/{type}/role.yml"
-    flags: {-t: tmux, -a: auto, "-A TYPE": "agent (librarian, dev_lead, custodian, ops, peer_review, tester, researcher, validator)", "-n NAME": named session, -c: continue, "-T": task mode (loads tasking.md)}
+    flags: {-t: tmux, -a: auto, "-A TYPE": "agent (librarian, dev_lead, custodian, peer_review, tester, researcher, validator)", "-n NAME": named session, -c: continue, "-T": task mode (loads tasking.md)}
     examples: ['python3 claude_cli.py -a -A librarian -t "prompt"', 'python3 claude_cli.py -t -a -c "continue"']
   codex_cli.py:
     path: ~/bin/ai/cli/codex_cli.py
@@ -34,13 +34,12 @@ agent_shortcuts:
   librarian_gemini.sh: "Gemini librarian agent"
   custodian_claude.sh: "Claude custodian agent"
   dev_lead_claude.sh: "Claude dev-lead agent"
-  ops_codex.sh: "Codex ops agent"
   gemini_session.sh: "Generic Gemini session launcher"
 
 agent_roles:
   base: ai_general/roles/
   manifest: ai_general/roles/manifest.yml
-  available: [librarian, dev_lead, custodian, ops, peer_review, tester, researcher, validator]
+  available: [librarian, dev_lead, custodian, peer_review, tester, researcher, validator]
   structure: "Each role has role.yml + prompt.md (or instructions.md)"
   memory_paths: "ai_claude_cli/memories/{role}/"
 
@@ -132,7 +131,7 @@ mcps:
     path: ai_general/apps/mcps/cli-agent/server.py
     type: MCP server (Python)
     purpose: "Launch and manage CLI agents with role-based bootstrapping"
-    tools: [launch_agent, launch_librarian, launch_dev_lead, launch_custodian, launch_ops, launch_peer_review, launch_tester, launch_researcher, launch_validator, kill, attach, send_keys, list_sessions, get_status]
+    tools: [launch_agent, launch_librarian, launch_dev_lead, launch_custodian, launch_peer_review, launch_tester, launch_researcher, launch_validator, kill, attach, send_keys, list_sessions, get_status]
   knowledge-search:
     path: ai_general/apps/mcps/knowledge-search/server.py
     type: MCP server (Python)
@@ -203,7 +202,7 @@ notes:
   - "CLI wrappers are Python (migrated from .sh 2026-01)"
   - "All python scripts need explicit python3"
   - "Roles live in ai_general/roles/ with role.yml + prompt.md per role"
-  - "8 roles: librarian, dev_lead, custodian, ops, peer_review, tester, researcher, validator"
+  - "7 roles: librarian, dev_lead, custodian, peer_review, tester, researcher, validator"
   - "cline_cli.py added for Cline integration (2026-02)"
   - "10 MCP servers: task-coord, cli-agent, knowledge-search, memory, messages, prompting, todo, chat-pipeline, chat"
   - "Shard tools (create_shards.py, rebuild_shards.py) support Gemini research orchestration"

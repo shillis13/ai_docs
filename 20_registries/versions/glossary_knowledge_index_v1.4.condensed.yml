@@ -30,7 +30,6 @@ terms:
     librarian: {aliases: [memory librarian], def: "Memory system curator, manages ai_memories/ and chat history pipeline", scope: ai_memories/, note: "keeps exports/condensations flowing"}
     dev_lead: {aliases: [dev lead, development coordinator], def: "Development coordinator, owns todos and task creation", scope: ai_general/todos/}
     custodian: {aliases: [repo custodian], def: "Repository maintainer, structural integrity", scope: ai_root/, note: "guards structure, hygiene, consistency"}
-    ops: {aliases: [operations], def: "CLI coordination and task execution", scope: ai_comms/, note: "dispatches CLI agents and drives executions"}
     peer_review: {aliases: [peer reviewer], def: "Code/design reviewer, quality assurance", note: "performs reviews before merge or release"}
     tester: {aliases: [qa tester], def: "Testing specialist, validation and verification", note: "drives test coverage and validation runs"}
 
@@ -75,7 +74,6 @@ quick_lookup:
   - {term: Librarian, domain: role, note: "curates ai_memories/ + chat history pipeline"}
   - {term: Dev Lead, domain: role, note: "coordinates development and task creation"}
   - {term: Custodian, domain: role, note: "maintains repo structure and integrity"}
-  - {term: Ops, domain: role, note: "dispatches CLI agents and executes tasks"}
   - {term: Peer Review, domain: role, note: "code/design reviewer for QA"}
   - {term: Tester, domain: role, note: "validation and verification specialist"}
   - {term: Codex MCP, domain: tools, note: "MCP tool, NOT a CLI or worker"}

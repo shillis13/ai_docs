@@ -1,0 +1,77 @@
+meta:
+  name: Task File Schema
+  v: 2.1.0
+  date: 2026-01-25
+  status: active
+  desc: "req_XXXX_slug.md task files"
+  used_by: protocol_taskCoordination_v9.0
+  changes_from_v2.0:
+    - "Directory naming stable through entire lifecycle (no claimed_ prefix)"
+    - "Claim signaled by zero-byte flag file, not directory rename"
+    - "Removed: claimed_{YYYYMMDD_HHMMSS}_{pid}_req_XXXX_slug/ pattern"
+
+naming:
+  directory: "req_XXXX_slug/"           # Unchanged through entire lifecycle
+  file: "req_XXXX_slug.md"              # Must match directory name (minus extension)
+  id_source: "ai_comms/counters/req.NextId"
+
+flag_files:
+  purpose: "Zero-byte files marking state transitions — placed inside task directory"
+  started:   "{reqId}_{YYYYMMDDTHHMMSS}_started"    # Created when claiming
+  completed: "{reqId}_{YYYYMMDDTHHMMSS}_completed"  # Created before moving to completed/
+  error:     "{reqId}_{YYYYMMDDTHHMMSS}_error"      # Created before moving to error/
+  cancelled: "{reqId}_{YYYYMMDDTHHMMSS}_cancelled"  # Created before moving to cancelled/
+
+lifecycle:
+  states: [staged, to_execute, in_progress, completed, error, cancelled]
+  flow: "staged → to_execute → in_progress → completed | error | cancelled"
+
+claiming:
+  steps:
+    - "mv to_execute/{task_dir}/ in_progress/{task_dir}/"
+    - "touch in_progress/{task_dir}/{reqId}_{datetime}_started"
+  race_prevention: "Directory move is atomic; flag confirms ownership"
+
+completing:
+  steps:
+    - "touch in_progress/{task_dir}/{reqId}_{datetime}_completed"
+    - "mv in_progress/{task_dir}/ completed/{task_dir}/"
+
+required:
+  title:    {format: "# Request #XXXX: Title", validate: reqId must match filename}
+  type:     {format: "**Type:** {value}", default: Standard, values: [Standard, Research, Installation, Testing, Emergency, Maintenance]}
+  priority: {format: "**Priority:** {value}", default: NORMAL, values: [LOW, NORMAL, HIGH, URGENT, CRITICAL]}
+  posted:   {format: "**Posted:** {ISO 8601}", example: "2026-01-25T15:30:00-06:00"}
+  description:     {format: "## Task Description\n{markdown}", min: 1 sentence}
+  expected_response: {format: "## Expected Response\n{desc}", purpose: completion criteria}
+
+optional:
+  commands:       {format: "## Task Commands\n```bash\n{cmds}\n```", omit: "worker decides"}
+  discrete:       {format: "**Discrete:** true|false", default: false, desc: "if true, no subdivision"}
+  target_worker:  {format: "**Target Worker:** {type} or {type}:{session}", omit: "any worker may claim"}
+  session:        {format: "**Session:** {name|id}", purpose: "persistent agent expertise", registry: "~/.claude/session_registry.yml"}
+  entry_criteria: {format: "## Entry Criteria\n{list}", omit: "start immediately"}
+  exit_criteria:  {format: "## Exit Criteria\n{list}", omit: "worker judgment"}
+  depends_on:     {format: "**Depends On:** req_XXXX, req_YYYY"}
+  sequence:       {format: "**Sequence:** {NNN}"}
+  notes:          {format: "## Notes\n{context}"}
+
+directory_contents_example: |
+  req_1234_yaml_migration/
+  ├── req_1234_yaml_migration.md              # Task definition (required)
+  ├── req_1234_20260125T143022_started        # Claim flag (zero-byte)
+  ├── execution_log.md                        # Worker notes
+  ├── checkpoint_001.md                       # Milestone report (optional)
+  ├── artifacts/                              # Output directory (optional)
+  └── req_1234_20260125T155500_completed      # Completion flag (zero-byte)
+
+subtasks:
+  directory: "{parentReqId}_{nn}_{slug}/"
+  example: "req_1234_01_analyze/, req_1234_02_convert/"
+  nesting:  "req_1234_01_01_review/"
+
+validation:
+  errors:   [dir_matches_file, reqid_matches_title, required_sections_present, valid_type, valid_priority, valid_timestamp, description_not_empty]
+  warnings: [expected_response_not_empty]
+
+refs: [protocol_taskCoordination_v9.0, schema_taskFile_v2.1.md, spec_task_id_counter]

@@ -58,7 +58,7 @@ top_level:
     prompts_detail:
       global.md: always loaded by CLI agents
       platforms/: platform-specific (claude.md, codex.md, gemini.md)
-      roles/: role definitions (librarian/, dev_lead/, custodian/, ops/, peer_review/, tester/)
+      roles/: role definitions (librarian/, dev_lead/, custodian/, peer_review/, tester/, researcher/, validator/)
       tasking.md: loaded when -T or task mode enabled
     role_structure:
       each_role: "{role}/role.yml (context_files, duties, ownership), {role}/prompt.md"

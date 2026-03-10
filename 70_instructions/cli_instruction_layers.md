@@ -155,7 +155,6 @@ Agent-specific convenience scripts delegate to the "best" platform for that role
 | `librarian_gemini.sh` | librarian | Gemini | 1M context for corpus |
 | `dev_lead_claude.sh` | dev-lead | Claude | Session persistence |
 | `custodian_claude.sh` | custodian | Claude | Structure validation |
-| `ops_codex.sh` | ops | Codex | Quick synchronous tasks |
 
 ```bash
 # These are equivalent:

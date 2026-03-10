@@ -13,7 +13,7 @@ schema:
       name:
         type: string
         required: true
-        description: Role identifier (e.g., desktop, librarian, ops)
+        description: Role identifier (e.g., desktop, librarian, custodian)
       version:
         type: string
         required: true

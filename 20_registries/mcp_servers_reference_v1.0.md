@@ -73,7 +73,7 @@ and more. Each server exposes a set of tools callable directly from Desktop Clau
 | `get_status` | Detailed status including recent output |
 
 **Platforms:** claude_cli, codex_cli, gemini_cli  
-**Roles:** librarian, dev_lead, custodian, ops, peer_review, tester, researcher, validator
+**Roles:** librarian, dev_lead, custodian, peer_review, tester, researcher, validator
 
 ---
 

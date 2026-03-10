@@ -11,14 +11,13 @@ Guide for AI Orchestrators (Desktop Claude, scripts, cron jobs) to launch and co
 
 ## Core Concept: Agents Are Platform-Agnostic
 
-Agent roles (librarian, dev-lead, custodian, ops) are **orthogonal** to platform type (Claude, Codex, Gemini). Any agent role can run on any platform:
+Agent roles (librarian, dev-lead, custodian, peer-review, tester, researcher, validator) are **orthogonal** to platform type (Claude, Codex, Gemini). Any agent role can run on any platform:
 
 | Agent Role | Claude | Codex | Gemini |
 |------------|--------|-------|--------|
 | librarian  | ✅ | ✅ | ✅ |
 | dev-lead   | ✅ | ✅ | ✅ |
 | custodian  | ✅ | ✅ | ✅ |
-| ops        | ✅ | ✅ | ✅ |
 
 **Why this matters:**
 - Librarians on different platforms can process in parallel
@@ -81,7 +80,7 @@ gemini_cli.py -t -s queue_worker -a --any-task
 | `-t` | Run in tmux (background, monitorable) |
 | `-s NAME` | Tmux session name (for identification) |
 | `-a` | Auto-approve (non-interactive) |
-| `-A TYPE` | Agent role (librarian, dev-lead, custodian, ops) |
+| `-A TYPE` | Agent role (librarian, dev-lead, custodian, peer-review, tester, researcher, validator) |
 | `-T FILE` | Task file to execute |
 | `--any-task` | Claim first available from queue |
 | `-w DIR` | Override working directory |
