@@ -12,9 +12,9 @@ principles:
 architecture:
   registry: ai_general/memories/ai_ecosystem_manifest.yml
   participants:
-    claude_desktop: {manifest: ai_claude/memories/manifest.yml, slots: "03-30", role: primary orchestrator}
-    cli_agents: {loc: "ai_claude/memories/cli/{agent}/", slots: 10 per agent, agents: [librarian, dev-lead, custodian, ops]}
-    codex: {manifest: ai_codex/memories/manifest.yml, slots: "01-10", role: sync task execution}
+    claude_desktop: {manifest: ai_memories/80_working_memory/manifest.yml, slots: "03-30", role: primary orchestrator}
+    cli_agents: {loc: "ai_memories/80_working_memory/cli/{agent}/", slots: 10 per agent, agents: [librarian, dev-lead, custodian, ops]}
+    codex: {manifest: ai_memories/80_working_memory/manifest.yml, slots: "01-10", role: sync task execution}
 
 slot_format:
   structure: "entries: [{ts, content, reads?}]"

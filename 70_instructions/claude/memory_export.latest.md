@@ -1,1 +1,1 @@
-versions/memory_export_v1.0.md
+versions/memory_export_deprecated.md

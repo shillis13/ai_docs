@@ -60,7 +60,7 @@ Shows count of documentation files loaded per directory tier:
 
 ## MSlots Field
 
-Shows which memory slots from ai_claude/memories/mem_slots/ were loaded:
+Shows which memory slots from ai_memories/80_working_memory/ were loaded:
 
 **Format:** `MSlots:3-7` or `MSlots:3-5,8,11` (use ranges for compactness)
 
@@ -129,4 +129,4 @@ Claude MUST include this footer on every response when operating in the ai_root 
 
 ## Related Documents
 - `ai_general/docs/20_registries/_knowledge_manifest.latest.yml`
-- `ai_claude/memories/mem_slots/manifest.yml`
+- `ai_memories/80_working_memory/manifest.yml`

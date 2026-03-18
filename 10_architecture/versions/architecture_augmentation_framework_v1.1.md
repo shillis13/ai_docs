@@ -165,7 +165,7 @@ We augment every component of the baseline architecture. The following diagram s
 |----------------------------|---------------------------------------------|--------------------------------------------|
 | **Auto-loaded knowledge**  | Core docs loaded without explicit request   | `_knowledge_manifest.yml` AUTO sequence    |
 | **Glossary recognition**   | Term→file mapping enables targeted loading  | `glossary_knowledge_index.condensed.yml`   |
-| **Memory slot injection**  | Per-AI persistent state in system prompt    | `ai_claude/memories/mem_slots/*.yml`       |
+| **Memory slot injection**  | Per-AI persistent state in system prompt    | `ai_memories/80_working_memory/*.yml`       |
 | **Reference pointers**     | `REF:` syntax for on-demand file loading    | `protocol_reference_pointers.yml`          |
 | **CLI task reports**       | Async worker results fed back to coordinator| Task `responses/` directory                |
 | **Cross-AI messages**      | Other AI platforms can send to Desktop Claude| `send_prompt.sh`, messaging directories   |
@@ -211,7 +211,7 @@ We augment every component of the baseline architecture. The following diagram s
 #### Internal (Our Extensions)
 | Element                      | Description                                 | Implementation                        |
 |------------------------------|---------------------------------------------|---------------------------------------|
-| **Federated memory slots**   | Per-AI owned memory with cross-reference    | `ai_claude/memories/mem_slots/`           |
+| **Federated memory slots**   | Per-AI owned memory with cross-reference    | `ai_memories/80_working_memory/`           |
 | **Chat history pipeline**    | Export → YAML → Index → Digest              | `ai_memories/chats/` pipeline         |
 | **Layered summaries**        | L0 (raw) → L1 (summary) → L2 (meta)         | Progressive abstraction               |
 | **Knowledge digests**        | Processed insights from conversations       | `ai_memories/knowledge/`              |

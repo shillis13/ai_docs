@@ -52,5 +52,5 @@ infrastructure_context:
   workspace: ~/Documents/AI/ai_root/
   structure: ai_claude/ (Desktop state), ai_general/ (shared), ai_memories/ (processing), ai_comms/ (coordination)
   methodology: YAML-as-source for token efficiency, Markdown for human consumption
-  memory_system: Federated memory slots under ai_claude/memories/mem_slots/
+  memory_system: Federated memory slots under ai_memories/80_working_memory/
   cross_ai: Multiple AI partners - Claude, ChatGPT ("Chatty"), Gemini

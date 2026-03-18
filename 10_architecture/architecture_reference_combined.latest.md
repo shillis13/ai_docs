@@ -1,1 +1,1 @@
-versions/architecture_reference_combined_v1.0.md
+versions/architecture_reference_combined_v1.1.md

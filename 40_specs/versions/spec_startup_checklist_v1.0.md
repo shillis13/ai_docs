@@ -11,7 +11,7 @@
 | manifest_valid | Run validate_manifests.py (or trust if user ran it) | M | yes | - |
 | tools_loaded | Read tools_manifest.condensed.yml | T | yes | ~60 |
 | dirs_loaded | Read directory_structure_reference_v02.condensed.md | D | yes | ~275 |
-| memory_checked | Read memory manifest (ai_claude/memories/mem_slots/manifest.yml) | Y | yes | ~200 |
+| memory_checked | Read memory manifest (ai_memories/80_working_memory/manifest.yml) | Y | yes | ~200 |
 | context_file | Check for active context file (ai_claude/notes_to_myself.md) | C | no | variable |
 
 ## Footer Integration

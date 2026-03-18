@@ -1,0 +1,34 @@
+metadata:
+  title: Working Memory Architecture
+  version: "2.0"
+  supersedes: federated_memory_architecture_v1.0
+  condensed_from: federated_memory_architecture_v2.0.md
+
+core: Shared persistent memory for all AI participants. All AIs read/write one location.
+principle: Write immediately. Never checkpoint. Curate later.
+mechanism: Memory slots point to files. AIs write files via Desktop Commander (no per-write permission).
+
+location: ai_memories/80_working_memory/
+manifest: ai_memories/80_working_memory/manifest.yml
+
+slots:
+  active: 03-11 (see manifest for purposes)
+  reserved: 12-27
+  retired: 28-30 (web/ios inbox — replaced by message inserts)
+
+write_paths:
+  desktop_cli: edit_block append to slot file
+  web_ios: "<<<INSERT type=memory_v1.1>>> block → cron harvests"
+
+cross_reference:
+  read: allowed (any AI, any slot)
+  write_others: never unilaterally — coordinate via task system
+  ecosystem_registry: ai_general/memories/ai_ecosystem_manifest.yml
+
+format:
+  minimal: "- {ts: 2026-03-16T14:30:00Z, content: 'observation'}"
+  full: ts + type + content + context + reads
+
+related:
+  protocol: instr_working_memory_protocol_v3.0.md
+  quickref: instr_working_memory_v2.0.md

@@ -157,4 +157,4 @@ find ai_memories/mem0_extraction -name "memories.jsonl" -exec wc -l {} \; | awk 
 ## References
 - Mem0 docs: https://docs.mem0.ai
 - OpenMemory: https://github.com/mem0ai/mem0
-- Local manifest: `ai_claude/memories/mem_slots/manifest.yml`
+- Local manifest: `ai_memories/80_working_memory/manifest.yml`

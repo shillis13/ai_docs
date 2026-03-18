@@ -27,9 +27,9 @@ Defines how multiple AI instances (Desktop Claude, CLI agents, Codex) maintain a
 
 | Participant | Manifest | Slots | Role |
 |-------------|----------|-------|------|
-| Claude Desktop | `ai_claude/memories/manifest.yml` | 03.yml - 30.yml | Primary orchestrator, strategic coordination |
-| CLI Agents | `ai_claude/memories/cli/{agent}/` | 10 slots per agent | Named sessions (-n flag) |
-| Codex CLI | `ai_codex/memories/manifest.yml` | 01.yml - 10.yml | Synchronous task execution |
+| Claude Desktop | `ai_memories/80_working_memory/manifest.yml` | 03.yml - 30.yml | Primary orchestrator, strategic coordination |
+| CLI Agents | `ai_memories/80_working_memory/cli/{agent}/` | 10 slots per agent | Named sessions (-n flag) |
+| Codex CLI | `ai_memories/80_working_memory/manifest.yml` | 01.yml - 10.yml | Synchronous task execution |
 
 **CLI Agents:** librarian, dev-lead, custodian, ops
 
@@ -122,9 +122,9 @@ Same session resumes → accumulated context preserved
 
 **Example:**
 Desktop Claude needs Librarian's corpus map:
-- Read `ai_claude/memories/cli/librarian/manifest.yml`
+- Read `ai_memories/80_working_memory/cli/librarian/manifest.yml`
 - Find: slot 02 is corpus_map
-- Read `ai_claude/memories/cli/librarian/mem_slots/02.yml`
+- Read `ai_memories/80_working_memory/cli/librarian/mem_slots/02.yml`
 
 ### Sharing Insights
 **Method:** Coordination task, not direct write

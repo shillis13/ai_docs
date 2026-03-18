@@ -13,7 +13,7 @@ our_extensions:
   perception:
     - auto_loaded_knowledge: _knowledge_manifest.yml AUTO sequence
     - glossary_recognition: term→file mapping for targeted loading
-    - memory_slot_injection: ai_claude/memories/mem_slots/*.yml
+    - memory_slot_injection: ai_memories/80_working_memory/*.yml
     - reference_pointers: REF: syntax for on-demand loading
     - cli_task_reports: async worker results fed back
     - cross_ai_messages: send_prompt.sh inter-AI communication

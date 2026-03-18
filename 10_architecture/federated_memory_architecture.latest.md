@@ -1,1 +1,1 @@
-versions/federated_memory_architecture_v1.0.md
+versions/federated_memory_architecture_v2.0.md

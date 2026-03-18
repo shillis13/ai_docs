@@ -96,7 +96,10 @@ schema:
   memory_path:
     required: false
     type: string
-    description: Path to role's memory directory (relative to ai_root)
+    description: |
+      Path to role's memory directory (relative to ai_root).
+      Shared working memory lives at ai_memories/80_working_memory/.
+      Role-specific override only if the role needs isolated memory.
 
   duties:
     required: false
@@ -153,7 +156,7 @@ examples:
           - pointer: REF:ai_general/docs/70_instructions/instr_development.latest.condensed.yml
             tokens: ~771
             triggers: [coding, development, PR]
-    memory_path: ai_claude/memories/
+    memory_path: ai_memories/80_working_memory
 
 cli_loading_behavior: |
   CLI agents (via lib_cli_common.py get_role_context_files):

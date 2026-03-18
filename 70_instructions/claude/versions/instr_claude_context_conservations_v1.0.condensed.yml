@@ -1,12 +1,26 @@
 # Source: instr_claude_context_conservations.yml (v2.1.0, 2026-02-07)
 # Priority: critical - overrides defaults when conflicting
 # Updated: Opus 4.6 model, compaction reality acknowledged
+#
+# ┌─────────────────────────────────────────────────────────────────────┐
+# │ CLI ADAPTATION REVIEW (2026-03-17, Claude CLI session)             │
+# │ This doc was written for Desktop Claude (200K context, sandboxed   │
+# │ bash, Desktop Commander as primary tool). Claude CLI differs:      │
+# │   - 1M context window (5x Desktop)                                │
+# │   - Bash has FULL filesystem access (no sandbox)                  │
+# │   - Native tools: Read, Edit, Write, Grep, Glob, Agent (subagents)│
+# │   - No Desktop Commander or Codex MCP available                   │
+# │ RECOMMENDATION: Create platform-specific variants or add          │
+# │ platform-conditional sections. Annotations below mark what to     │
+# │ change for CLI.                                                   │
+# └─────────────────────────────────────────────────────────────────────┘
 
 rules:
   conceptual_vs_implementation:
     rule: Stay at design level during architectural discussions
     expand_only_when: feasibility validation needed | consolidating understanding | user requests
     pattern: "pending → active → complete" NOT "class __init__, _transition_state()..."
+    # CLI NOTE: Keep as-is. Good discipline regardless of platform.
 
   bash_tool_prohibition:
     rule: NEVER use bash_tool
@@ -19,6 +33,27 @@ rules:
       need_filesystem: Desktop Commander
       need_to_run_code: Codex MCP or CLI Coordination
       exploratory_structure: delegate to Codex/CLI
+    # ┌─────────────────────────────────────────────────────────────────┐
+    # │ CLI: ENTIRE SECTION INVERTS.                                   │
+    # │ Desktop bash = sandboxed, no filesystem. CLI bash = REAL,      │
+    # │ full filesystem access. For CLI, bash is the PRIMARY execution │
+    # │ tool alongside native Read/Edit/Write/Grep/Glob tools.        │
+    # │                                                                │
+    # │ CLI replacement section should read:                           │
+    # │   bash_tool_usage:                                             │
+    # │     rule: Bash is primary execution tool (full filesystem)     │
+    # │     prefer_native_tools_for:                                   │
+    # │       - File reads: Read tool (not cat/head/tail)              │
+    # │       - File search: Grep/Glob tools (not grep/find)           │
+    # │       - File edits: Edit tool (not sed/awk)                    │
+    # │       - File creation: Write tool (not echo/cat heredoc)       │
+    # │     use_bash_for:                                              │
+    # │       - System commands and process execution                  │
+    # │       - Script invocation (~/bin/ai/*)                         │
+    # │       - Git operations                                        │
+    # │       - Multi-step shell pipelines                             │
+    # │       - Package management, builds                             │
+    # └─────────────────────────────────────────────────────────────────┘
 
   context_preservation_delegation:
     default: Delegate any operation that consumes significant context
@@ -28,16 +63,46 @@ rules:
       - Data analysis/processing
       - Multi-step command sequences
       - Output-heavy operations
+    # ┌─────────────────────────────────────────────────────────────────┐
+    # │ CLI: THRESHOLDS NEED RECALIBRATING for 1M context.             │
+    # │ At 200K, >3 files / >500 lines was protective.                │
+    # │ At 1M, direct reads of ~20 files / ~5000 lines are fine.      │
+    # │                                                                │
+    # │ CLI should delegate for:                                       │
+    # │   - Parallelism (multiple independent tasks)                   │
+    # │   - Async work (continues while user converses)                │
+    # │   - Truly massive output (>50K tokens)                         │
+    # │   - Isolation (risky/experimental work in git worktrees)       │
+    # │ NOT just for context protection.                                │
+    # └─────────────────────────────────────────────────────────────────┘
     priority_order:
       1: Codex MCP (synchronous, immediate results)
       2: CLI Coordination (async, parallel, Codex unavailable)
       3: Codex CLI (no coordination overhead needed)
+    # ┌─────────────────────────────────────────────────────────────────┐
+    # │ CLI: PRIORITY ORDER CHANGES. No Codex MCP or Desktop Commander.│
+    # │ CLI replacement:                                               │
+    # │   1: Direct execution (bash, native tools) — default           │
+    # │   2: Agent subagents — parallel independent work               │
+    # │   3: CLI Coordination — async delegation to other AI agents    │
+    # └─────────────────────────────────────────────────────────────────┘
     decision_tree:
       results_needed_now: Codex MCP
       can_run_async: CLI Coordination
       simple_single_task: Desktop Commander direct
       exploratory_unknown_scope: ALWAYS delegate to Codex MCP
+    # ┌─────────────────────────────────────────────────────────────────┐
+    # │ CLI replacement decision_tree:                                 │
+    # │   results_needed_now: Direct execution (bash/tools)            │
+    # │   can_run_async: CLI Coordination or background Agent          │
+    # │   simple_single_task: Native tools (Read/Grep/Glob)            │
+    # │   exploratory_unknown_scope: Agent subagent (Explore type)     │
+    # │   parallel_independent_tasks: Multiple Agent subagents         │
+    # └─────────────────────────────────────────────────────────────────┘
     anti_pattern: Do NOT directly read multiple files, run verbose commands, or consume context on exploratory work
+    # CLI NOTE: Anti-pattern is MUCH weaker at 1M. Reading multiple
+    # files directly is fine. Reframe as: "Don't consume context
+    # *unnecessarily* — but direct reads are cheap at 1M."
 
   browser_snapshot_handling:
     rule: NEVER view browser snapshots in chat context
@@ -53,6 +118,14 @@ rules:
       - "Let me look at the page structure" → snapshot → instant context death
       - Inline snapshot viewing for "quick reference"
     always: snapshot → file → delegate → summary
+    # ┌─────────────────────────────────────────────────────────────────┐
+    # │ CLI: LESS LETHAL but still worth caution.                      │
+    # │ 20-50K = 2-5% of 1M context (vs 10-25% of 200K).             │
+    # │ "Kills conversation" is overstated at 1M, but snapshots are   │
+    # │ still noisy/low-signal. Keep the discipline of writing to file │
+    # │ and summarizing, but the urgency is reduced.                   │
+    # │ CLI tools: Write tool to save, then Read selectively.          │
+    # └─────────────────────────────────────────────────────────────────┘
 
 enforcement:
   self_check_before_operation:
@@ -60,11 +133,28 @@ enforcement:
     - Am I about to use bash_tool? → STOP, use alternative
     - Am I viewing browser snapshot? → STOP, write to file
     - Is this exploratory? → Delegate to Codex MCP
+  # ┌─────────────────────────────────────────────────────────────────┐
+  # │ CLI replacement self_check:                                     │
+  # │   - Will this consume >10K tokens? → Consider if delegation    │
+  # │     would be more efficient (parallelism, not protection)       │
+  # │   - Am I using bash when a native tool exists? → Prefer native │
+  # │     (Read over cat, Grep over grep, etc.)                       │
+  # │   - Am I viewing a browser snapshot? → Write to file first     │
+  # │   - Are there 2+ independent tasks? → Use parallel Agent calls │
+  # └─────────────────────────────────────────────────────────────────┘
   context_monitoring:
     compaction: Anthropic auto-summarizes older context when approaching limits (lossy)
     implication: conversations no longer hard-crash at limit, but early context becomes summary
     memory_slots_role: lossless ground truth that survives compaction - still essential
     delegation_still_matters: compaction doesn't increase usable context, just extends conversation length
     note: 200K window unchanged for claude.ai; 1M is API-only
+    # ┌─────────────────────────────────────────────────────────────────┐
+    # │ CLI: Last line is STALE.                                       │
+    # │ Claude CLI (Claude Code) uses 1M context window.               │
+    # │ Compaction still applies but triggers much later.              │
+    # │ Memory slots still essential as lossless ground truth.         │
+    # │ "delegation_still_matters" should be reframed: delegation      │
+    # │ matters for parallelism and async, not context protection.     │
+    # └─────────────────────────────────────────────────────────────────┘
 
 # Related: instr_claude_use_of_ai_agents.md, coordination_system_v4_digest.md

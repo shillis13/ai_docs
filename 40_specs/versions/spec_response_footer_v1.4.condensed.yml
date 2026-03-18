@@ -24,7 +24,7 @@ docs_field:
   format: "Docs:20:5,70:3 (tier:count, omit zeros)"
 
 mslots_field:
-  range: "03-30 from ai_claude/memories/mem_slots/"
+  range: "03-30 from ai_memories/80_working_memory/"
   format: "MSlots:3-7 or MSlots:3-5,8,11 (use ranges for consecutive)"
 
 rules:

@@ -1,1 +1,1 @@
-versions/spec_response_footer_v1.3.md
+versions/spec_response_footer_v1.4.md
