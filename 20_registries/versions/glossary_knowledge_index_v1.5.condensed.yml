@@ -1,0 +1,65 @@
+meta: {v: 1.5.0, schema: schema_knowledge_glossary_v1, generated: 2026-03-19, terms: 43, files: 21}
+
+purpose: Solves bootstrap problem - Claude needs to know what's IN files to know WHEN to load them. Provides term recognition without full doc loading.
+
+usage: |
+  1. Use definition for immediate context
+  2. Load primary_ref if details needed
+  3. Check also_in for related context
+
+terms:
+  architecture:
+    ai_root: {aliases: [ai_root, workspace], def: "root dir ~/Documents/AI/ai_root/", ref: architecture_overview.condensed.yml, related: [communication_layer, implementation_layer, knowledge_layer]}
+    layer_model: {aliases: [layer model, three-layer], def: "3-tier: communication(ai_comms), implementation(ai_claude), knowledge(ai_memories)", ref: architectural_layer_model.condensed.yml}
+
+  protocol:
+    at_self_wake: {aliases: [AT alarm, self-wake], def: "Desktop Claude schedules AT jobs to self-prompt after delegating. AT=Desktop's alarm not CLI's doorbell", ref: protocol_at_self_wake.condensed.yml}
+    claim_prefix: {aliases: [claimed prefix], def: "DEPRECATED v9.0 - replaced by flag files. Was: claimed_{TS}_{PID}_ prefix", ref: protocol_taskCoordination.condensed.yml, status: deprecated}
+    flag_files: {aliases: [state flags, lifecycle flags], def: "Zero-byte files marking task state: {reqId}_{datetime}_started, _completed, _error, _cancelled. v9.0 replacement for claim_prefix", ref: protocol_taskCoordination.condensed.yml}
+
+  entity:
+    ai_clis: {aliases: [CLIs, CLI agents, terminal AIs], def: "terminal-based AI agents for autonomous work. Includes Claude CLI, Gemini CLI, Codex CLI, Cline CLI. Coordinated via ai_comms/{cli}/tasks/", note: "distinct from Codex MCP which is a tool, not a worker"}
+    claude_cli: {aliases: [Claude Code, claude_cli], def: "Claude in terminal via claude_cli.py. Tmux, agent profiles (-A), named sessions (-n), auto mode (-a)", script: ~/bin/ai/cli/claude_cli.py, coord: ai_comms/claude_cli/}
+    cline_cli: {aliases: [Cline, cline_cli], def: "local agentic AI via Cline + llama-server. Qwen3-Coder backend on port 8081. .clinerules for workspace rules", script: ~/bin/ai/cli/cline_cli.py}
+    codex_cli: {aliases: [Codex, codex_cli], def: "OpenAI Codex in terminal via codex_cli.py. Code analysis and autonomous tasks", script: ~/bin/ai/cli/codex_cli.py, coord: ai_comms/codex_cli/, note: "different from Codex MCP"}
+    gemini_cli: {aliases: [Gemini Code, gemini_cli], def: "Google Gemini in terminal. Wave orchestration capable", coord: ai_comms/gemini_cli/}
+    desktop_claude: {aliases: [Desktop, Claude Desktop], def: "primary orchestrator in desktop app - coordination, memory, decisions. Not a CLI"}
+    llama_server: {aliases: [llama-server, local LLM, llm_server], def: "Local LLM inference (llama.cpp/MLX). Profile-based, default port 11881. Backend for Cline, Goose, mcp-openai", port: 11881, script: ~/bin/ai/local_llm/llm_server.sh}
+
+  role:
+    librarian: {aliases: [memory librarian], def: "Memory system curator, manages ai_memories/ and chat history pipeline", scope: ai_memories/}
+    dev_lead: {aliases: [dev lead, development coordinator], def: "Development coordinator, owns todos and task creation", scope: ai_general/todos/}
+    custodian: {aliases: [repo custodian], def: "Repository maintainer, structural integrity", scope: ai_root/}
+    peer_review: {aliases: [peer reviewer], def: "Code/design reviewer, quality assurance"}
+    tester: {aliases: [qa tester], def: "Testing specialist, validation and verification"}
+
+  tools:
+    codex_mcp: {aliases: [Codex server, codex tool], def: "OpenAI Codex as MCP Server - synchronous tool for Desktop Claude. NOT a worker", usage: "codex:codex", timeout: "30-60s", note: "for async use Codex CLI"}
+    claude_code_plugins: {aliases: [plugins, plugin system, /plugin], def: "Extension system for Claude Code - commands, agents, skills, MCP servers as plugins", ref: claude_code_plugins_reference.latest.yml, cli: "claude plugin <cmd>", repl: /plugin}
+    plugin_marketplace: {aliases: [marketplace, plugin repo], def: "Git repos hosting plugin catalogs. Add via 'claude plugin marketplace add owner/repo'", examples: [anthropics/claude-code, ananddtyagi/cc-marketplace, obra/superpowers-marketplace], location: ~/.claude/plugins/marketplaces/}
+    superpowers_plugin: {aliases: [superpowers, obra superpowers], def: "Core skills library - TDD, debugging, /brainstorm, /write-plan, git-worktrees. 20+ skills", source: superpowers-marketplace, repo: obra/superpowers}
+    episodic_memory_plugin: {aliases: [episodic-memory, conversation memory], def: "Semantic search across past Claude Code conversations. Persistent cross-session memory", source: superpowers-marketplace}
+    desktop_skills: {aliases: [claude.ai skills, upload skills, SKILL.md], def: "Model-invoked instruction packages for Claude Desktop. Auto-activate on context. SKILL.md + optional assets", ref: claude_desktop_skills_reference.latest.yml, install: "Settings > Capabilities > Skills > + Add"}
+    csv_data_summarizer: {aliases: [csv analyzer], def: "Desktop skill - auto CSV analysis with stats and visualizations", type: community_skill}
+    search_agent: {aliases: [knowledge search, conversation search], def: "Gemini dual-mode search over 4yr conversation archive. SEARCH=curated results, ANSWER=editorial+citations. 4-layer cascade", ref: spec_search_agent.latest.condensed.yml, version: "2.5"}
+    search_cascade: {aliases: [4-layer search], def: "Search fallback: L1 topics → L2 synonyms → L3 content → L4 content+synonyms. Case-insensitive. Never stop at L1", ref: spec_search_agent.latest.condensed.yml}
+    answer_mode: {aliases: [editorial mode], def: "Search agent question mode - editorial + [N] citations + Sources. Triggers: what/why/how/explain", ref: spec_search_agent.latest.condensed.yml}
+    search_mode: {aliases: [results mode], def: "Search agent discovery mode - curated list + Why Relevant + Patterns + To Go Deeper. Triggers: find/search/list/show", ref: spec_search_agent.latest.condensed.yml}
+    cli_agent_mcp: {aliases: [cli-agent MCP, CLI agent MCP server], def: "MCP server for launching/managing CLI agents", path: ai_general/apps/mcps/cli-agent/}
+
+  concept:
+    message_inserts: {aliases: [memory inserts, INSERT blocks, structured inserts], def: "<<<INSERT type=X>>> blocks for machine-readable markers. Types: BOOKMARK/MEMORY/DECISION/QUESTION. Cross-platform persistence for Web/iOS", ref: spec_message_insert.latest.condensed.yml}
+    bootstrap_problem: {aliases: [context bootstrap], def: "Need to know file contents to know when to load. Solved by glossary", ref: schema_knowledge_glossary_v1.yml}
+    bootstrap_hierarchy: {aliases: [bootstrap order, load order], def: "CLI bootstrap: global.md → platform/{platform}.md → role/{role}/role.yml → tasking.md (if -T)", path: ai_general/prompts/}
+    context_files: {aliases: [context_files list, role context], def: "REF: pointers in role.yml for role-specific file loading"}
+    reference_pointers: {aliases: ["REF:", file pointers], def: "REF:path/to/file.yml syntax for lazy loading, reduced context"}
+    role_yml: {aliases: [role.yml, role definition], def: "Role config: context_files, duties, ownership. At ai_general/prompts/roles/{role}/role.yml"}
+    time_loop: {aliases: [time loop, UI reset], def: "Claude Desktop UI reset phenomenon - response fails mid-gen, context resets as if never submitted", platform: Claude Desktop only}
+
+  workflow:
+    condensed_chat_history: {aliases: [condensed chat, chat condensation], def: "Semantic summary created ON-DEMAND, not pre-stored. Raw chat → decisions/outcomes → ~80% reduction → .condensed.yml"}
+    chat_continuity_recovery: {aliases: [broken chat recovery], def: "Auto-recovery from context exhaustion - detects 'prompt too long', exports, condenses, continues", ref: spec_chat_continuity_recovery.condensed.yml}
+    task_lifecycle: {aliases: [task states], def: "staged → to_execute → in_progress → completed/error/cancelled", ref: protocol_taskCoordination.condensed.yml}
+    task_id_counter: {aliases: [NextId, next_id.sh], def: "Atomic hierarchical ID via mkdir spinlock. Session conflict: fork/exit/queue", ref: spec_task_id_counter.latest.md, script: ~/bin/ai/next_id.sh}
+
+see_also: [glossary_knowledge_index_v1.1.yml, 50_schemas/schema_knowledge_glossary_v1.yml]

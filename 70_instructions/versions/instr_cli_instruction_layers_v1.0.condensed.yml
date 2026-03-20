@@ -1,0 +1,45 @@
+# instr_cli_instruction_layers_v1.0.condensed.yml
+metadata:
+  source: instr_cli_instruction_layers_v1.0.md
+  version: "1.0"
+  condensed_by: claude_cli
+
+purpose: 4-layer instruction model for all CLI agents (Claude, Gemini, Codex).
+
+layers:
+  1_global:
+    location: ai_general/prompts/global/cli_agents.md
+    loaded: always
+    contains: [user preferences, workspace conventions, communication protocols, quality standards, tool usage]
+  2_agent_role:
+    location: "ai_general/prompts/agents/{agent}.md"
+    loaded: "-A <agent> flag"
+    contains: [primary tasks, scope, scripts, domain knowledge, workflow patterns, output expectations]
+    examples: [librarian, dev_lead, custodian, analyst]
+  3_task:
+    location: "ai_comms/{platform}_cli/tasks/{task}.md"
+    loaded: "-T <task> flag (Claude/Codex) or -t (Gemini)"
+    contains: [task ID, metadata, background, goal, deliverables, requirements, success criteria]
+  4_prompt:
+    loaded: positional argument
+    contains: [specific action, parameters, priority overrides]
+
+flags:
+  common:
+    "-A <agent>": load layer 2
+    "-T/-t <task>": load layer 3
+    "-y/-a": auto-approve (-y Gemini, -a Claude)
+    "-p": print/headless mode
+    "-r": resume previous session
+
+assembly: "global.md + agent.md (if -A) + task.md (if -T) + prompt"
+
+platform_notes:
+  claude_cli: {context: CLAUDE.md per-dir, approve: "-a/--auto-approve", task: "-T/--task-file", sessions: "--resume/--continue/--named"}
+  gemini_cli: {context: GEMINI.md per-dir, approve: "-y/--yolo", task: "-t", sessions: "--resume + /chat save|resume"}
+  codex_cli: {context: inherited, approve: "-a", task: "-T", note: "short-lived, task-focused"}
+
+convenience_scripts:
+  librarian_gemini.sh: {agent: librarian, platform: Gemini, reason: "1M context for corpus"}
+  dev_lead_claude.sh: {agent: dev-lead, platform: Claude, reason: "session persistence"}
+  custodian_claude.sh: {agent: custodian, platform: Claude, reason: "structure validation"}

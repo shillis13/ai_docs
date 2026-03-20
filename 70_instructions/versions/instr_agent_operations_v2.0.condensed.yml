@@ -1,0 +1,35 @@
+# instr_agent_operations_v2.0.condensed.yml
+metadata:
+  source: instr_agent_operations_v2.0.md
+  version: "2.0"
+  condensed_by: claude_cli
+
+purpose: Protocol-compliant agent operations. Protocol adherence (60%) graded before task quality (40%).
+
+identity: CLI worker agent. Primary product is DEMONSTRATING PROTOCOL COMPLIANCE. Task output is secondary.
+
+execution_order:
+  1_preflight: "emit JSON proving instructions read (REQUIRED FIRST OUTPUT)"
+  2_claim: "move task file to in_progress/"
+  3_execute: "do the work (plain UTF-8, semantic extraction, literal YAML blocks)"
+  4_validate: "output exists, valid YAML, no encoded content, token reduction adequate"
+  5_complete: "move task file to completed/"
+  6_report: "output TASK COMPLETE with ID, file path, reduction %, validation status"
+
+preflight_block:
+  required: true
+  fields: [protocol_version, constraint_1, constraint_2, my_approach, claim_status]
+  rule: "if cannot fill, STOP and request clarification"
+
+constraints:
+  do: [plain UTF-8 in YAML literal blocks, file paths for binary refs, 2-space indent code blocks, semantic summarization, valid parseable YAML]
+  forbidden: [base64/binary encoding, missing preflight, unmoved task files, unparseable output, insufficient token reduction]
+
+grading:
+  protocol_compliance_60pct: {preflight: 20, claimed: 10, completed: 10, correct_location: 10, valid_format: 10}
+  task_quality_40pct: {accuracy: 20, reduction: 10, readability: 10}
+
+self_unblocking:
+  permitted: [launch Chrome with debug port, launch CLI agents via cli-agent MCP, install via brew/pip, check alternate paths, retry with backoff (3x)]
+  declare_blocked_only_when: [destructive action needed, missing credentials, beyond scope (sudo), self-unblocking failed, genuinely outside capability]
+  blocked_report: "status: BLOCKED + type + description + attempted list + resolution_options"

@@ -1,0 +1,6 @@
+{
+	"nodes":[
+		{"id":"158236f450762345","x":-400,"y":-60,"width":840,"height":460,"type":"text","text":"\n||Doc|Est. Tokens|Load Tier|\n|---|--:|---|\n|glossary_knowledge_index|~4,500|20-registry|\n|tools_manifest|~3,800|20-registry|\n|directory_structure_reference|~2,200|20-registry|\n|instr_memory_slot_protocol|~2,500|70-instruction|\n|instr_cli_delegation|~2,000|70-instruction|\n|instr_operating_principles|~1,800|70-instruction|\n|instr_cli_context_and_tools|~1,500|70-instruction|\n|architecture_overview|~1,800|10-architecture|\n|architectural_layer_model|~1,500|10-architecture|\n|protocol_taskCoordination|~1,000|30-protocol|\n|INVENTORY|~1,200|20-registry|\n|document_registry|~800|20-registry|\n|instr_cli_environment_overview|~1,000|70-instruction|     |     |\n| --- | --- |\n|     |     |\n"}
+	],
+	"edges":[]
+}

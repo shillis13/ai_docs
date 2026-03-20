@@ -1,1 +1,1 @@
-versions/glossary_knowledge_index_v1.3.md
+versions/glossary_knowledge_index_v1.5.md

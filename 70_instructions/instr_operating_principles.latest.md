@@ -1,1 +1,1 @@
-versions/instr_operating_principles_v2.4.md
+versions/instr_operating_principles_v2.5.md

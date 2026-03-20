@@ -1,0 +1,63 @@
+# instr_todo_v1.0.condensed.yml
+metadata:
+  source: instr_todo_v1.0.md
+  version: "1.0"
+  updated: 2026-01-02
+  maintainer: PianoMan
+  status: active
+  load: topic
+  condensed_by: claude_cli
+
+purpose: How AI agents create TODOs for discovered out-of-scope work.
+
+when_to_create:
+  yes:
+    - required work blocking/enabling other goals, not current assignment
+    - technical debt to address later
+    - missing infrastructure for future capabilities
+    - follow-up work from completed tasks outside original scope
+  no:
+    - observations without clear action (use feedback log)
+    - work within current task scope (just do it)
+    - questions needing user input (ask directly)
+
+location:
+  root: ai_general/todos/
+  structure:
+    "todo_NNNN_short_description/": active TODOs (notes.md + optional scripts/)
+    "completed/": done TODOs
+    "trash/": abandoned TODOs
+    "template_todo_item/": template for new items
+
+creation:
+  preferred: "todo_mgr (interactive)"
+  manual:
+    1: "determine next number: ls ai_general/todos/ | grep -E '^todo_[0-9]+' | sort -t_ -k2 -n | tail -1"
+    2: "mkdir ai_general/todos/todo_NNNN_short_description"
+    3: "cp template notes.md into new dir"
+    4: fill template fields
+
+template_fields:
+  - "Created/Updated dates"
+  - "Description: what this accomplishes (specific)"
+  - "Requirements: concrete items"
+  - "Dependencies: parent todo, depends on, related refs"
+  - "Outputs: expected deliverables"
+  - "Done When: specific checkable criteria"
+  - "Notes: creation context, discovery circumstances"
+
+guidelines:
+  title: "todo_NNNN_verb_noun (e.g., todo_0045_update_glossary)"
+  description: actionable (what needs to happen, not just what's wrong)
+  done_criteria: specific, checkable
+  context: why it matters, where it came from
+  links: reference tasks, chats, other TODOs
+
+lifecycle: "Created (Triaging) → Needs Research / Needs Derivation / Ready → In Progress → Completed (→completed/) or Abandoned (→trash/)"
+
+agent_workflow:
+  1: "assess urgency — blocks current work? report to orchestrator"
+  2: "check existing TODOs — might already be tracked"
+  3: "create TODO via todo_mgr or manual"
+  4: "log briefly in session output: [NOTE] Created todo_NNNN_desc — context"
+  5: "continue work — don't get derailed"

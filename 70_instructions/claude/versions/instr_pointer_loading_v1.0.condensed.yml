@@ -1,6 +1,12 @@
 # Source: instr_pointer_loading_latest.yml (v1.0.0, 2025-12-05)
 # Related: protocol_reference_pointers_latest.yml, schema_pointer_syntax_latest.yml
 
+why_ref_pointers_exist:
+  problem: "Project Files in claude.ai are static copies that drift from source on disk"
+  solution: "REF pointers keep only lightweight refs in Project Files. Desktop Claude resolves via Desktop Commander read_file, always reading current version from disk"
+  tiered_loading: "AUTO (~4.5K tok) loads immediately, TOPIC loads on domain match, DEMAND loads only when needed. Avoids full ~12-15K token cost every session"
+  cli_note: "claude_cli.py eagerly resolves all REFs at launch (inlines into system prompt). CLI gets never-stale but loses lazy-loading savings. CLI agents don't need this doc at bootstrap — wrapper handles resolution. Loaded here for Desktop Claude"
+
 recognition:
   pattern: "<TYPE>:<PATH_OR_QUERY> [| <KEY>:<VALUE>]*"
   types_path: STARTER, PROJECT, PREFS, CONTEXT, TOOL, REF

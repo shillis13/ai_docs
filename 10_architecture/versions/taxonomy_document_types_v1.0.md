@@ -10,16 +10,16 @@
 
 ## Hierarchy
 
-| Level | Type         | Purpose                                           | Example                          |
-|:-----:|:-------------|:--------------------------------------------------|:---------------------------------|
-|   1   | Architecture | WHY — design rationale, vision, layer models      | `architectural_layer_model.yml`  |
-|   2   | Registry     | WHAT EXISTS — inventories, catalogs, indexes      | `INVENTORY.md`                   |
-|   3   | Protocol     | HOW IT WORKS — process flows, lifecycles          | `protocol_taskCoordination_v5.yml` |
-|   4   | Spec         | HOW IT WORKS — interface contracts, APIs          | `spec_ai_message_sender_v1.1.yml` |
-|   5   | Schema       | HOW IT WORKS — data structures, file formats      | `schema_taskFile_v1.yml`         |
-|   6   | Playbook     | WHAT TO DO — platform-agnostic operations         | `maintenance_playbook.md`        |
-|   7   | Instruction  | HOW TO DO IT — platform-specific implementation   | `instr_claude_environment.md`    |
-|   8   | Quick Ref    | CHEAT SHEET — condensed reference                 | `QUICK_REFERENCE.md`             |
+| Level | Type         | Purpose                                         | Example                            |
+| :---: | :----------- | :---------------------------------------------- | :--------------------------------- |
+|   1   | Architecture | WHY — design rationale, vision, layer models    | `architectural_layer_model.yml`    |
+|   2   | Registry     | WHAT EXISTS — inventories, catalogs, indexes    | `INVENTORY.md`                     |
+|   3   | Protocol     | HOW IT WORKS — process flows, lifecycles        | `protocol_taskCoordination_v5.yml` |
+|   4   | Spec         | HOW IT WORKS — interface contracts, APIs        | `spec_ai_message_sender_v1.1.yml`  |
+|   5   | Schema       | HOW IT WORKS — data structures, file formats    | `schema_taskFile_v1.yml`           |
+|   6   | Playbook     | WHAT TO DO — platform-agnostic operations       | `maintenance_playbook.md`          |
+|   7   | Instruction  | HOW TO DO IT — platform-specific implementation | `instr_claude_environment.md`      |
+|   8   | Quick Ref    | CHEAT SHEET — condensed reference               | `QUICK_REFERENCE.md`               |
 
 ## Non-Hierarchical Types
 

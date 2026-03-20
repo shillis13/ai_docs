@@ -43,13 +43,13 @@ The roundtable explored many alternatives: interaction signatures, lens summarie
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                      INGESTION PIPELINE                         │
-│  Raw Export → Normalize → Chunk → Condense → Index → Archive   │
+│  Raw Export → Normalize → Chunk → Condense → Index → Archive    │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      SEARCH ARCHITECTURE                        │
-│                                                                 │
+┌────────────────────────────────────────────────────────────────┐
+│                      SEARCH ARCHITECTURE                       │
+│                                                                │
 │  ┌─────────────┐         ┌──────────────────────────────────┐  │
 │  │ knowledge-  │         │     Researcher (Claude CLI)      │  │
 │  │ search MCP  │         │     - Shard orchestration        │  │
@@ -58,27 +58,27 @@ The roundtable explored many alternatives: interaction signatures, lens summarie
 │  │   search    │         └──────────────────────────────────┘  │
 │  └─────────────┘                        │                      │
 │        │                                ▼                      │
-│        │              ┌────────┬────────┬────────┬────────┐   │
-│        │              │Shard 01│Shard 02│  ...   │Shard 06│   │
-│        │              │Gemini  │Gemini  │        │Gemini  │   │
-│        │              │~800K   │~800K   │        │~800K   │   │
-│        │              └────────┴────────┴────────┴────────┘   │
+│        │              ┌────────┬────────┬────────┬────────┐    │
+│        │              │Shard 01│Shard 02│  ...   │Shard 06│    │
+│        │              │Gemini  │Gemini  │        │Gemini  │    │
+│        │              │~800K   │~800K   │        │~800K   │    │
+│        │              └────────┴────────┴────────┴────────┘    │
 │        │                                │                      │
 │        │                                ▼                      │
-│        │              ┌──────────────────────────────────┐    │
-│        │              │     Validator (ChatGPT CLI)      │    │
-│        │              │     - Adversarial I&T            │    │
-│        │              │     - Evidence verification      │    │
-│        │              │     - Fabrication detection      │    │
-│        │              └──────────────────────────────────┘    │
+│        │              ┌──────────────────────────────────┐     │
+│        │              │     Validator (ChatGPT CLI)      │     │
+│        │              │     - Adversarial I&T            │     │
+│        │              │     - Evidence verification      │     │
+│        │              │     - Fabrication detection      │     │
+│        │              └──────────────────────────────────┘     │
 │        ▼                                                       │
-│  ┌─────────────────────────────────────────────────────────┐  │
-│  │                   Indexed Corpus                         │  │
-│  │  40_histories/  - Chunked conversation files            │  │
-│  │  50_shards/     - Shard corpus files (~3.5MB each)      │  │
-│  │  topic_index/   - Term → conversation mappings          │  │
-│  └─────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                   Indexed Corpus                        │   │
+│  │  40_histories/  - Chunked conversation files            │   │
+│  │  50_shards/     - Shard corpus files (~3.5MB each)      │   │
+│  │  topic_index/   - Term → conversation mappings          │   │
+│  └─────────────────────────────────────────────────────────┘   │
+└────────────────────────────────────────────────────────────────┘
 ```
 
 ## Ingestion Pipeline

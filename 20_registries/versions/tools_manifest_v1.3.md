@@ -8,10 +8,10 @@
 
 ## CLI Wrappers
 
-**Base:** `~/bin/ai/cli`
+**Base:** [~/bin/ai/cli](file:///~/bin/ai/cli)
 
 ### claude_cli.py
-- **Path:** `~/bin/ai/cli/claude_cli.py`
+- **Path:** `~/bin/ai/cli/claude_cli.py  [~/bin/ai/cli/claude_cli.py](file:///~/bin/ai/cli/claude_cli.py)
 - **Invoke:** `python3 ~/bin/ai/cli/claude_cli.py`
 - **Description:** Claude CLI with tmux, agents, session management. Bootstrap: `global.md → platform/claude.md → roles/{type}/role.yml`
 - **Flags:**

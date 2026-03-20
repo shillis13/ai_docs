@@ -11,6 +11,16 @@
 - Protocol: `../../30_protocols/protocol_reference_pointers_latest.yml`
 - Schema: `../../50_schemas/schema_pointer_syntax_latest.yml`
 
+## Why REF Pointers Exist
+
+REF pointers were created (~Dec 2025) to solve the **stale Project Files problem** for Desktop Claude.
+
+Project Files in claude.ai are static copies — once uploaded, they drift from the source files on disk. REF pointers solve this by keeping only lightweight pointers in Project Files. When Desktop Claude encounters `REF:path/to/file.yml`, it resolves the pointer via Desktop Commander `read_file`, always reading the current version from disk.
+
+The tiered loading system (AUTO/TOPIC/DEMAND) is the second benefit: not all referenced docs need to be loaded at conversation start. AUTO-tier loads immediately (~4.5K tokens), TOPIC-tier loads when the conversation enters a relevant domain, and DEMAND-tier loads only when explicitly needed. This avoids paying the full token cost (~12-15K) for every session.
+
+**CLI Note:** `claude_cli.py` shares common config files (global.md, role.yml) with Desktop, so CLI also encounters REF syntax. The CLI wrapper currently resolves all REF pointers eagerly at launch, inlining them into the system prompt. This means CLI gets the "never stale" benefit but loses the tiered lazy-loading token savings. CLI agents do not need this instruction doc at bootstrap since the wrapper handles resolution — it is loaded here for Desktop Claude's benefit.
+
 ## Recognition
 
 ### Pattern

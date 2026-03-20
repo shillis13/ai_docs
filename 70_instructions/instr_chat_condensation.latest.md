@@ -1,1 +1,1 @@
-versions/instr_chat_condensation_v1.0.md
+versions/instr_chat_condensation_v2.0.md

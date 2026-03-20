@@ -69,10 +69,10 @@ context_window:
   antipatterns: [direct browser snapshots, reading multiple large files, implementation during architecture]
 
 constraints:
-  context_window: 200K tokens
+  context_window: "200K tokens (Desktop), 1M tokens (Claude Code)"
   mcp_timeout: 30-60s hard limit
-  bash_tool: sandbox only, never use
-  browser_snapshots: write to file + delegate
+  bash_tool: "Desktop: sandbox only, never use. Claude Code: full filesystem access, primary tool"
+  browser_snapshots: write to file + delegate (less critical at 1M but still noisy)
 
 doc_hierarchy:
   10_: architecture

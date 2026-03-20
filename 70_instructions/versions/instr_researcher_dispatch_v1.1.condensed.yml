@@ -1,0 +1,36 @@
+# instr_researcher_dispatch_v1.1.condensed.yml
+metadata:
+  source: instr_researcher_dispatch_v1.1.md
+  version: "1.1"
+  condensed_by: claude_cli
+  changes_from_v1.0: "added validation pipeline (validator, bounce-back, agreement/deadlock)"
+
+purpose: When and how to dispatch the researcher agent for conversation archive searches.
+
+triggers:
+  use_researcher:
+    - past conversations, discussions, decisions with AI assistants
+    - how something evolved or changed over time
+    - "what did we discuss about X" / "when did we first talk about Y"
+    - historical context for current projects
+    - anything requiring search across conversation archive
+  use_knowledge_search_instead:
+    - quick lookups in indexed/condensed content
+    - questions glossary or topic index answers directly
+
+launch: "cli-agent:launch_researcher(prompt='<research question>')"
+task_dir: "ai_comms/claude_cli/tasks/in_progress/query{NNNN}_{slug}/"
+
+pipeline:
+  1: "Researcher dispatches shards, collects evidence, writes synthesis → status: ready_for_validation"
+  2: "Pipeline script detects completion, launches validator (cross-model, must differ from synthesizer)"
+  3: "Validator checks every claim against shard evidence, writes validation file"
+  4: "Bounce-back (max 3 rounds): if issues found, synthesis returns to researcher for revision"
+  5: "Agreement or deadlock: final output includes both synthesis and validation verdicts"
+  6: "Desktop Claude reads validated output from task directory"
+
+rules:
+  - "Desktop Claude does NOT read synthesis until validation complete"
+  - "Do NOT read from ai_memories/librarian/results/ — deprecated for query workflows"
+
+user_response: "launched with query task ID, results go through validation, ~15-30 min, check status anytime"

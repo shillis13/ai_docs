@@ -1,0 +1,41 @@
+# instr_chat_condensation_v2.0.condensed.yml
+metadata:
+  source: instr_chat_condensation_v2.0.md
+  version: "2.0"
+  previous: "1.1"
+  created: 2026-01-17
+  condensed_by: claude_cli
+  schema: schema_condensation_flags.v1.0.yml
+  changes: [orthogonal condensation flags, presets, flag-aware extraction rules]
+
+purpose: Semantic extraction with configurable granularity via flags.
+
+flags:
+  removal:
+    strip_conversational: "remove greetings, fillers, hedging, process narration; keep direct statements"
+    strip_explanatory: "remove examples, analogies, background context; keep conclusions, decisions, facts"
+    summarize_failures: "collapse to 'Tried X → failed Y → led to Z'; keep learnings"
+    summarize_rationales: "collapse to decision + key_factors list; remove exploration"
+    strip_meta: "remove 'good question', self-corrections, conversation reflections"
+    strip_redundant: "keep only final version; remove drafts, repeated explanations"
+  keep:
+    preserve_quotes: "keep verbatim quoted material with attribution (relationship, evidence, exact wording)"
+    preserve_artifacts: "keep code/ASCII/diagrams intact (final versions only)"
+
+always_extract: [decisions (what+why+rejected options), outcomes (accomplished+final state+resolved), facts (names/dates/versions/paths/IDs/errors+fixes), procedures (working workflows+steps+commands)]
+
+always_discard: [role markers, message timestamps, flow markers, broken/partial content, exact duplicates]
+
+output:
+  format: "human-readable YAML, .condensed.yml extension"
+  sections: [condensed_metadata, summary, decisions, failures, procedures, discoveries, outcomes, quotes, artifacts]
+
+presets:
+  import_continuation: {flags: [strip_conversational, strip_meta, strip_redundant, summarize_failures], reduction: "40-60%"}
+  archival: {flags: [ALL strip_*, ALL summarize_*, preserve_artifacts], reduction: "70-90%"}
+  relationship_preservation: {flags: [strip_explanatory, strip_meta, strip_redundant, "summarize_*", preserve_quotes], reduction: "30-50%"}
+  technical_extraction: {flags: [ALL strip_*, ALL summarize_*, preserve_artifacts], reduction: "70-90%"}
+  minimal: {flags: [strip_meta, strip_redundant, preserve_quotes, preserve_artifacts], reduction: "15-30%"}
+
+quality: [all decisions/outcomes recoverable, readable by unfamiliar reader, flag compliance reflected, valid YAML]
+forbidden: [base64/binary encoding, dropping decisions/outcomes, ignoring flags, inventing content]
